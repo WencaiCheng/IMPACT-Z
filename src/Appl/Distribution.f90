@@ -16,6 +16,7 @@
         use Timerclass
         use NumConstclass
         use PhysConstclass
+        use MathModule
       contains
         ! sample the particles with intial distribution.
         subroutine sample_Dist(this,distparam0,nparam,flagdist,geom,grid,Flagbc,&
@@ -109,8 +110,8 @@
           call readimpt_Dist(this,nparam,distparam,geom,grid,Flagbc)
         else if(flagdist.eq.45) then
           call Cylinder_Dist(this,nparam,distparam,grid)
-!        else if(flagdist.eq.46) then
-!          call CylinderSin_Dist(this,nparam,distparam,grid)
+        else if(flagdist.eq.46) then
+          call CylinderSin_Dist(this,nparam,distparam,grid)
         else
           print*,"Initial distribution not available!!"
           stop
@@ -2044,6 +2045,167 @@
         t_kvdist = t_kvdist + elapsedtime_Timer(t0)
         end subroutine Cylinder_Dist
 
+!Biaobin Li, 201908, generate cylinder uniform distribution with sinusoidal
+!density modulation.
+!For 46 type distribution:
+! 1). By default: alpha_xyz=0, mismatchxyz=1, offsetXYZ=0,
+! offsetPxPyPz=0.
+! 2). (offsetPhase, offsetEnergy) is temporary changed to (eta,lambda)
+! for density modulation depth and wavelength.
+        subroutine CylinderSin_Dist(this,nparam,distparam,grid)
+        implicit none
+        include 'mpif.h'
+        type (BeamBunch), intent(inout) :: this
+        integer, intent(in) :: nparam
+        double precision, dimension(nparam) :: distparam
+        type (Pgrid2d), intent(in) :: grid
+        double precision  :: sigx,sigpx,muxpx,xscale,sigy,&
+        sigpy,muypy, yscale,sigz,sigpz,muzpz,zscale,pxscale,pyscale,pzscale
+        double precision :: xmu1,xmu2,xmu3,xmu4,xmu5,xmu6
+        double precision, dimension(2) :: gs
+        double precision :: sig1,sig2,sig3,sig4,sig5,sig6
+        double precision :: rootx,rooty,rootz,x1,x3,cs,ss
+        integer :: totnp,npy,npx
+        integer :: avgpts,numpts
+        integer :: myid,myidx,myidy,i,ierr
+        double precision :: t0,twopi
+        integer :: nptsob,ilow,ihigh,Nmax,ndim
+        real*8 :: xz
+        real*8, dimension(6) :: xtmp
+        integer :: pid
+        real*8 :: eta,lamda,k
+        integer,parameter :: Nbin=1e4
+        real*8 :: x(Nbin+1),Fx(Nbin+1)
+        real*8 :: Uj,Fxmax
+        integer :: j,lo,hi,mid
+        call starttime_Timer(t0)
 
+        sigx = distparam(1)
+        sigpx = distparam(2)
+        muxpx = distparam(3)
+        xscale = distparam(4)
+        pxscale = distparam(5)
+        xmu1 = distparam(6)
+        xmu2 = distparam(7)
+        sigy = distparam(8)
+        sigpy = distparam(9)
+        muypy = distparam(10)
+        yscale = distparam(11)
+        pyscale = distparam(12)
+        xmu3 = distparam(13)
+        xmu4 = distparam(14)
+        sigz = distparam(15)
+        sigpz = distparam(16)
+        muzpz = distparam(17)
+        zscale = distparam(18)
+        pzscale = distparam(19)
+        xmu5 = distparam(20)
+        xmu6 = distparam(21)
+
+        call getsize_Pgrid2d(grid,totnp,npy,npx)
+        call getpost_Pgrid2d(grid,myid,myidy,myidx)
+
+        avgpts = this%Npt/(npx*npy)
+        nptsob = avgpts*npx*npy
+        this%Npt = nptsob
+        !particle index in processor myid is [ilow,ihigh]
+        ilow = myid*avgpts
+        ihigh = (myid+1)*avgpts
+        !print*,"myid= ",myid,"ilow=",ilow,"ihigh=",ihigh,"avgpts=",avgpts
+
+        !sig1 = sigx*xscale
+        !sig2 = sigpx*pxscale
+        !sig3 = sigy*yscale
+        !sig4 = sigpy*pyscale
+        !sig5 = sigz*zscale
+        !sig6 = sigpz*pzscale
+
+        !(aphax,alphay,alphaz)=0 by default
+        !rootx=sqrt(1.-muxpx*muxpx)
+        !rooty=sqrt(1.-muypy*muypy)
+        !rootz=sqrt(1.-muzpz*muzpz)
+
+        !offsetPhase is used for: Density modulation depth
+        eta = xmu5
+        !offsetEnergy is used for: normalize lamda by bunch length
+        lamda = xmu6/(2.0d0*sigz*sqrt(3.0d0))
+        print*,"eta= ",eta,"lamda= ",lamda
+
+        ! initial allocate 'avgpts' particles on each processor.
+        allocate(this%Pts1(9,avgpts))
+        twopi = 4*asin(1.0d0)
+
+        do i=1,avgpts
+           ! call random_number(xtmp)
+           ! use halton sequence instead
+           xtmp(1) = math%hamsl(2,i+ilow)
+           xtmp(2) = math%hamsl(4,i+ilow)
+           xtmp(3) = math%randn(3,i+ilow)
+           xtmp(4) = math%randn(5,i+ilow)
+           xtmp(6) = math%randn(6,i+ilow)
+
+!transverse uniform cylinder + Gaussian momentum
+            x1 = sqrt(xtmp(1)) !uniform cylinder
+            x3 = sqrt(xtmp(1))
+            cs = cos(xtmp(2)*twopi)
+            ss = sin(xtmp(2)*twopi)
+            this%Pts1(1,i) = sig1*x1*cs
+            this%Pts1(3,i) = sig3*x3*ss
+
+            this%Pts1(2,i) = sig2*xtmp(3)
+            this%Pts1(4,i) = sig4*xtmp(4)
+            this%Pts1(6,i) = sigpz*xtmp(6)
+        enddo
+
+!density modulation
+!-----------------
+! rejection method, not quiet enough after particles propagation
+!-----------------
+!        !eta = 0.1d0
+!        !lamda = 1.0d0/10.0d0
+!        tmpNp = 0
+!        i = 1
+!        do while ( tmpNp < avgpts)
+!            tmp1 = math%hamsl(1,i+ilow)
+!            tmp2 = math%hamsl(7,i+ilow)*(1.0d0+eta)
+!            FilterLine = 1.0d0+eta*sin(2.0d0*Pi/lamda*tmp1-Pi/2.0d0)
+!            ! filter process
+!            if (tmp2<FilterLine) then
+!              tmpNp=tmpNp+1
+!              xz = sigz*(2.0d0*tmp1-1.0d0)
+!              this%Pts1(5,tmpNp) = xz
+!            endif
+!            i=i+1
+!         enddo
+! -----------------------------
+! use inverse sampling method
+! -----------------------------
+        k=twopi/lamda
+        !normalized CDF function
+        Fxmax = 1.0d0-eta/k*sin(k)
+        do j=1,Nbin+1
+          x(j)  = (j-1)*1.0d0/Nbin
+          Fx(j) = x(j)-eta/k*sin(k*x(j))
+          !normalize the CDF
+          Fx(j) = Fx(j)/Fxmax
+        end do
+        !inverse sampling and then Langerange interp
+        do j=1,avgpts
+          Uj=math%hamsl(1,j+ilow)
+          this%Pts1(5,j)=sigz*(2.0d0*math%interp(x,Fx,Uj,Nbin+1)-1.0d0)
+        end do
+
+        this%Nptlocal = avgpts
+
+        do j = 1, avgpts
+          pid = j + myid*avgpts
+          this%Pts1(7,j) = this%Charge/this%mass
+          this%Pts1(8,j) = this%Current/Scfreq/this%Npt*this%Charge/abs(this%Charge)
+          this%Pts1(9,j) = pid
+        enddo
+
+        t_kvdist = t_kvdist + elapsedtime_Timer(t0)
+
+        end subroutine CylinderSin_Dist
 
       end module Distributionclass
