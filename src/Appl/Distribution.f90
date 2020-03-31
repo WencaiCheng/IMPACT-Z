@@ -2129,7 +2129,9 @@
         eta = xmu5
         !offsetEnergy is used for: normalize lamda by bunch length
         lamda = xmu6/(2.0d0*sigz*sqrt(3.0d0))
-        print*,"eta= ",eta,"lamda= ",lamda
+        
+        print*,"generating density modulation: "
+        print*,"eta= ",eta,"lamda= ",xmu6," m"
 
         ! initial allocate 'avgpts' particles on each processor.
         allocate(this%Pts1(9,avgpts))
@@ -2172,7 +2174,7 @@
 !            ! filter process
 !            if (tmp2<FilterLine) then
 !              tmpNp=tmpNp+1
-!              xz = sigz*(2.0d0*tmp1-1.0d0)
+!              xz = sigz*sqrt(3.0d0)(2.0d0*tmp1-1.0d0)
 !              this%Pts1(5,tmpNp) = xz
 !            endif
 !            i=i+1
@@ -2192,7 +2194,7 @@
         !inverse sampling and then Langerange interp
         do j=1,avgpts
           Uj=math%hamsl(1,j+ilow)
-          this%Pts1(5,j)=sigz*(2.0d0*math%interp(x,Fx,Uj,Nbin+1)-1.0d0)
+          this%Pts1(5,j)=sigz*sqrt(3.0d0)*(2.0d0*math%interp(x,Fx,Uj,Nbin+1)-1.0d0)
         end do
 
         this%Nptlocal = avgpts
