@@ -463,7 +463,7 @@
 
         !J.Q. modified 2018. Now particle distribution in ImpactZ coordinates
         !Transfer matrix follows the Transport: K. L. Brown, SLAC-75.
-        subroutine Fpol_Dipole(h0,h1,tanphi,tanphib,k1,psi,ptarry1,ang,Nplocal,&
+        subroutine Fpol_Dipole_nonlinearmap(h0,h1,tanphi,tanphib,k1,psi,ptarry1,ang,Nplocal,&
                                gam0,qm0)
         implicit none
         include 'mpif.h'
@@ -523,9 +523,9 @@
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
 
-        end subroutine Fpol_Dipole
+        end subroutine Fpol_Dipole_nonlinearmap
 
-        subroutine Bpol_Dipole(h0,h1,tanphi,tanphib,k1,psi,ptarry1,ang,&
+        subroutine Bpol_Dipole_nonlinearmap(h0,h1,tanphi,tanphib,k1,psi,ptarry1,ang,&
                    Nplocal,gam0,qm0)
         implicit none
         include 'mpif.h'
@@ -588,7 +588,7 @@
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
 
-        end subroutine Bpol_Dipole
+        end subroutine Bpol_Dipole_nonlinearmap
 
         subroutine Sectorlinear_Dipole(len,beta,h0,k1,ptarry1,Nplocal,qm0)
         implicit none
@@ -690,7 +690,7 @@
 
         !B. Li added the 2nd order map
         !ref: Brown_1982_SlacPub
-        subroutine Sector_Dipole(len,beta0,h0,k1,ptarry1,Nplocal,qm0)
+        subroutine Sector_Dipole_nonlinearmap(len,beta0,h0,k1,ptarry1,Nplocal,qm0)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: Nplocal
@@ -699,7 +699,7 @@
         double precision, dimension(6) :: ptarry2
         integer :: i
         real*8 :: gami,gam0,gam2,gambet
-        real*8 :: R11,R12,R16,R21,R22,R26
+        real*8 :: R11,R12,R16,R21,R22,R26,R51,R52,R56
         real*8 :: T111,T112,T116,T122,T126,T166,T144
         real*8 :: T216,T222,T266,T244,T314,T324,T346
         real*8 :: theta, rho
@@ -716,6 +716,9 @@
         R21 = -sin(theta)/rho
         R22 = cos(theta)
         R26 = sin(theta)
+        R51 = -R26
+        R52 = -R16
+        R56 = rho*(sin(theta)-beta0**2*theta)
         T111 = -sin(theta)**2/(2.0d0*rho)
         T112 = sin(theta)*cos(theta)
         T116 = sin(theta)**2
@@ -752,8 +755,9 @@
               +T216*x0*eta +T222*xp0**2 +T266*eta**2 +T244*yp0**2
           ptarry2(3) = y0 +len*yp0 +T314*x0*yp0 +T324*xp0*yp0 +T346*yp0*eta
           ptarry2(4) = yp0
-          ptarry2(5) = -sin(theta)*x0 -rho*(1.0d0-cos(theta))*xp0 &
-                       +z0 +rho*(sin(theta)-beta0**2*theta)*eta
+          !longitudinal use linear map
+          qmrel = (ptarry1(7,i)-qm0)/qm0
+          ptarry2(5) = R51*x0+R52*xp0+z0+R56*(eta+qmrel)
           ptarry2(6) = eta
 
           ptarry1(1,i) = ptarry2(1)/Scxl
@@ -764,6 +768,168 @@
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
 
-        end subroutine Sector_Dipole
+        end subroutine Sector_Dipole_nonlinearmap
+
+        !=====================================
+        !Biaobin, linear map for dipole
+        subroutine Fpol_Dipole_linearmap(h0,h1,tanphi,tanphib,k1,psi,ptarry1,ang,Nplocal,&
+                               gam0,qm0)
+        implicit none
+        include 'mpif.h'
+        integer, intent(in) :: Nplocal
+        double precision, pointer, dimension(:,:) :: ptarry1
+        double precision :: h0,h1,tanphi,tanphib,k1,psi,ang,gam0,qm0
+        double precision, dimension(6) :: ptarry2
+        double precision :: tanphi2,secphi2,secphi,secphi3,secphib2
+        integer :: i
+        real*8 :: gambet,beta0
+
+        tanphi2 = tanphi**2       
+        secphi2 = 1.0 + tanphi2   
+        secphi = 1.0/cos(ang)
+        secphi3 = secphi2*secphi
+        secphib2 = 1.+tanphib**2
+        beta0 = sqrt(1.0d0-1.0d0/gam0**2)
+        gambet =  beta0*gam0
+
+        ptarry2 = 0.0d0
+
+        do i = 1, Nplocal
+          ptarry1(1,i) = ptarry1(1,i)*Scxl
+          ptarry1(2,i) = ptarry1(2,i)/gambet     
+          ptarry1(3,i) = ptarry1(3,i)*Scxl
+          ptarry1(4,i) = ptarry1(4,i)/gambet      
+          ptarry1(5,i) = -ptarry1(5,i)*beta0*Scxl
+          ptarry1(6,i) = -ptarry1(6,i)/beta0/gambet - &  
+                       (ptarry1(7,i)-qm0)/qm0       
+
+          ptarry2(1) = ptarry1(1,i)
+          ptarry2(2) = h0*tanphi*ptarry1(1,i)+ptarry1(2,i)
+          ptarry2(3) = ptarry1(3,i)
+          ptarry2(4) = -h0*tanphib*ptarry1(3,i)+ptarry1(4,i)
+          ptarry2(5) = ptarry1(5,i)
+          ptarry2(6) = ptarry1(6,i)
+
+          ptarry1(1,i) = ptarry2(1)/Scxl
+          ptarry1(2,i) = ptarry2(2)*gambet
+          ptarry1(3,i) = ptarry2(3)/Scxl
+          ptarry1(4,i) = ptarry2(4)*gambet
+          ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
+          ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
+        enddo
+
+        end subroutine Fpol_Dipole_linearmap
+
+        subroutine Bpol_Dipole_linearmap(h0,h1,tanphi,tanphib,k1,psi,ptarry1,ang,&
+                   Nplocal,gam0,qm0)
+        implicit none
+        include 'mpif.h'
+        integer, intent(in) :: Nplocal
+        double precision, pointer, dimension(:,:) :: ptarry1
+        double precision :: h0,h1,tanphi,tanphib,k1,psi,ang,gam0,qm0
+        double precision, dimension(6) :: ptarry2
+        double precision :: tanphi2,secphi2,secphi,secphi3,secphib2
+        integer :: i
+        real*8 :: gambet,beta0
+
+        tanphi2 = tanphi**2
+        secphi2 = 1.0d0 + tanphi2
+        secphi = 1.0d0/cos(ang)
+        secphi3 = secphi2*secphi
+        secphib2 = 1.+tanphib**2
+
+        ptarry2 = 0.0d0
+        beta0 = sqrt(1.0d0-1.0d0/gam0**2)
+        gambet =  beta0*gam0
+
+        do i = 1, Nplocal
+          ptarry1(1,i) = ptarry1(1,i)*Scxl
+          ptarry1(2,i) = ptarry1(2,i)/gambet  
+          ptarry1(3,i) = ptarry1(3,i)*Scxl
+          ptarry1(4,i) = ptarry1(4,i)/gambet  
+          ptarry1(5,i) = -ptarry1(5,i)*beta0*Scxl  
+          ptarry1(6,i) = -ptarry1(6,i)/beta0/gambet - &
+                       (ptarry1(7,i)-qm0)/qm0
+ 
+          ptarry2(1) = ptarry1(1,i)
+          ptarry2(2) = h0*tanphi*ptarry1(1,i)+ptarry1(2,i)
+          ptarry2(3) = ptarry1(3,i)
+          ptarry2(4) = -h0*tanphib*ptarry1(3,i)+ptarry1(4,i)
+          ptarry2(5) = ptarry1(5,i)
+          ptarry2(6) = ptarry1(6,i)
+
+          ptarry1(1,i) = ptarry2(1)/Scxl
+          ptarry1(2,i) = ptarry2(2)*gambet
+          ptarry1(3,i) = ptarry2(3)/Scxl
+          ptarry1(4,i) = ptarry2(4)*gambet
+          ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
+          ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
+        enddo
+
+        end subroutine Bpol_Dipole_linearmap
+
+        subroutine Sector_Dipole_linearmap(len,beta0,h0,k1,ptarry1,Nplocal,qm0)
+        implicit none
+        include 'mpif.h'
+        integer, intent(in) :: Nplocal
+        double precision, pointer, dimension(:,:) :: ptarry1
+        double precision :: h0,len,beta0,k1,qm0
+        double precision, dimension(6) :: ptarry2
+        integer :: i
+        real*8 :: gami,gam0,gam2,gambet
+        real*8 :: R11,R12,R16,R21,R22,R26,R51,R52,R56
+        real*8 :: theta, rho
+        real*8 :: x0,xp0,y0,yp0,z0,eta
+
+        !right now, sector dipole only has dipole filed, no quad filed
+        !K1=0, for K1.ne.0, map too complicated, added in future
+        rho = 1.0d0/h0;
+        theta = len*h0
+
+        R11 = cos(theta)
+        R12 = rho*sin(theta)
+        R16 = rho*(1.0d0-cos(theta))
+        R21 = -sin(theta)/rho
+        R22 = cos(theta)
+        R26 = sin(theta)
+        R51 = -R26
+        R52 = -R16
+        R56 = rho*(sin(theta)-beta0**2*theta)
+        !reference particle information
+        gambet = beta0/sqrt(1.0d0-beta0**2)
+        gam2 = 1.0d0/(1.0d0-beta0**2)
+        gam0 = sqrt(gam2)
+        ptarry2 = 0.0d0
+        do i = 1, Nplocal
+          gami = gam0 - ptarry1(6,i)
+          !transform to geometry phase space (x,xp,y,yp,z,eta)
+          x0     =  ptarry1(1,i)*Scxl
+          xp0    =  ptarry1(2,i)/gambet
+          y0     =  ptarry1(3,i)*Scxl
+          yp0    =  ptarry1(4,i)/gambet
+          z0     = -ptarry1(5,i)*beta0*Scxl
+          eta    = -ptarry1(6,i)/beta0/gambet-(ptarry1(7,i)-qm0)/qm0
+          !applying transfer map up to 2nd order
+          ptarry2(1) = R11*x0 +R12*xp0 +R16*eta 
+          ptarry2(2) = R21*x0 +R22*xp0 +R26*eta 
+          ptarry2(3) = y0 +len*yp0 
+          ptarry2(4) = yp0
+          !longitudinal use linear map
+          qmrel = (ptarry1(7,i)-qm0)/qm0
+          !ptarry2(5) = -h0*sx*ptarry1(1,i)-h0*dx*ptarry1(2,i)+&
+          !           ptarry1(5,i) - h0**2*j1*ptarry1(6,i) + &
+          !           len/gam2*(ptarry1(6,i)+qmrel) 
+          !Question, qmrel=0, when qmrel will be non-zero? What does qmrel represent for???    
+          ptarry2(5) = R51*x0+R52*xp0+z0+R56*(eta+qmrel)
+          ptarry2(6) = eta
+
+          ptarry1(1,i) = ptarry2(1)/Scxl
+          ptarry1(2,i) = ptarry2(2)*gambet
+          ptarry1(3,i) = ptarry2(3)/Scxl
+          ptarry1(4,i) = ptarry2(4)*gambet
+          ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
+          ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
+        enddo
+        end subroutine Sector_Dipole_linearmap   
 
       end module Dipoleclass
