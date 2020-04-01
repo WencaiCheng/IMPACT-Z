@@ -505,8 +505,10 @@
  
         end subroutine getfldfrgAna2_Quadrupole
 
-        !quad strength using K
-        subroutine transfmapK_Quadrupole(tt,tau,this,refpt,Nplc,pts,qmass)
+        !ID<0, the gradient is K1 in unit of [m^-2] 
+        !biaobin, ID(-10,0), linear map
+        !         ID<-10, nonlinear map
+        subroutine transfmapK_Quadrupole_nonlinearmap(tt,tau,this,refpt,Nplc,pts,qmass)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: Nplc
@@ -520,6 +522,7 @@
                   betaz,beta0,rtkstrzz,rtkstr,kstr,gambet0
         integer  :: i
         real*8 :: t,cs,ss
+        real*8 :: gambet
 
         gambet0 = sqrt(refpt(6)**2-1.0d0)
         beta0 = sqrt(1.0d0-1.0d0/(refpt(6)**2))
@@ -527,11 +530,10 @@
           gam = -refpt(6) - pts(6,i)
           gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
           betaz = gambetz/gam
-          !each reference particle momentum
-          gambetz = sqrt(gam**2-1.0d0) 
-!          kstr = pts(7,i)*2.997928e8/gambetz*this%Param(2)
-!Param(2) is the K defined in MAD, i.e. G/Brho
-          kstr = pts(7,i)/qmass*gambet0/gambetz*this%Param(2)
+          !individual particle momentum
+          gambet = sqrt(gam**2-1.0d0) 
+          !Param(2) is the K defined in MAD, i.e. G/Brho
+          kstr = pts(7,i)/qmass*gambet0/gambet*this%Param(2)
           rtkstr = sqrt(abs(kstr))
           rtkstrzz = rtkstr*tau
           if(kstr.gt.0.0) then
@@ -541,10 +543,6 @@
             xm12 = ss/rtkstr
             xm21 = -rtkstr*ss
             xm22 = cs
-            !xm11 = cos(rtkstrzz)
-            !xm12 = sin(rtkstrzz)/rtkstr
-            !xm21 = -rtkstr*sin(rtkstrzz)
-            !xm22 = cos(rtkstrzz)
             t = exp(rtkstrzz)
             cs= (t*t +1.0d0) / (t + t)
             ss= (t*t -1.0d0) / (t + t) 
@@ -552,10 +550,6 @@
             xm34 = ss/rtkstr
             xm43 = ss*rtkstr
             xm44 = cs
-            !xm33 = cosh(rtkstrzz)
-            !xm34 = sinh(rtkstrzz)/rtkstr
-            !xm43 = sinh(rtkstrzz)*rtkstr
-            !xm44 = cosh(rtkstrzz)
           else if(kstr.lt.0.0) then
             t = exp(rtkstrzz)
             cs= (t*t +1.0d0) / (t + t)
@@ -564,20 +558,12 @@
             xm12 = ss/rtkstr
             xm21 = rtkstr*ss
             xm22 = cs
-            !xm11 = cosh(rtkstrzz)
-            !xm12 = sinh(rtkstrzz)/rtkstr
-            !xm21 = rtkstr*sinh(rtkstrzz)
-            !xm22 = cosh(rtkstrzz)
             cs = cos(rtkstrzz)
             ss = sin(rtkstrzz)
             xm33 = cs
             xm34 = ss/rtkstr
             xm43 = -ss*rtkstr
             xm44 = cs
-            !xm33 = cos(rtkstrzz)
-            !xm34 = sin(rtkstrzz)/rtkstr
-            !xm43 = -sin(rtkstrzz)*rtkstr
-            !xm44 = cos(rtkstrzz)
           else
             xm11 = 1.0d0
             xm12 = tau
@@ -588,10 +574,11 @@
             xm43 = 0.0
             xm44 = 1.0d0
           endif
-          tmp(1) = xm11*pts(1,i)+xm12*pts(2,i)/gambetz/Scxl
-          tmp(2) = gambetz*Scxl*xm21*pts(1,i)+xm22*pts(2,i)
-          tmp(3) = xm33*pts(3,i)+xm34*pts(4,i)/gambetz/Scxl
-          tmp(4) = gambetz*Scxl*xm43*pts(3,i)+xm44*pts(4,i)
+          tmp(1) = xm11*pts(1,i)+xm12*pts(2,i)/gambet/Scxl
+          tmp(2) = gambet*Scxl*xm21*pts(1,i)+xm22*pts(2,i)
+          tmp(3) = xm33*pts(3,i)+xm34*pts(4,i)/gambet/Scxl
+          tmp(4) = gambet*Scxl*xm43*pts(3,i)+xm44*pts(4,i)
+          !drift behavior 
           tmp(5) = pts(5,i) + (1.0/betaz-1.0/beta0)*tau/Scxl 
           tmp(6) = pts(6,i)
           pts(1,i) = tmp(1)
@@ -604,6 +591,97 @@
         refpt(5) = refpt(5) + tau/beta0/Scxl
 !        tt = tt + tau
 
-        end subroutine transfmapK_Quadrupole
+        end subroutine transfmapK_Quadrupole_nonlinearmap
+        
+        subroutine transfmapK_Quadrupole_linearmap(tt,tau,this,refpt,Nplc,pts,qmass) 
+        implicit none
+        include 'mpif.h'
+        integer, intent(in) :: Nplc
+        double precision, intent(inout) :: tt
+        double precision, intent(in) :: tau,qmass
+        double precision, dimension(6), intent(inout) :: refpt
+        double precision, dimension(6) :: tmp
+        type (Quadrupole), intent(in) :: this
+        double precision, pointer, dimension(:,:) :: pts
+        real*8 :: xm11,xm12,xm21,xm22,xm33,xm34,xm43,xm44,gam,gambetz,&
+                  betaz,beta0,rtkstrzz,rtkstr,kstr,gambet0
+        integer  :: i
+        real*8 :: t,cs,ss
+        real*8 :: x0,px0,y0,py0,z0,delta0
+        real*8 :: x1,px1,y1,py1,z1,delta1
+          !linear map, same K1 for all particles
+          kstr = this%Param(2)  
+          rtkstr = sqrt(abs(kstr))
+          rtkstrzz = rtkstr*tau
+          if(kstr.gt.0.0) then
+            cs = cos(rtkstrzz)
+            ss = sin(rtkstrzz)
+            xm11 = cs
+            xm12 = ss/rtkstr
+            xm21 = -rtkstr*ss
+            xm22 = cs
+            t = exp(rtkstrzz)
+            cs= (t*t +1.0d0) / (t + t)
+            ss= (t*t -1.0d0) / (t + t)
+            xm33 = cs
+            xm34 = ss/rtkstr
+            xm43 = ss*rtkstr
+            xm44 = cs
+          else if(kstr.lt.0.0) then
+            t = exp(rtkstrzz)
+            cs= (t*t +1.0d0) / (t + t)
+            ss= (t*t -1.0d0) / (t + t)
+            xm11 = cs
+            xm12 = ss/rtkstr
+            xm21 = rtkstr*ss
+            xm22 = cs
+            cs = cos(rtkstrzz)
+            ss = sin(rtkstrzz)
+            xm33 = cs
+            xm34 = ss/rtkstr
+            xm43 = -ss*rtkstr
+            xm44 = cs
+          else
+            xm11 = 1.0d0
+            xm12 = tau
+            xm21 = 0.0d0
+            xm22 = 1.0d0
+            xm33 = 1.0d0
+            xm34 = tau
+            xm43 = 0.0
+            xm44 = 1.0d0
+          endif
+
+        gambet0 = sqrt(refpt(6)**2-1.0d0)
+        beta0 = sqrt(1.0d0-1.0d0/(refpt(6)**2))
+        do i = 1, Nplc
+          gam = -refpt(6) - pts(6,i)
+          gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
+          betaz = gambetz/gam
+          !transform to (x,px,y,py,z,delta) phase space 
+          x0     = pts(1,i)*Scxl
+          px0    = pts(2,i)/gambet0
+          y0     = pts(3,i)*Scxl
+          py0    = pts(4,i)/gambet0
+          z0     = -pts(5,i)*Scxl
+          delta0 = -pts(6,i)/gambet0
+          !apply transfer map
+          x1  = xm11*x0 + xm12*px0
+          px1 = xm21*x0 + xm22*px0
+          y1  = xm33*y0 + xm34*py0
+          py1 = xm43*y0 + xm44*py0
+          z1  = z0 + tau/(gambet0**2)*delta0
+          delta1 = delta0
+          !transform back to ImpactZ's phase space
+          pts(1,i) = x1/Scxl
+          pts(2,i) = px1*gambet0
+          pts(3,i) = y1/Scxl
+          pts(4,i) = py1*gambet0
+          pts(5,i) = -z1/Scxl
+          pts(6,i) = -delta1*gambet0
+        enddo
+        refpt(5) = refpt(5) + tau/beta0/Scxl
+!        tt = tt + tau
+        end subroutine transfmapK_Quadrupole_linearmap
 
       end module Quadrupoleclass

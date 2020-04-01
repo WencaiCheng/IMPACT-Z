@@ -2174,7 +2174,7 @@
 !            ! filter process
 !            if (tmp2<FilterLine) then
 !              tmpNp=tmpNp+1
-!              xz = sigz*sqrt(3.0d0)(2.0d0*tmp1-1.0d0)
+!              xz = sigz*sqrt(3.0d0)*(2.0d0*tmp1-1.0d0)
 !              this%Pts1(5,tmpNp) = xz
 !            endif
 !            i=i+1

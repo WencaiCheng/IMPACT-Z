@@ -298,8 +298,17 @@
           this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)
         else if(bitype.eq.1) then
           call getparam_BeamLineElem(beamln,3,x3)
-          if(x3.lt.-1.0d-6) then
-            call transfmapK_Quadrupole(z,tau,beamln%pquad,this%refptcl,this%Nptlocal,&
+          if(x3<0.0d0 .and. x3>-10.0d0 ) then
+            !gradient file ID<0, gradient is
+            !K1=1/(B\rho_0)*\frac{\partial By}{\partial x},
+            !using transfer map to propgate particles
+            !
+            !ID(-10,0), linear map
+            !ID<-10, nonlinear map
+            call transfmapK_Quadrupole_linearmap(z,tau,beamln%pquad,this%refptcl,this%Nptlocal,&
+                                    this%Pts1,qmass)
+          else if(x3<-10.0d0) then
+            call transfmapK_Quadrupole_nonlinearmap(z,tau,beamln%pquad,this%refptcl,this%Nptlocal,&
                                     this%Pts1,qmass)
           else
             call maplinear_BeamLineElem(beamln,z,tau,xm,this%refptcl,this%Charge,&
