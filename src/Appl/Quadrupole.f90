@@ -523,13 +523,15 @@
         integer  :: i
         real*8 :: t,cs,ss
         real*8 :: gambet
+        
+        print*,"nonlinear map quadrupole."
 
         gambet0 = sqrt(refpt(6)**2-1.0d0)
         beta0 = sqrt(1.0d0-1.0d0/(refpt(6)**2))
         do i = 1, Nplc
           gam = -refpt(6) - pts(6,i)
-          gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
-          betaz = gambetz/gam
+          !gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
+          !betaz = gambetz/gam
           !individual particle momentum
           gambet = sqrt(gam**2-1.0d0) 
           !Param(2) is the K defined in MAD, i.e. G/Brho
@@ -609,6 +611,9 @@
         real*8 :: t,cs,ss
         real*8 :: x0,px0,y0,py0,z0,delta0
         real*8 :: x1,px1,y1,py1,z1,delta1
+
+        print*,"linear map quadrupole."
+
           !linear map, same K1 for all particles
           kstr = this%Param(2)  
           rtkstr = sqrt(abs(kstr))
@@ -655,9 +660,9 @@
         gambet0 = sqrt(refpt(6)**2-1.0d0)
         beta0 = sqrt(1.0d0-1.0d0/(refpt(6)**2))
         do i = 1, Nplc
-          gam = -refpt(6) - pts(6,i)
-          gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
-          betaz = gambetz/gam
+          !gam = -refpt(6) - pts(6,i)
+          !gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
+          !betaz = gambetz/gam
           !transform to (x,px,y,py,z,delta) phase space 
           x0     = pts(1,i)*Scxl
           px0    = pts(2,i)/gambet0
