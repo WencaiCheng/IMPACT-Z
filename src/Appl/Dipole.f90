@@ -743,7 +743,7 @@
           y0     =  ptarry1(3,i)*Scxl
           yp0    =  ptarry1(4,i)/gambet
           z0     = -ptarry1(5,i)*beta0*Scxl
-          eta   = (gami-gam0)/gambet
+          eta    = -ptarry1(6,i)/beta0/gambet-(ptarry1(7,i)-qm0)/qm0
           !applying transfer map up to 2nd order
           ptarry2(1) = R11*x0 +R12*xp0 +R16*eta &
               +T111*x0**2 +T112*x0*xp0 +T116*x0*eta &
@@ -754,15 +754,14 @@
           ptarry2(4) = yp0
           ptarry2(5) = -sin(theta)*x0 -rho*(1.0d0-cos(theta))*xp0 &
                        +z0 +rho*(sin(theta)-beta0**2*theta)*eta
-          !ptarry2(6) = eta
+          ptarry2(6) = eta
 
           ptarry1(1,i) = ptarry2(1)/Scxl
           ptarry1(2,i) = ptarry2(2)*gambet
           ptarry1(3,i) = ptarry2(3)/Scxl
           ptarry1(4,i) = ptarry2(4)*gambet
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
-          !ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
-          ptarry1(6,i) = gam0-gami
+          ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
 
         end subroutine Sector_Dipole
