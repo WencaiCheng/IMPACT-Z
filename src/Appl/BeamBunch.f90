@@ -261,12 +261,8 @@
         double precision :: t0
         integer :: i,j,k
         real*8 :: beta0,gam0,gambet0,tmppx,tmppy,tmppt,tmph,x3,qmass
-!for ideal RF cavity model
         integer :: idealrf
-        real*8 :: vtmp,vtmpgrad,phi0lc,phi,gam,gambet,gambeto,&
-                  gambetz,invfocus,dgam,fact,harm,dgambet,cosphi
         real*8, dimension(12) :: drange
-        real*8 :: gami_1,gambeti_1,gambetzi_1,dgami,gami_2,gambeti_2
 
         call starttime_Timer(t0)
 
@@ -339,114 +335,21 @@
         else
           !ideal RF cavity model with entrance and exit focusing
           call getparam_BeamLineElem(beamln,drange)
-          if(drange(5).lt.0.0) then
-            idealrf = 1
+
+          !Biaobin, add options to control cavity behavior:
+          !ID=-0.5,   linear map
+          !ID=-1.0,   nonlinear map
+          !otherwise, call maplinear_BeamLineElem()       
+          if( drange(5).eq.-0.5 ) then         
+            call idealrf_linearmap(this,drange,tau,nseg,nst,ihlf)
+          
+          else if( drange(5).eq.-1.0 ) then
+            call idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf)
+          
           else
-            idealrf = 0
-          endif
-          !print*,"idealrf: ",idealrf
-          if(idealrf.eq.1) then
-            !max. accelerating gradient (V/m)
-            vtmp = drange(2)/this%Mass
-            harm = drange(3)/Scfreq
-            !synchronous phase
-            phi0lc = drange(4)*asin(1.0d0)/90
-            vtmpgrad = vtmp*cos(phi0lc)*Scxl
-            !print*,"vtmp: ",vtmp,harm,phi0lc,Scxl,nst,tau,nseg
-
-            !apply entrance focusing kick
-            if(nst.eq.1 .and. mod(ihlf,2).eq.0) then
-              gam0 = -this%refptcl(6)
-              gambet = sqrt(gam0**2-1.0d0)
-              invfocus = -vtmpgrad/gam0/2
-              do i = 1, this%Nptlocal
-                gam = gam0 - this%Pts1(6,i)
-                !gam = gam0
-                gambetz = sqrt(gam**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
-                !gambetz = gambet
-                phi = this%Pts1(5,i)*harm+phi0lc
-                cosphi = cos(phi)
-                vtmpgrad = vtmp*cosphi*Scxl
-                this%Pts1(2,i) = this%Pts1(2,i)  &
-                             -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
-                             !    gambetz*invfocus*this%Pts1(1,i)
-                             !-0.5d0*vtmpgrad*gambetz/gam0*this%Pts1(1,i)
-                this%Pts1(4,i) = this%Pts1(4,i)  &
-                             -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
-                             !    gambetz*invfocus*this%Pts1(3,i)
-                             !-0.5d0*vtmpgrad*gambetz/gam0*this%Pts1(3,i)
-              enddo
-            endif
-            !drift under constant acceleration
-!            gam0 = -this%refptcl(6)
-!
-!            dgam = tau*vtmp*cos(phi0lc)
-!            gambet = sqrt(gam0**2-1.0d0)
-!            gam = gam0 + dgam
-!            gambeto = sqrt(gam**2-1.0d0)
-!            dgambet = gambeto-gambet
-!
-!            fact = (tau/dgam/Scxl)*dlog(gambeto/gambet)
-!            do i = 1, this%Nptlocal
-!              this%Pts1(1,i) = this%Pts1(1,i) + fact*this%Pts1(2,i)
-!              this%Pts1(3,i) = this%Pts1(3,i) + fact*this%Pts1(4,i)
-!              this%Pts1(5,i) = this%Pts1(5,i) + (tau/Scxl)/gambet**3*&
-!                                                this%Pts1(6,i)
-!            enddo
-
-            !drift under constant acceleration, using individual
-            !particle momentum to propagate particles
-            gam0 = -this%refptcl(6)
-            gambet = sqrt(gam0**2-1.0d0)
-            do i = 1, this%Nptlocal
-              !entrance momentum of individual particle
-              gami_1 = gam0 - this%Pts1(6,i)
-              gambeti_1 = sqrt(gami_1**2-1.0d0)
-              gambetzi_1 = sqrt(gami_1**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
-              !exit momentum of individual particle
-              phi = this%Pts1(5,i)*harm+phi0lc
-              dgami = tau*vtmp*cos(phi)
-              gami_2 = gami_1+dgami
-              gambeti_2 = sqrt(gami_2**2-1.0d0)
-
-              fact = gambeti_1/dgami*dlog(gambeti_2/gambeti_1)*tau/Scxl
-
-              this%Pts1(1,i) = this%Pts1(1,i) + fact*&
-                               this%Pts1(2,i)/gambetzi_1
-              this%Pts1(3,i) = this%Pts1(3,i) + fact*&
-                               this%Pts1(4,i)/gambetzi_1
-              this%Pts1(5,i) = this%Pts1(5,i) + (tau/Scxl)/gambet**3*&
-                                                this%Pts1(6,i)
-            enddo
-
-            !update the reference particle energy
-            this%refptcl(6) = this%refptcl(6) - tau*vtmp*cos(phi0lc)
-            !apply exit focusing kick
-            if(nst.eq.nseg .and. mod(ihlf,2).eq.1) then
-              gam0 = -this%refptcl(6)
-              invfocus = vtmpgrad/gam0/2
-              do i = 1, this%Nptlocal
-                gam = gam0 - this%Pts1(6,i)
-                !gam = gam0
-                gambetz = sqrt(gam**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
-                !gambetz = gambet
-                phi = this%Pts1(5,i)*harm+phi0lc
-                cosphi = cos(phi)
-                vtmpgrad = vtmp*cosphi*Scxl
-                this%Pts1(2,i) = this%Pts1(2,i) + &
-                             0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
-                this%Pts1(4,i) = this%Pts1(4,i) + &
-                             0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
-                !apply the final longitudinal energy deviaton kicks
-                !this does not work correctly at low energy
-                phi = this%Pts1(5,i)*harm+phi0lc
-                this%Pts1(6,i) = this%Pts1(6,i)+2*nseg*tau*vtmp*(cos(phi0lc)-cos(phi))
-              enddo
-            endif
-          else
+            ! original 103 element?       
             call maplinear_BeamLineElem(beamln,z,tau,xm,this%refptcl,this%Charge,&
                        this%Mass)
-
             do i = 1, this%Nptlocal
               do j = 1, 6
                 temp(j) = 0.0
@@ -459,6 +362,7 @@
               enddo
             enddo
           endif
+
         endif
 
         z=z+tau
@@ -6031,4 +5935,219 @@
 
         end subroutine scatter2errwake_BeamBunch
 
+! ================================================================================
+        subroutine idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf)
+        implicit none
+        include 'mpif.h'
+        type (BeamBunch), intent(inout) :: this
+        real*8, dimension(12), intent(in) :: drange
+        double precision, intent (in) :: tau
+        integer, intent(in) :: nseg,nst
+        integer, intent(inout) :: ihlf
+        integer :: i
+        real*8 :: vtmp,vtmpgrad,phi0lc,phi,&
+                  fact,harm,cosphi
+        real*8 :: gam0,gam,gambet,gambetz
+        real*8 :: gami_1,gambeti_1,gambetzi_1,dgami
+        real*8 :: gami_2,gambeti_2
+
+        print*,"nonlinear map for ideal cavity."
+
+        !max. accelerating gradient (V/m)
+        vtmp = drange(2)/this%Mass
+        harm = drange(3)/Scfreq
+        !synchronous phase
+        phi0lc = drange(4)*asin(1.0d0)/90
+
+        !apply entrance focusing kick
+        if(nst.eq.1 .and. mod(ihlf,2).eq.0) then
+          gam0 = -this%refptcl(6)
+          gambet = sqrt(gam0**2-1.0d0)
+          do i = 1, this%Nptlocal
+            gam = gam0 - this%Pts1(6,i)
+            gambetz = sqrt(gam**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
+            phi = this%Pts1(5,i)*harm+phi0lc
+            cosphi = cos(phi)
+            vtmpgrad = vtmp*cosphi*Scxl
+            this%Pts1(2,i) = this%Pts1(2,i)  &
+                         -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
+            this%Pts1(4,i) = this%Pts1(4,i)  &
+                         -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
+          enddo
+        endif
+        !drift under constant acceleration, using individual
+        !particle momentum to propagate particles
+        gam0 = -this%refptcl(6)
+        gambet = sqrt(gam0**2-1.0d0)
+        do i = 1, this%Nptlocal
+          !entrance momentum of individual particle
+          gami_1 = gam0 - this%Pts1(6,i)
+          gambeti_1 = sqrt(gami_1**2-1.0d0)
+          gambetzi_1 = sqrt(gami_1**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
+          !exit momentum of individual particle
+          phi = this%Pts1(5,i)*harm+phi0lc
+          dgami = tau*vtmp*cos(phi)
+          gami_2 = gami_1+dgami
+          gambeti_2 = sqrt(gami_2**2-1.0d0)
+
+          fact = gambeti_1/dgami*dlog(gambeti_2/gambeti_1)*tau/Scxl
+
+          this%Pts1(1,i) = this%Pts1(1,i) + fact*&
+                           this%Pts1(2,i)/gambetzi_1
+          this%Pts1(3,i) = this%Pts1(3,i) + fact*&
+                           this%Pts1(4,i)/gambetzi_1
+          !longitudinal direction same as linear map for drift                 
+          this%Pts1(5,i) = this%Pts1(5,i) + (tau/Scxl)/gambet**3*&
+                                            this%Pts1(6,i)
+        enddo
+
+        !update the reference particle energy
+        this%refptcl(6) = this%refptcl(6) - tau*vtmp*cos(phi0lc)
+ 
+        !apply exit focusing kick
+        if(nst.eq.nseg .and. mod(ihlf,2).eq.1) then
+          gam0 = -this%refptcl(6)
+          do i = 1, this%Nptlocal
+            gam = gam0 - this%Pts1(6,i)
+            gambetz = sqrt(gam**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
+            phi = this%Pts1(5,i)*harm+phi0lc
+            cosphi = cos(phi)
+            vtmpgrad = vtmp*cosphi*Scxl
+            this%Pts1(2,i) = this%Pts1(2,i) + &
+                         0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
+            this%Pts1(4,i) = this%Pts1(4,i) + &
+                         0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
+            !apply the final longitudinal energy deviaton kicks
+            !this does not work correctly at low energy
+            phi = this%Pts1(5,i)*harm+phi0lc
+            this%Pts1(6,i) = this%Pts1(6,i)+2*nseg*tau*vtmp*(cos(phi0lc)-cos(phi))
+          enddo
+        endif
+        
+        end subroutine idealrf_nonlinearmap
+
+        subroutine idealrf_linearmap(this,drange,tau,nseg,nst,ihlf)
+        implicit none
+        include 'mpif.h'
+        type (BeamBunch), intent(inout) :: this
+        real*8, dimension(12), intent(in) :: drange
+        double precision, intent (in) :: tau
+        integer, intent(in) :: nseg,nst
+        integer, intent(inout) :: ihlf
+        integer :: i
+        real*8 :: vtmp,vtmpgrad,phi0lc
+        real*8 :: gam0,bet0,gambet0,dgam,gam1,bet1,gambet1,fRF        
+        real*8 :: x0,xp0,y0,yp0,z0,delta0
+        real*8 :: x1,xp1,y1,yp1,z1,delta1
+        real*8 :: gam
+        real*8 :: m11f,m12f,m21f,m22f,m33f,m34f,m43f,m44f,m55f,m56f,m65f,m66f
+        real*8 :: m11m,m12m,m21m,m22m,m33m,m34m,m43m,m44m,m55m,m56m,m65m,m66m
+
+        print*,"linear map for ideal cavity."
+
+        !max. accelerating gradient (V/m)
+        vtmp = drange(2)/this%Mass        
+        !synchronous phase
+        phi0lc = drange(4)*asin(1.0d0)/90 
+        vtmpgrad = vtmp*cos(phi0lc)
+        fRF = drange(3)
+        ! entrance momentum
+        gam0    = -this%refptcl(6)
+        gambet0 = sqrt(gam0**2-1.0d0)
+        bet0   = gambet0/gam0
+        ! exit momentum
+        dgam = tau*vtmp*cos(phi0lc)
+        gam1 = gam0+dgam
+        gambet1 = sqrt(gam1**2-1.0d0)
+        bet1 = gambet1/gam1
+        !apply entrance focusing kick
+        if(nst.eq.1 .and. mod(ihlf,2).eq.0) then
+            m21f = -vtmpgrad/(2.0d0*gam0)
+            m43f = -vtmpgrad/(2.0d0*gam0)
+            !********************************
+            !if comment end focus
+            !m21f = 0.0d0
+            !m43f = 0.0d0
+            !********************************
+          do i = 1, this%Nptlocal
+            gam = gam0 - this%Pts1(6,i)
+            !initial phase, impactz => geo phase
+            x0  = this%Pts1(1,i)*Scxl
+            xp0 = this%Pts1(2,i)/gambet0
+            y0  = this%Pts1(3,i)*Scxl
+            yp0 = this%Pts1(4,i)/gambet0
+            !apply transfer map
+            x1  = x0
+            xp1 = m21f*x0 + xp0
+            y1  = y0
+            yp1 = m43f*y0 + yp0
+            !transform back to ImpactZ's phase
+            this%Pts1(1,i) = x1/Scxl
+            this%Pts1(2,i) = xp1*gambet0 
+            this%Pts1(3,i) = y1/Scxl
+            this%Pts1(4,i) = yp1*gambet0 
+          enddo
+        endif
+        !drift under constant acceleration
+        m12m = gambet0/vtmpgrad*dlog(gambet1/gambet0)
+        m22m = gambet0/gambet1
+        m34m = gambet0/vtmpgrad*dlog(gambet1/gambet0)
+        m44m = gambet0/gambet1
+        !energy chirp term, linear chirp
+        m65m = dgam*tan(phi0lc)*2*(4.0d0*atan(1.0_8))*fRF/Clight/(gambet1*bet1)
+        m66m = gambet0/gambet1
+        do i = 1, this%Nptlocal
+          x0  = this%Pts1(1,i)*Scxl
+          xp0 = this%Pts1(2,i)/gambet0
+          y0  = this%Pts1(3,i)*Scxl
+          yp0 = this%Pts1(4,i)/gambet0
+          z0  = -this%Pts1(5,i)*bet0*Scxl
+          delta0 = -this%Pts1(6,i)/gambet0/bet0
+          !apply transfer map
+          x1  = x0 + m12m*xp0
+          xp1 = m22m*xp0
+          y1  = y0 + m34m*yp0
+          yp1 = m44m*yp0     
+          !longitudinal direction same as linear map for drift 
+          z1  = z0 + tau/(gambet0**2)*delta0
+          delta1 = m65m*z0 + m66m*delta0
+          !transform back to ImpactZ phase space
+          this%Pts1(1,i) = x1/Scxl
+          this%Pts1(2,i) = xp1*gambet1
+          this%Pts1(3,i) = y1/Scxl
+          this%Pts1(4,i) = yp1*gambet1
+          this%Pts1(5,i) = -z1/Scxl/bet1
+          this%Pts1(6,i) = -delta1*gambet1*bet1
+        enddo
+        !update the reference particle energy
+        this%refptcl(6) = this%refptcl(6) - tau*vtmp*cos(phi0lc)
+
+        !apply exit focusing kick
+        if(nst.eq.nseg .and. mod(ihlf,2).eq.1) then
+            m21f = vtmpgrad/(2.0d0*gam1)
+            m43f = vtmpgrad/(2.0d0*gam1)
+            !******************************
+            !comment end focus
+            !m21f = 0.0d0
+            !m43f = 0.0d0
+            !******************************
+          do i = 1, this%Nptlocal
+            x0  = this%Pts1(1,i)*Scxl
+            xp0 = this%Pts1(2,i)/gambet1
+            y0  = this%Pts1(3,i)*Scxl
+            yp0 = this%Pts1(4,i)/gambet1
+            !apply transfer map
+            x1  = x0
+            xp1 = m21f*x0 + xp0
+            y1  = y0
+            yp1 = m43f*y0 + yp0
+            !transform back to ImpactZ's phase space
+            this%Pts1(1,i) = x1/Scxl
+            this%Pts1(2,i) = xp1*gambet1
+            this%Pts1(3,i) = y1/Scxl
+            this%Pts1(4,i) = yp1*gambet1
+          enddo
+        endif
+        end subroutine idealrf_linearmap
+        
       end module BeamBunchclass
