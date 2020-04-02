@@ -113,7 +113,7 @@
         double precision :: time
         double precision :: t0
         double precision :: z,xrad,yrad,phsini
-        double precision, dimension(2) :: tmpdr 
+        double precision, dimension(3) :: tmpdr 
         double precision, dimension(5) :: tmpcf 
         double precision, dimension(10) :: tmpbpm 
         double precision, dimension(9) :: tmpquad
@@ -245,6 +245,11 @@
                  bitype(i),blength(i))
             tmpdr(1) = 0.0
             tmpdr(2) = val1(i)
+            tmpdr(3) = 0.0     !in case ungiven, set default values,
+                               !default is real map 
+            tmpdr(3) = val2(i) !additional parameter after drift pip
+                               !radius, ID<0, linear map; otherwise real
+                               !map
             call setparam_DriftTube(beamln1(idr),tmpdr)
             Blnelem(i) = assign_BeamLineElem(beamln1(idr))
           else if(bitype(i).eq.1) then

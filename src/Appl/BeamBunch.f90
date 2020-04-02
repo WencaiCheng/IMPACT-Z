@@ -268,7 +268,6 @@
         real*8, dimension(12) :: drange
         real*8 :: gami_1,gambeti_1,gambetzi_1,dgami,gami_2,gambeti_2
 
-
         call starttime_Timer(t0)
 
         qmass = this%Charge/this%Mass
@@ -277,25 +276,36 @@
           gam0 = -this%refptcl(6)
           gambet0 = sqrt(gam0**2-1.0)
           beta0 = gambet0/gam0
-          do i = 1, this%Nptlocal
-            !tmppx = this%Pts1(2,i)/gambet0
-            !tmppy = this%Pts1(4,i)/gambet0
-            !tmppt = this%Pts1(6,i)/gambet0
-            !tmph = sqrt((tmppt-1.d0/beta0)**2-(1./gambet0)**2-tmppx**2-tmppy**2)
-            !this%Pts1(1,i) = this%Pts1(1,i)+tmppx*tau/tmph/Scxl 
-            !this%Pts1(3,i) = this%Pts1(3,i)+tmppy*tau/tmph/Scxl 
-            !this%Pts1(5,i) = this%Pts1(5,i)+(1./beta0+(tmppt-1./beta0)/tmph)*&
-            !                 tau/Scxl
-            tmppx = this%Pts1(2,i)
-            tmppy = this%Pts1(4,i)
-            tmppt = this%Pts1(6,i)
-            tmph = sqrt((tmppt-gam0)**2-1-tmppx**2-tmppy**2)
-            this%Pts1(1,i) = this%Pts1(1,i)+tmppx*tau/tmph/Scxl 
-            this%Pts1(3,i) = this%Pts1(3,i)+tmppy*tau/tmph/Scxl 
-            this%Pts1(5,i) = this%Pts1(5,i)-(1./beta0+(tmppt-gam0)/tmph)*&
-                             tau/Scxl
-          enddo
-          this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)
+          !add a parameter following pip radius:
+          !ID<0, linear map
+          !otherwise, or left unsetted blank, real map
+          !This keeps compatibility with previous version. 
+          call getparam_BeamLineElem(beamln,3,x3)
+          if (x3<0) then   
+                print*,"linear map,x3= ",x3            
+                do i = 1, this%Nptlocal
+                  tmppx = this%Pts1(2,i)
+                  tmppy = this%Pts1(4,i)
+                  tmppt = this%Pts1(6,i)
+                  this%Pts1(1,i) = this%Pts1(1,i)+tmppx/gambet0*tau/Scxl 
+                  this%Pts1(3,i) = this%Pts1(3,i)+tmppy/gambet0*tau/Scxl
+                  this%Pts1(5,i) = this%Pts1(5,i)+tmppt/gambet0*tau/Scxl/gambet0**2                                               
+                enddo
+                this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)
+          else
+                print*,"real map,x3= ",x3
+                do i = 1, this%Nptlocal
+                  tmppx = this%Pts1(2,i)
+                  tmppy = this%Pts1(4,i)
+                  tmppt = this%Pts1(6,i)
+                  tmph = sqrt((tmppt-gam0)**2-1-tmppx**2-tmppy**2) !gambetz**2
+                  this%Pts1(1,i) = this%Pts1(1,i)+tmppx/tmph*tau/Scxl
+                  this%Pts1(3,i) = this%Pts1(3,i)+tmppy/tmph*tau/Scxl
+                  this%Pts1(5,i) = this%Pts1(5,i)-(1./beta0+(tmppt-gam0)/tmph)*&
+                                   tau/Scxl
+                enddo
+                this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)       
+          endif   
         else if(bitype.eq.1) then
           call getparam_BeamLineElem(beamln,3,x3)
           if(x3<0.0d0 .and. x3>-10.0d0 ) then
