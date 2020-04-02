@@ -695,7 +695,7 @@
         include 'mpif.h'
         integer, intent(in) :: Nplocal
         double precision, pointer, dimension(:,:) :: ptarry1
-        double precision :: h0,len,beta0,k1,qm0
+        double precision :: h0,len,beta0,k1,qm0,qmrel
         double precision, dimension(6) :: ptarry2
         integer :: i
         real*8 :: gami,gam0,gam2,gambet
@@ -704,7 +704,7 @@
         real*8 :: T216,T222,T266,T244,T314,T324,T346
         real*8 :: theta, rho
         real*8 :: x0,xp0,y0,yp0,z0,eta
-
+        print*,"non-linear map for Dipole."
         !right now, sector dipole only has dipole filed, no quad filed
         !K1=0, for K1.ne.0, map too complicated, added in future
         rho = 1.0d0/h0;
@@ -873,14 +873,14 @@
         include 'mpif.h'
         integer, intent(in) :: Nplocal
         double precision, pointer, dimension(:,:) :: ptarry1
-        double precision :: h0,len,beta0,k1,qm0
+        double precision :: h0,len,beta0,k1,qm0,qmrel
         double precision, dimension(6) :: ptarry2
         integer :: i
         real*8 :: gami,gam0,gam2,gambet
         real*8 :: R11,R12,R16,R21,R22,R26,R51,R52,R56
         real*8 :: theta, rho
         real*8 :: x0,xp0,y0,yp0,z0,eta
-
+        print*,"linear map for Dipole."
         !right now, sector dipole only has dipole filed, no quad filed
         !K1=0, for K1.ne.0, map too complicated, added in future
         rho = 1.0d0/h0;
@@ -909,7 +909,7 @@
           yp0    =  ptarry1(4,i)/gambet
           z0     = -ptarry1(5,i)*beta0*Scxl
           eta    = -ptarry1(6,i)/beta0/gambet-(ptarry1(7,i)-qm0)/qm0
-          !applying transfer map up to 2nd order
+          !applying first order transfer map
           ptarry2(1) = R11*x0 +R12*xp0 +R16*eta 
           ptarry2(2) = R21*x0 +R22*xp0 +R26*eta 
           ptarry2(3) = y0 +len*yp0 
