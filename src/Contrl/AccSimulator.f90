@@ -841,11 +841,18 @@
             endif
             call getparam_BeamLineElem(Blnelem(i),4,tmp1)
             !print*,"-41flagbc: ",tmpwk,rfile,tmp1
+            !biaobin, wakefiled option:
+              !ID < 0,     wake OFF
+              !ID = (0,10),  Lwake
+              !ID = (10,20), Twake
+              !ID > 20,      Lwake+Twake
             if(tmp1.gt.0.0d0) then !turn on the read-in wakefield.
               flagwake = 1
               flagwakeread = 1
-              if(tmp1<10.0) then !no transverse wakefield
+              if(tmp1<10.0 .and. tmp1>0.0) then !no transverse wakefield
                 flagbtw = 2
+              else if(tmp1>10.0 .and. tmp1<20.0) then !no longitudinal wakefiled
+                flagbtw = 4
               endif
               scwk = tmpwk
             else !turn off
