@@ -278,7 +278,7 @@
           !This keeps compatibility with previous version. 
           call getparam_BeamLineElem(beamln,3,x3)
           if (x3<0) then   
-                print*,"linear map,x3= ",x3            
+                !print*,"linear map,x3= ",x3            
                 do i = 1, this%Nptlocal
                   tmppx = this%Pts1(2,i)
                   tmppy = this%Pts1(4,i)
@@ -289,7 +289,7 @@
                 enddo
                 this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)
           else
-                print*,"real map,x3= ",x3
+                !print*,"real map,x3= ",x3
                 do i = 1, this%Nptlocal
                   tmppx = this%Pts1(2,i)
                   tmppy = this%Pts1(4,i)
@@ -5951,7 +5951,7 @@
         real*8 :: gami_1,gambeti_1,gambetzi_1,dgami
         real*8 :: gami_2,gambeti_2
 
-        print*,"nonlinear map for ideal cavity."
+        !print*,"nonlinear map for ideal cavity."
 
         !max. accelerating gradient (V/m)
         vtmp = drange(2)/this%Mass
@@ -6043,7 +6043,7 @@
         real*8 :: m11f,m12f,m21f,m22f,m33f,m34f,m43f,m44f,m55f,m56f,m65f,m66f
         real*8 :: m11m,m12m,m21m,m22m,m33m,m34m,m43m,m44m,m55m,m56m,m65m,m66m
 
-        print*,"linear map for ideal cavity."
+        !print*,"linear map for ideal cavity."
 
         !max. accelerating gradient (V/m)
         vtmp = drange(2)/this%Mass        

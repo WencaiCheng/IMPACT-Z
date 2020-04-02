@@ -524,7 +524,7 @@
         real*8 :: t,cs,ss
         real*8 :: gambet
         
-        print*,"nonlinear map quadrupole."
+        !print*,"nonlinear map quadrupole."
 
         gambet0 = sqrt(refpt(6)**2-1.0d0)
         beta0 = sqrt(1.0d0-1.0d0/(refpt(6)**2))
@@ -612,7 +612,7 @@
         real*8 :: x0,px0,y0,py0,z0,delta0
         real*8 :: x1,px1,y1,py1,z1,delta1
 
-        print*,"linear map quadrupole."
+        !print*,"linear map quadrupole."
 
           !linear map, same K1 for all particles
           kstr = this%Param(2)  

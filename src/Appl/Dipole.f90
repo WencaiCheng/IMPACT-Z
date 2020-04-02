@@ -704,7 +704,7 @@
         real*8 :: T216,T222,T266,T244,T314,T324,T346
         real*8 :: theta, rho
         real*8 :: x0,xp0,y0,yp0,z0,eta
-        print*,"non-linear map for Dipole."
+        !print*,"non-linear map for Dipole."
         !right now, sector dipole only has dipole filed, no quad filed
         !K1=0, for K1.ne.0, map too complicated, added in future
         rho = 1.0d0/h0;
@@ -880,7 +880,7 @@
         real*8 :: R11,R12,R16,R21,R22,R26,R51,R52,R56
         real*8 :: theta, rho
         real*8 :: x0,xp0,y0,yp0,z0,eta
-        print*,"linear map for Dipole."
+        !print*,"linear map for Dipole."
         !right now, sector dipole only has dipole filed, no quad filed
         !K1=0, for K1.ne.0, map too complicated, added in future
         rho = 1.0d0/h0;
