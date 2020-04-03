@@ -1015,11 +1015,11 @@
                 !ID >200, nonlinear map + CSR
                 if((dparam(4).gt.50.and.dparam(4).lt.100).or.(dparam(4).gt.200)) then
                     flagcsr = 1
-                    print*,"CSR for Dipole is ON."
+                    !print*,"CSR for Dipole is ON."
                 !endif
                 else
                     flagcsr = 0
-                    print*,"CSR for Dipole is OFF."
+                    !print*,"CSR for Dipole is OFF."
                 endif
 
               endif
