@@ -530,8 +530,8 @@
         beta0 = sqrt(1.0d0-1.0d0/(refpt(6)**2))
         do i = 1, Nplc
           gam = -refpt(6) - pts(6,i)
-          !gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
-          !betaz = gambetz/gam
+          gambetz = sqrt(gam**2-1.0d0-pts(2,i)**2-pts(4,i)**2)
+          betaz = gambetz/gam
           !individual particle momentum
           gambet = sqrt(gam**2-1.0d0) 
           !Param(2) is the K defined in MAD, i.e. G/Brho
