@@ -1977,7 +1977,7 @@
         do i = 1, 3000
           call random_number(x11)
         enddo
-        print*,myid,x11
+        !print*,myid,x11
 
         avgpts = this%Npt/(npx*npy)
         nptsob = avgpts*npx*npy
@@ -2017,8 +2017,9 @@
             x3 = sqrt(xtmp(1))
             cs = cos(xtmp(2)*twopi)
             ss = sin(xtmp(2)*twopi)
-            this%Pts1(1,i) = xmu1 + sig1*x1*cs/rootx
-            this%Pts1(3,i) = xmu3 + sig3*x3*ss/rooty
+            !round cross uniform, rb=2*sig1
+            this%Pts1(1,i) = xmu1 + 2.0d0*sig1*x1*cs/rootx
+            this%Pts1(3,i) = xmu3 + 2.0d0*sig3*x3*ss/rooty
             if(xtmp(3).eq.0.0) xtmp(3) = epsilon
             this%Pts1(2,i) = xmu2 + sig2* &
                      (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
@@ -2151,8 +2152,9 @@
             x3 = sqrt(xtmp(1))
             cs = cos(xtmp(2)*twopi)
             ss = sin(xtmp(2)*twopi)
-            this%Pts1(1,i) = sig1*x1*cs
-            this%Pts1(3,i) = sig3*x3*ss
+            !round cross uniform, rb=2*sig1
+            this%Pts1(1,i) = 2.0d0*sig1*x1*cs
+            this%Pts1(3,i) = 2.0d0*sig3*x3*ss
 
             this%Pts1(2,i) = sig2*xtmp(3)
             this%Pts1(4,i) = sig4*xtmp(4)
