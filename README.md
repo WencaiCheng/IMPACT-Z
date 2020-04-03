@@ -25,7 +25,7 @@ add an addition parameter for ID flag.
 - ID<0, linear map, ID=-1
 - otherwise, real map, ID left ungiven use real map.
 
-<br/>usage:ID=1
+<br/>usage:ID=-1
 
 10 1 1 0 1.0 -1 /
 
