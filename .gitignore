@@ -4,3 +4,7 @@ src/.cproject
 src/.project
 src/ImpactZexe
 src/tags
+src/*.o
+src/**/*.o
+src/*.mod
+
