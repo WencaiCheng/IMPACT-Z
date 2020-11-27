@@ -2252,12 +2252,12 @@
         ihigh = (myid+1)*avgpts
         !print*,"myid= ",myid,"ilow=",ilow,"ihigh=",ihigh,"avgpts=",avgpts
 
-        !sig1 = sigx*xscale
-        !sig2 = sigpx*pxscale
-        !sig3 = sigy*yscale
-        !sig4 = sigpy*pyscale
-        !sig5 = sigz*zscale
-        !sig6 = sigpz*pzscale
+        sig1 = sigx*xscale
+        sig2 = sigpx*pxscale
+        sig3 = sigy*yscale
+        sig4 = sigpy*pyscale
+        sig5 = sigz*zscale
+        sig6 = sigpz*pzscale
 
         !(aphax,alphay,alphaz)=0 by default
         !rootx=sqrt(1.-muxpx*muxpx)
