@@ -20,15 +20,15 @@
 #**************************************************************************
 # Macros defining the Fortran, C/C++ compiler and linker.
 
-CC = gfortran
-LINK = gfortran
+CC = mpif90
+LINK = mpif90
 FFLAGS = -O3
 
 #**************************************************************************
 # List of .o files that EXENAME depends on.  Edit as appropriate for MP.
 
 OBJS = \
-	mpistub.o DataStruct/NumConst.o DataStruct/PhysConst.o DataStruct/Pgrid.o \
+	DataStruct/NumConst.o DataStruct/PhysConst.o DataStruct/Pgrid.o \
 	DataStruct/Data.o \
 	Func/Timer.o Func/Transpose.o Func/Fldmger.o Func/Ptclmger.o  Func/FFT.o Func/math.o \
         Appl/BPM.o Appl/CCL.o Appl/CCDTL.o Appl/DTL.o Appl/SC.o \
@@ -38,7 +38,7 @@ OBJS = \
 	Contrl/Input.o Contrl/Output.o Contrl/AccSimulator.o Contrl/main.o
 
 OBJS2 = \
-	mpistub.o NumConst.o PhysConst.o Pgrid.o Data.o \
+	NumConst.o PhysConst.o Pgrid.o Data.o \
         Timer.o Transpose.o Fldmger.o Ptclmger.o FFT.o math.o \
 	BPM.o CCL.o CCDTL.o DTL.o SC.o DriftTube.o Quadrupole.o ConstFoc.o \
 	SolRF.o Sol.o Dipole.o Multipole.o EMfld.o TWS.o BeamLineElem.o CompDom.o Field.o BeamBunch.o Distribution.o \
