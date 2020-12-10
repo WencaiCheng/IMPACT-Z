@@ -2024,17 +2024,23 @@
             this%Pts1(1,i) = xmu1 + 2.0d0*sig1*x1*cs/rootx
             this%Pts1(3,i) = xmu3 + 2.0d0*sig3*x3*ss/rooty
             if(xtmp(3).eq.0.0) xtmp(3) = epsilon
-            this%Pts1(2,i) = xmu2 + sig2* &
-                     (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
-            this%Pts1(4,i) = xmu4 + sig4* &
-                     (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
+            
+            this%Pts1(2,i) = 0  
+            this%Pts1(4,i) = 0  
+            this%Pts1(6,i) = 0  
+
+            !this%Pts1(2,i) = xmu2 + sig2* &
+            !         (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
+            !this%Pts1(4,i) = xmu4 + sig4* &
+            !         (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
+
             ! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
             xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
             this%Pts1(5,i) = xmu5 + xz
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
-            this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
-                             cos(twopi*xx) 
+            !this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
+            !                 cos(twopi*xx) 
         enddo
         
         this%Nptlocal = avgpts
