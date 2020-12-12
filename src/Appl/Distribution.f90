@@ -35,7 +35,7 @@
         !integer seedarray(1)
         integer, allocatable, dimension(:) :: seedarray
         real rancheck
-        real*8 :: gam,gambet,alpha,beta,eps
+        real*8 :: gam,gambet,bet0,alpha,beta,eps
 
         call getpost_Pgrid2d(grid,myid,myidy,myidx)
 !        seedarray(1)=(100001+myid)*(myid+7)
@@ -61,30 +61,49 @@
 !        write(6,*)'myid,rancheck=',seedarray,myid,rancheck
 
         distparam = distparam0
-
         gam = -this%refptcl(6)
         gambet = sqrt(gam**2-1.0d0)
-!X-Px
-        alpha = distparam0(1)     
-        beta = distparam0(2)
-        eps = distparam0(3)/gambet !unnormalized emittance m-rad
-        distparam(1) = sqrt(beta*eps/(1.d0+alpha**2))/Scxl
-        distparam(2) = sqrt(eps/beta)*gambet 
-        distparam(3) = alpha/sqrt(1.d0+alpha**2)
-!Y-Py
-        alpha = distparam0(8)     
-        beta = distparam0(9)
-        eps = distparam0(10)/gambet
-        distparam(8) = sqrt(beta*eps/(1.d0+alpha**2))/Scxl
-        distparam(9) = sqrt(eps/beta)*gambet 
-        distparam(10) = alpha/sqrt(1.d0+alpha**2)
-!T-Pt
-        alpha = distparam0(15)     
-        beta = distparam0(16) !degree/MeV
-        eps = distparam0(17) !degree-MeV
-        distparam(15) = sqrt(beta*eps/(1.d0+alpha**2))/Rad2deg
-        distparam(16) = sqrt(eps/beta)/(this%Mass/1.0d6)
-        distparam(17) = -alpha/sqrt(1.d0+alpha**2)
+        bet0 = gambet/gam
+!biaobin,2020-12-12
+!The following codes use twiss parameters as input
+!!X-Px
+!        alpha = distparam0(1)     
+!        beta = distparam0(2)
+!        eps = distparam0(3)/gambet !unnormalized emittance m-rad
+!        distparam(1) = sqrt(beta*eps/(1.d0+alpha**2))/Scxl
+!        distparam(2) = sqrt(eps/beta)*gambet 
+!        distparam(3) = alpha/sqrt(1.d0+alpha**2)
+!!Y-Py
+!        alpha = distparam0(8)     
+!        beta = distparam0(9)
+!        eps = distparam0(10)/gambet
+!        distparam(8) = sqrt(beta*eps/(1.d0+alpha**2))/Scxl
+!        distparam(9) = sqrt(eps/beta)*gambet 
+!        distparam(10) = alpha/sqrt(1.d0+alpha**2)
+!!T-Pt
+!        alpha = distparam0(15)     
+!        beta = distparam0(16) !degree/MeV
+!        eps = distparam0(17) !degree-MeV
+!        distparam(15) = sqrt(beta*eps/(1.d0+alpha**2))/Rad2deg
+!        distparam(16) = sqrt(eps/beta)/(this%Mass/1.0d6)
+!        distparam(17) = -alpha/sqrt(1.d0+alpha**2)
+
+!biaobin,2020-12-12        
+!The following codes use sigma values as input in line8-10,
+!definitions are:
+!sigx (m), sigpx (i.e. sigma_gambetx), sigxpx (m), mismatchx (i.e.
+!enlargement/minification factor) ...
+!sigy (m), sigpy (i.e. sigma_gambety), sigypy (m), mismatchy (i.e.
+!enlargement/minification factor) ...
+!sigz (z), sig_dgam (dgam=gami-gam0), sigzdgam (m), mismatchz ...
+
+!transform back to impactz coordinates
+        distparam(1) = distparam(1)/Scxl
+        distparam(3) = distparam(3)/Scxl
+        distparam(8) = distparam(8)/Scxl
+        distparam(10) = distparam(10)/Scxl
+        distparam(15) = -distparam(15)/Scxl/bet0
+        distparam(17) = distparam(17)/Scxl/bet0
 
         if(flagdist.eq.1) then
           call Uniform_Dist(this,nparam,distparam,geom,grid)
@@ -2024,23 +2043,18 @@
             this%Pts1(1,i) = xmu1 + 2.0d0*sig1*x1*cs/rootx
             this%Pts1(3,i) = xmu3 + 2.0d0*sig3*x3*ss/rooty
             if(xtmp(3).eq.0.0) xtmp(3) = epsilon
-            
-            this%Pts1(2,i) = 0  
-            this%Pts1(4,i) = 0  
-            this%Pts1(6,i) = 0  
-
-            !this%Pts1(2,i) = xmu2 + sig2* &
-            !         (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
-            !this%Pts1(4,i) = xmu4 + sig4* &
-            !         (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
+            this%Pts1(2,i) = xmu2 + sig2* &
+                     (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
+            this%Pts1(4,i) = xmu4 + sig4* &
+                     (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
 
             ! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
             xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
             this%Pts1(5,i) = xmu5 + xz
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
-            !this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
-            !                 cos(twopi*xx) 
+            this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
+                             cos(twopi*xx) 
         enddo
         
         this%Nptlocal = avgpts

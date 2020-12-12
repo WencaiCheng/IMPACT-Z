@@ -1778,6 +1778,17 @@
         integer :: i,j,sixnpt,mnpt
         integer, allocatable, dimension(:) :: nptlist
         double precision, allocatable,dimension(:,:) :: recvbuf
+        double precision :: gam,gambet,bet0
+
+        !biaobin,2020-12-12, if flag<0, 
+        !i.e. 0 0 1020 -2 -10 / 
+        ! output phase is:
+        ! x=x, px=gambetx
+        ! x=y, py=gambety
+        ! z=-c/w*(T-T0)*bet0, dgam=gam-gam0
+        gam = -this%refptcl(6)
+        gambet = sqrt(gam**2-1.0d0)
+        bet0 = gambet/gam
 
         if (samplePeriod .eq. 0) then
            samplePeriod = 1
@@ -1817,11 +1828,13 @@
             enddo
            enddo
           else
-           write (*,*) 'dumping phase space Impact-T format'
+           !if flag<0
+           write (*,*) 'dumping phase space Impact-T format,&
+                        z=-c/w*(T-T0)*bet0'
            do i = 1, this%Nptlocal,abs(samplePeriod)
             write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i), &
                   this%Pts1(3,i)*Scxl,this%Pts1(4,i), &
-                 -this%Pts1(5,i)*Scxl,-this%Pts1(6,i)-this%refptcl(6)
+                 -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)-this%refptcl(6)
            enddo
            do i = 1, np-1
             call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
