@@ -1843,7 +1843,7 @@
             do j = 1, nptlist(i)/9,abs(samplePeriod)
               write(nfile,101)recvbuf(1,j)*Scxl,recvbuf(2,j),&
                     recvbuf(3,j)*Scxl,recvbuf(4,j),&
-                   -recvbuf(5,j)*Scxl,-recvbuf(6,j)-this%refptcl(6)
+                   -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)-this%refptcl(6)
             enddo
            enddo
           endif
