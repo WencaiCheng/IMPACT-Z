@@ -1195,10 +1195,11 @@
           ilost = 0
           do i0 = 1, this%Nptlocal
             i = i0 - ilost
-            !if(abs(this%Pts1(5,i0)).ge.pilc) then
-            !  ilost = ilost + 1
-            !  goto 100
-            !endif
+            if(abs(this%Pts1(5,i0)).ge.pilc) then
+             !ilost = ilost + 1
+             !goto 100
+             print*,"PAY ATTENTION: bunch length is outside (-pi,pi)."
+            endif
             ntmp5 = this%Pts1(5,i0)/pilc
             tmp5 = this%Pts1(5,i0) - ntmp5*pilc
             this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
