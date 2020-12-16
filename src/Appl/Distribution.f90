@@ -133,6 +133,8 @@
           call CylinderSin_Dist(this,nparam,distparam,grid)
         else if(flagdist.eq.47) then
           call CylinderGaussDist(this,nparam,distparam,grid)
+        else if(flagdist.eq.48) then
+          call CircleUniformGaussDist(this,nparam,distparam,grid)
         else
           print*,"Initial distribution not available!!"
           stop
@@ -2201,7 +2203,138 @@
         t_kvdist = t_kvdist + elapsedtime_Timer(t0)
         end subroutine CylinderGaussDist
 
+        !biaobin, 2020-12-16
+        !transverse is uniform distribution, longi-gauss dist
+        subroutine CircleUniformGaussDist(this,nparam,distparam,grid)
+        implicit none
+        include 'mpif.h'
+        type (BeamBunch), intent(inout) :: this
+        integer, intent(in) :: nparam
+        double precision, dimension(nparam) :: distparam
+        type (Pgrid2d), intent(in) :: grid
+        double precision  :: sigx,sigpx,muxpx,xscale,sigy,&
+        sigpy,muypy, yscale,sigz,sigpz,muzpz,zscale,pxscale,pyscale,pzscale
+        double precision :: xmu1,xmu2,xmu3,xmu4,xmu5,xmu6
+        double precision, dimension(2) :: gs
+        double precision :: sig1,sig2,sig3,sig4,sig5,sig6
+        double precision :: rootx,rooty,rootz,x1,x3,cs,ss
+        double precision, allocatable, dimension(:) :: r1,r2,r3,r4 
+        integer :: totnp,npy,npx
+        integer :: avgpts,numpts
+        integer :: myid,myidx,myidy,i,ierr
+!        integer seedarray(1)
+        double precision :: t0,x11,twopi,tmpmax,tmpmaxgl,shiftz
+        real*8 :: vx,vy,r44,vr1,vr2,vzmax,r,fvalue
+        integer :: isamz
+        integer :: nptsob,k,ilow,ihigh,Nmax,ndim
+        real*8 :: eps,epsilon,xz,xmod,rk,psi,xx
+        real*8, dimension(6) :: xtmp
+        integer :: j,pid
+        real*8 :: hh,gam0,r56
+        integer*8 :: iseed
 
+        call starttime_Timer(t0)
+
+        sigx = distparam(1)
+        sigpx = distparam(2)
+        muxpx = distparam(3)
+        xscale = distparam(4)
+        pxscale = distparam(5)
+        xmu1 = distparam(6)
+        xmu2 = distparam(7)
+        sigy = distparam(8)
+        sigpy = distparam(9)
+        muypy = distparam(10)
+        yscale = distparam(11)
+        pyscale = distparam(12)
+        xmu3 = distparam(13)
+        xmu4 = distparam(14)
+        sigz = distparam(15)
+        sigpz = distparam(16)
+        muzpz = distparam(17) 
+        zscale = distparam(18) 
+        pzscale = distparam(19)
+        xmu5 = distparam(20)
+        xmu6 = distparam(21)
+
+        call getsize_Pgrid2d(grid,totnp,npy,npx)
+
+        call getpost_Pgrid2d(grid,myid,myidy,myidx)
+        do i = 1, 3000
+          call random_number(x11)
+        enddo
+        !print*,myid,x11
+
+        avgpts = this%Npt/(npx*npy)
+        nptsob = avgpts*npx*npy
+        this%Npt = nptsob
+
+
+        ilow = myid*avgpts
+        ihigh = (myid+1)*avgpts
+
+        sig1 = sigx*xscale
+        sig2 = sigpx*pxscale
+        sig3 = sigy*yscale
+        sig4 = sigpy*pyscale
+        sig5 = sigz*zscale
+        sig6 = sigpz*pzscale
+
+        rootx=sqrt(1.-muxpx*muxpx)
+        rooty=sqrt(1.-muypy*muypy)
+        rootz=sqrt(1.-muzpz*muzpz)
+
+        ! initial allocate 'avgpts' particles on each processor.
+        allocate(this%Pts1(9,avgpts))
+        twopi = 4*asin(1.0d0)
+
+        xmod = muzpz
+        rk = twopi/(zscale)
+        Nmax = 500
+        eps = 1.0d-8
+        epsilon = 1.0d-18
+
+        ndim = 6
+        do i = 1, avgpts
+           call random_number(xtmp)
+!------
+!transverse uniform cylinder + Gaussian momentum
+            x1 = sqrt(xtmp(1)) !uniform cylinder
+            x3 = sqrt(xtmp(1))
+            cs = cos(xtmp(2)*twopi)
+            ss = sin(xtmp(2)*twopi)
+            !round cross uniform, rb=2*sig1
+            this%Pts1(1,i) = xmu1 + 2.0d0*sig1*x1*cs/rootx
+            this%Pts1(3,i) = xmu3 + 2.0d0*sig3*x3*ss/rooty
+            if(xtmp(3).eq.0.0) xtmp(3) = epsilon
+            this%Pts1(2,i) = xmu2 + sig2* &
+                     (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
+            this%Pts1(4,i) = xmu4 + sig4* &
+                     (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
+
+            ! longitudinal gauss 
+            ! xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
+            xz = sqrt(-2.0d0*log(xtmp(5))) *cos(twopi*xtmp(6))
+            this%Pts1(5,i) = xmu5 + xz
+
+            if(xtmp(6).eq.0.0) xtmp(6) = epsilon
+            call random_number(xx)
+            this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
+                             cos(twopi*xx) 
+        enddo
+        
+        this%Nptlocal = avgpts
+
+        do j = 1, avgpts
+          pid = j + myid*avgpts
+          this%Pts1(7,j) = this%Charge/this%mass
+          this%Pts1(8,j) = this%Current/Scfreq/this%Npt*this%Charge/abs(this%Charge)
+          this%Pts1(9,j) = pid
+        enddo
+       
+        t_kvdist = t_kvdist + elapsedtime_Timer(t0)
+        end subroutine CircleUniformGaussDist 
+ 
 
 
 !Biaobin Li, 201908, generate cylinder uniform distribution with sinusoidal

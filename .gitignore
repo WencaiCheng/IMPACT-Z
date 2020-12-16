@@ -1,5 +1,5 @@
 .DS_Store
-examples
+examples/**/fort.*
 src/.cproject
 src/.project
 src/ImpactZexe
