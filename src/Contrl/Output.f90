@@ -3022,10 +3022,12 @@
       real*8 :: zmin,zmax,hz,zz,zavg,detaabb,&
                 deltagamma,gammaz,ab,clite,sclcur,zmingl,zmaxgl
       real*8 :: alphax,betax,gamx,alphay,betay,gamy,gamx0,gamy0,gambet
+      real*8 :: bet0
 
       clite = 2.99792d8
       sclcur = clite*qchg/npt
-
+      
+      bet0 = sqrt(1.0d0-1.0d0/gam0**2)
       gamx0 = (1.0d0+alphax0**2)/betax0
       gamy0 = (1.0d0+alphay0**2)/betay0
 
@@ -3209,7 +3211,7 @@
       if(my_rank.eq.0) then
         do i = 1, nslice
           zz = zmin + (i-1)*hz 
-          write(nfile,777)-zz*scxl,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
+          write(nfile,777)-zz*scxl*bet0,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
                   epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl,&
                   bmatchx(i),bmatchy(i)
         enddo
