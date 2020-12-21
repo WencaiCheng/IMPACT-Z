@@ -2315,7 +2315,7 @@
             ! longitudinal gauss 
             ! xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
             xz = sqrt(-2.0d0*log(xtmp(5))) *cos(twopi*xtmp(6))
-            this%Pts1(5,i) = xmu5 + xz
+            this%Pts1(5,i) = xmu5 + sig5*xz
 
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
