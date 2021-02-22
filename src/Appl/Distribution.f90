@@ -1,4 +1,4 @@
-!----------------------------------------------------------------
+!Cylinder_Dist!------Cylinder_Dist!----------------------------------------------------------------
 ! (c) Copyright, 2018 by the Regents of the University of California.
 ! Distributionclass: Initial distribution of charged beam bunch class in 
 !                    Beam module of APPLICATION layer.
@@ -98,12 +98,10 @@
 !sigz (z), sig_dgam (dgam=gami-gam0), sigzdgam (m), mismatchz ...
 
 !transform back to impactz coordinates
-        distparam(1) = distparam(1)/Scxl
-        distparam(3) = distparam(3)/Scxl
-        distparam(8) = distparam(8)/Scxl
-        distparam(10) = distparam(10)/Scxl
-        distparam(15) = -distparam(15)/Scxl/bet0
-        distparam(17) = distparam(17)/Scxl/bet0
+!2021-02-22, this transform moves to python level
+!        distparam(1) = distparam(1)/Scxl
+!        distparam(8) = distparam(8)/Scxl
+!        distparam(15) = -distparam(15)/Scxl/bet0
 
         if(flagdist.eq.1) then
           call Uniform_Dist(this,nparam,distparam,geom,grid)
@@ -2058,10 +2056,8 @@
             this%pts1(6,i) = sigpz*sqrt(-2.0*log(xtmp(6)))* &
                              cos(twopi*xx) 
             !then add energy chirp, muzpz is energy chirp h here
-            !xmu6 refers to (gam-gam0), not (gam0-gam), so is minus
-            this%pts1(6,i) = this%pts1(6,i) -xmu6 &
-                             -muzpz*this%pts1(5,i)*Scxl*gam0*bet0**3
-
+            this%pts1(6,i) = this%pts1(6,i) + xmu6 &
+                             +muzpz*xz*Scxl*gam0*bet0**3
         enddo
         
         this%Nptlocal = avgpts
