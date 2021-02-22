@@ -1831,23 +1831,24 @@
            !if flag<0
            !write (*,*) 'dumping phase space Impact-T format,&
            !             z=-c/w*(T-T0)*bet0'
+           !output is (x, xp, z, dgam=gami-gam0)
            do i = 1, this%Nptlocal,abs(samplePeriod)
-            write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i), &
-                  this%Pts1(3,i)*Scxl,this%Pts1(4,i), &
-                  -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)-this%refptcl(6)
+            write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i)/gambet, &
+                  this%Pts1(3,i)*Scxl,this%Pts1(4,i)/gambet, &
+                  -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)
                  !the following, X5=t
-                 !-this%Pts1(5,i)*Scxl/Clight,-this%Pts1(6,i)-this%refptcl(6)
+                 !-this%Pts1(5,i)*Scxl/Clight,-this%Pts1(6,i)
            enddo
            do i = 1, np-1
             call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
                           i,1,MPI_COMM_WORLD,status,ierr) 
         
             do j = 1, nptlist(i)/9,abs(samplePeriod)
-              write(nfile,101)recvbuf(1,j)*Scxl,recvbuf(2,j),&
-                    recvbuf(3,j)*Scxl,recvbuf(4,j),&
-                    -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)-this%refptcl(6)
+              write(nfile,101)recvbuf(1,j)*Scxl,recvbuf(2,j)/gambet,&
+                    recvbuf(3,j)*Scxl,recvbuf(4,j)/gambet,&
+                    -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)
                    !the following, X5=t
-                   !-recvbuf(5,j)*Scxl/Clight,-recvbuf(6,j)-this%refptcl(6)
+                   !-recvbuf(5,j)*Scxl/Clight,-recvbuf(6,j)
             enddo
            enddo
           endif
