@@ -128,7 +128,7 @@
         else if(flagdist.eq.35) then
           call readimpt_Dist(this,nparam,distparam,geom,grid,Flagbc)
         else if(flagdist.eq.45) then
-          call Cylinder_Dist(this,nparam,distparam,grid)
+          call Cylinder_Dist(this,nparam,distparam,grid,gam,bet0)
         else if(flagdist.eq.46) then
           call CylinderSin_Dist(this,nparam,distparam,grid)
         else if(flagdist.eq.47) then
@@ -1943,7 +1943,7 @@
 
         !generate a uniform cylinder distribution.
         !transverse is uniform distribution
-        subroutine Cylinder_Dist(this,nparam,distparam,grid)
+        subroutine Cylinder_Dist(this,nparam,distparam,grid,gam0,bet0)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
@@ -1968,7 +1968,7 @@
         real*8 :: eps,epsilon,xz,xmod,rk,psi,xx
         real*8, dimension(6) :: xtmp
         integer :: j,pid
-        real*8 :: hh,gam0,r56
+        real*8 :: hh,gam0,bet0,r56
         integer*8 :: iseed
 
         call starttime_Timer(t0)
@@ -1989,7 +1989,7 @@
         xmu4 = distparam(14)
         sigz = distparam(15)
         sigpz = distparam(16)
-        muzpz = distparam(17) 
+        muzpz = distparam(17)   !biaobin, used as energy chirp h [m^-1]
         zscale = distparam(18) 
         pzscale = distparam(19)
         xmu5 = distparam(20)
@@ -2055,8 +2055,13 @@
             this%Pts1(5,i) = xmu5 + xz
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
-            this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
+            this%pts1(6,i) = sigpz*sqrt(-2.0*log(xtmp(6)))* &
                              cos(twopi*xx) 
+            !then add energy chirp, muzpz is energy chirp h here
+            !xmu6 refers to (gam-gam0), not (gam0-gam), so is minus
+            this%pts1(6,i) = this%pts1(6,i) -xmu6 &
+                             -muzpz*this%pts1(5,i)*Scxl*gam0*bet0**3
+
         enddo
         
         this%Nptlocal = avgpts
