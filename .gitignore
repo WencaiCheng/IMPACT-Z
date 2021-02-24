@@ -8,3 +8,5 @@ src/*.o
 src/**/*.o
 src/*.mod
 
+.cproject
+.project
