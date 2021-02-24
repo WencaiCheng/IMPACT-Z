@@ -567,6 +567,7 @@
         real*8 :: rsiglaser,rlaserwvleng
         real*8, dimension(2) :: xylc,xygl
         real*8 :: xsig2,ysig2,freqlaser,harm,sigx2,ezlaser
+        real*8 :: tmp
 
 
 !-------------------------------------------------------------------
@@ -596,6 +597,14 @@
         ibal = ibalend
         nstep = nstepend
         z = zend
+
+        tmp = abs(totnp*Bpts%Nptlocal - Bpts%Npt)
+        if ( tmp > totnp ) then
+          print*,"WARNING, particle number given in ImpactZ.in not consistent with particle.in."  
+          print*,"tracking particle number=", totnp*Bpts%Nptlocal 
+          print*,"particle number read from ImpactZ.in = ",Bpts%Npt
+          stop      
+        endif
 
         if(Flagdiag.eq.1) then
             call diagnostic1_Output(z,Bpts,nchrg,nptlist0)
