@@ -608,7 +608,14 @@
 77        continue
           close(14)
 !          close(15)
+
           Ndatawk = n
+          if (Ndatawk*2>Ndataini) then
+            print*,"ERROR: max wake file line number should be less &
+                    than", Ndataini,", program stopped."
+            stop
+          endif
+
           zdat1 = zdatwk(1)
           do i = 1, Ndatawk
             zdatwk(i) = zdatwk(i) - zdat1
