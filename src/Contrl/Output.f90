@@ -3214,6 +3214,15 @@
       call MPI_COMM_RANK(MPI_COMM_WORLD,my_rank,ierr)
 
       if(my_rank.eq.0) then
+        !if current .ne. 0.0, then output exact current in [A]  
+        if (sclcur.eq. 0.0d0) then
+            !space charge off, current=0, set total_charge=1
+            !to output current profile. use 
+            !plot 'fort.2000' u 1:($3*Q) to get the right 
+            !current profile when SC is OFF.
+            sclcur =  clite/npt
+        endif
+         
         do i = 1, nslice
           zz = zmin + (i-1)*hz 
           write(nfile,777)-zz*scxl*bet0,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
