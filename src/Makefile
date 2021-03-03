@@ -20,8 +20,8 @@
 #**************************************************************************
 # Macros defining the Fortran, C/C++ compiler and linker.
 
-CC = mpif90
-LINK = mpif90
+CC = gfortran
+LINK = gfortran
 #FFLAGS = -O3
 FFLAGS = -g
 
