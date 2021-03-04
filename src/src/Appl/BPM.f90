@@ -247,6 +247,41 @@
  
         end subroutine kick_BPM
 
+        subroutine kick_matrix(Pts1,innp,m11,m33,m55,m56,m65,m66,gam0,mass)
+        implicit none
+        include 'mpif.h'
+        integer, intent(in) :: innp
+        double precision, pointer, dimension(:,:) :: Pts1
+        double precision, intent(in) :: m11,m33,m55,m56,m65,m66
+        double precision, intent(in) :: gam0,mass
+        integer :: i
+        real*8 :: gambet0,bet0
+        real*8 :: z0,delta0,z1,delta1
+
+        print*,"m11,m33,m55,m56,m65,m66=",m11,m33,m55,m56,m65,m66
+        !reference particle
+        gambet0=sqrt(gam0**2-1.0d0)
+        bet0=gambet0/gam0
+        do i=1,innp
+          !coordinate transform
+          z0=-Pts1(5,i)*Scxl*bet0
+          delta0=-Pts1(6,i)/gambet0/bet0
+
+          !matrix kick
+          Pts1(1,i)    = m11*Pts1(1,i)
+          Pts1(3,i)    = m33*Pts1(1,i)
+          z1    = m55*z0 +m56*delta0
+          delta1= m65*z0 +m66*delta0
+
+          !transform back to IMPACT-Z coordinate
+          Pts1(5,i) = -z1/bet0/Scxl
+          Pts1(6,i) = -delta1*gambet0*bet0
+
+        end do
+
+        end subroutine kick_matrix 
+
+
         !kick the beam longitudinally by the rf nonlinearity (the linear
         !part has been included in the map integrator and substracted.)
         !drange(3); vmax (V)

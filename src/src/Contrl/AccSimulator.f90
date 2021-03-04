@@ -836,6 +836,22 @@
             call kick_BPM(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&
             drange(6),drange(7),drange(8),-Bpts%refptcl(6),Bpts%Mass)
 !            Bpts%refptcl(6) = Bpts%refptcl(6) - drange(8)*1.d6/Bpts%Mass
+
+          !EMATRIX element, temporary only support: m11, m33, m56, m65
+          else if(bitype.eq.-22)then
+            call getparam_BeamLineElem(Blnelem(i),drange)
+            !length steps maps type radius m11 m33 m56 m65
+            !drange(1) is type, i.e. -22
+            !drange(2): radius, not used
+            !drange(3): m11
+            !drange(4): m33
+            !drange(5): m55
+            !drange(6): m56, since we use z>0 head convention, m56>0 for chicane.
+            !drange(7): m65
+            !drange(8): m66
+            call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&
+            drange(6),drange(7),drange(8),-Bpts%refptcl(6),Bpts%Mass)
+
           else if(bitype.eq.-40)then
             call getparam_BeamLineElem(Blnelem(i),drange)
             call kickRF_BPM(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&

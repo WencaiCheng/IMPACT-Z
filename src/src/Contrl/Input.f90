@@ -248,6 +248,7 @@
         end subroutine in1_Input
 
         ! Input beam line element parameters.
+        ! onblem: lattice elements total number
         subroutine in2_Input(onblem,oblength,obnseg,obmpstp,&
         obtype,value1,value2,value3,value4,value5,value6,value7,value8,&
         value9,value10,value11,value12,value13,value14,value15,value16,&
@@ -313,11 +314,13 @@
             endif
           goto 123
 789       continue
-
-!          print*,"nblem: ",i,onblem
-          do i = 1, onblem
-!          print*,"value11: ",value11(i),value12(i)
-          end do
+          !print*,"nblem: ",i,onblem
+          !do i = 1, onblem
+          !print*,"value11: ",value11(i),value12(i)
+          !print*,"value=", value1(i),value2(i),value3(i),value4(i), &
+          !                  value5(i),value6(i)    
+          !                !un-set values are all 0.
+          !end do
           close(13)
 
         endif

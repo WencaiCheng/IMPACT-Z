@@ -1,3 +1,6 @@
 #!/bin/bash
+./cleanUp
 
-ImpactZexe
+genimpactzin lte.impz line
+
+ImpactZexe 
