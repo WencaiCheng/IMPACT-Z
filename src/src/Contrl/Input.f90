@@ -35,7 +35,8 @@
         subroutine in1_Input(odim,onp,onx,ony,onz,oflagbc,oflagdist, &
         orstartflg,oflagmap,distparam,nparam,obcurr,obkenergy,obmass,&
         obcharge,obfreq,oxrad,oyrad,operdlen,onblem,onpcol,onprow,oflagerr,&
-        oflagdiag,oflagsbstp,ophsini,onchrg,onptlist,ocurrlist,oqmcclist)
+        oflagdiag,oflagsbstp,ophsini,onchrg,onptlist,ocurrlist,oqmcclist,&
+        Flagsc)
 
         implicit none
         include 'mpif.h'
@@ -53,6 +54,7 @@
         integer :: my_rank,nproc,ierr,np,itot,njunk1,njunk2,njunk3
         character*1 comst
         integer :: ii,jj,i
+        integer, intent(out) :: Flagsc
 
         call MPI_COMM_RANK(MPI_COMM_WORLD,my_rank,ierr)
         call MPI_COMM_SIZE(MPI_COMM_WORLD,np,ierr)
@@ -175,7 +177,7 @@
             goto 102
           else
             backspace(13,err=789)
-            read(13,*)obcurr,obkenergy,obmass,obcharge,obfreq,ophsini
+            read(13,*)obcurr,obkenergy,obmass,obcharge,obfreq,ophsini,Flagsc
             ii = ii+1
           endif
 
@@ -243,6 +245,8 @@
         call MPI_BCAST(obfreq,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
                          ierr)
         call MPI_BCAST(ophsini,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
+                         ierr)
+        call MPI_BCAST(Flagsc,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
                          ierr)
 
         end subroutine in1_Input

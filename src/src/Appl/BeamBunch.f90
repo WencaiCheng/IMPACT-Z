@@ -1614,12 +1614,13 @@
         ! Advance the particles in the velocity space using the force
         ! from the external field and the self space charge force
         ! interpolated from the grid to particles. (linear map)
+        !biaobin, space charge kick is here
         subroutine kick1_BeamBunch(this,tau,innx,inny,innz,temppotent,&
-                              ptsgeom,grid,Flagbc,perdlen)
+                              ptsgeom,grid,Flagbc,perdlen,Flagsc)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
-        integer, intent(in) :: innx, inny, innz, Flagbc
+        integer, intent(in) :: innx, inny, innz, Flagbc, Flagsc
         type (CompDom), intent(in) :: ptsgeom
         double precision, dimension(innx,inny,innz), intent(inout) :: temppotent
         type (Pgrid2d), intent(in) :: grid
@@ -1637,7 +1638,9 @@
 
         call starttime_Timer(t0)
 
-        if(this%Current.lt.1.0e-20) goto 1000
+        !if(this%Current.lt.1.0e-20) goto 1000
+        !Flagsc=0, space charge is OFF
+        if(Flagsc.eq.0 .OR. this%Current.lt.1.0e-20) goto 1000
 
         call getsize_Pgrid2d(grid,totnp,nproccol,nprocrow)
         call getpost_Pgrid2d(grid,myid,myidy,myidx)
@@ -1933,7 +1936,7 @@
         if((Flagbc.eq.3).or.(Flagbc.eq.4)) then
         else
           call scatter1_BeamBunch(innp,innx,inny,innz,this%Pts1,egx,egy,egz,&
-          ptsgeom,nprocrow,nproccol,myidx,myidy,gam,curr,tau,mass,chrg)
+          ptsgeom,nprocrow,nproccol,myidx,myidy,gam,curr,tau,mass,chrg,Flagsc)
         endif
 
         !call MPI_BARRIER(comm2d,ierr)
@@ -1949,13 +1952,14 @@
 
         ! scatter grid quantity onto particles using linear map.
         subroutine scatter1_BeamBunch(innp,innx,inny,innz,rays,exg,&
-                   eyg,ezg,ptsgeom,npx,npy,myidx,myidy,gam,curr,tau,mass,chrg)
+                   eyg,ezg,ptsgeom,npx,npy,myidx,myidy,gam,curr,tau,mass,chrg,Flagsc)
         implicit none
         include 'mpif.h'
         double precision, intent (inout), dimension (9,innp) :: rays
         double precision, intent (in), dimension (innx,inny,innz) :: exg,eyg,ezg 
         double precision, intent (in) :: gam,curr,tau,mass,chrg
-        integer, intent(in) :: innp,innx,inny,innz,npx,npy,myidx,myidy
+        integer, intent(in) :: innp,innx,inny,innz,npx,npy,myidx,myidy,&
+                               Flagsc
         integer, dimension(2,0:npx-1,0:npy-1) :: table
         integer, dimension(0:npx-1) :: xtable
         integer, dimension(0:npy-1) :: ytable
@@ -2066,6 +2070,26 @@
                   +ezg(ix1,jx1,kx1)*(1.0-ab)*(1.0-cd)*(1.0-ef)&
                   +ezg(ix1,jx1,kx)*(1.0-ab)*(1.0-cd)*ef &
                   +ezg(ix1,jx,kx)*(1.0-ab)*cd*ef
+
+          !Biaobin Li, 2021-03-04
+          !space charge kick behavior control:
+          !Flagsc=0, SC OFF
+          !Flagsc=1, LSC
+          !Flagsc=2, TSC
+          !Flagsc=3, LSC + TSC
+          print*,"Biaobin, Flagsc=",Flagsc
+          if (Flagsc.eq.1) then 
+              !print*,"TSC is turned OFF, only LSC is ON."
+              exn = 0.0d0
+              eyn = 0.0d0
+          else if (Flagsc.eq.2) then
+              !print*,"LSC is turned OFF, only TSC is ON."
+              ezn = 0.0d0
+          else if (Flagsc.eq.3) then
+              !print*,"Both LSC and TSC are turned ON."
+          else
+              print*,"ERROR, wrong Flagsc is given, Flagsc=", Flagsc
+          end if
 
           !0th order algorithm to transfer back from t beam frame to z.
           rcpgammai = 1.0/(-rays(6,n)+gam)
@@ -4544,11 +4568,11 @@
 
         subroutine kick1wake_BeamBunch(this,tau,innx,inny,innz,temppotent,&
                               ptsgeom,grid,Flagbc,perdlen,&
-                              exwake,eywake,ezwake,Nz,npx,npy)
+                              exwake,eywake,ezwake,Nz,npx,npy,Flagsc)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
-        integer, intent(in) :: innx, inny, innz, Flagbc,Nz,npx,npy
+        integer, intent(in) :: innx, inny, innz,Flagbc,Nz,npx,npy,Flagsc
         type (CompDom), intent(in) :: ptsgeom
         double precision, dimension(innx,inny,innz), intent(inout) :: temppotent
         type (Pgrid2d), intent(in) :: grid
@@ -4568,7 +4592,9 @@
 
         call starttime_Timer(t0)
 
-        if(this%Current.lt.1.0e-20) goto 1000
+        !if(this%Current.lt.1.0e-20) goto 1000
+        !Flagsc=0, space charge is OFF
+        if(Flagsc.eq.0 .OR. this%Current.lt.1.0e-20) goto 1000
 
         call getsize_Pgrid2d(grid,totnp,nproccol,nprocrow)
         call getpost_Pgrid2d(grid,myid,myidy,myidx)
@@ -4887,7 +4913,7 @@
         if((Flagbc.eq.3).or.(Flagbc.eq.4)) then
         else
           call scatter1_BeamBunch(innp,innx,inny,innz,this%Pts1,egx,egy,egz,&
-          ptsgeom,nprocrow,nproccol,myidx,myidy,gam,curr,tau,mass,chrg)
+          ptsgeom,nprocrow,nproccol,myidx,myidy,gam,curr,tau,mass,chrg,Flagsc)
         endif
 
 1000    continue

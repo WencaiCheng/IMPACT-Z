@@ -43,7 +43,7 @@
         !# of num. total x, total and local y mesh pts., type of BC, 
         !# of beam elems, type of integrator.
         integer, private :: Nx,Ny,Nz,Nxlocal,Nylocal,Nzlocal,Flagbc,&
-                            Nblem,Flagmap,Flagdiag
+                            Nblem,Flagmap,Flagdiag,Flagsc
 
         !# of processors in column and row direction.
         integer, private :: npcol, nprow
@@ -143,7 +143,7 @@
         call in_Input(Dim,Np,Nx,Ny,Nz,Flagbc,Flagdist,Rstartflg,&
               Flagmap,distparam,21,Bcurr,Bkenergy,Bmass,Bcharge,&
         Bfreq,xrad,yrad,Perdlen,Nblem,npcol,nprow,Flagerr,Flagdiag,&
-        Flagsubstep,phsini,nchrg,nptlist,currlist,qmcclist)
+        Flagsubstep,phsini,nchrg,nptlist,currlist,qmcclist,Flagsc)
  
         allocate(nptlist0(nchrg))
         allocate(currlist0(nchrg))
@@ -568,8 +568,7 @@
         real*8, dimension(2) :: xylc,xygl
         real*8 :: xsig2,ysig2,freqlaser,harm,sigx2,ezlaser
         real*8 :: tmp
-
-
+         
 !-------------------------------------------------------------------
 ! prepare initial parameters, allocate temporary array.
 !        iend = 0
@@ -1022,8 +1021,18 @@
             endif
 
 !-------------------------------------------------------------------
-! escape the space charge calculation for 0 current case
-            if(Bcurr.lt.1.0e-10)  then !no space-charge
+            !escape the space charge calculation for 0 current case
+            !if(Bcurr.lt.1.0e-10)  then !no space-charge
+
+            !Biaobin Li, 2021-03-04
+            !use Flagsc to control space charge behavior:
+            !Flagsc=0 or current=0, SC OFF
+            !Flagsc=1, LSC
+            !Flagsc=2, TSC
+            !Flagsc=3, LSC + TSC
+            if (Bcurr.lt.1.0e-10 .or. Flagsc.eq.0)  then !no space-charge
+               !print*,"current=",Bcurr,"Flagsc=",Flagsc
+               !print*,"Space charge kick is turned OFF." 
 !              call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad,piperad2)
 !              call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
             else !calculate space charge forces
@@ -1325,10 +1334,10 @@
                 !Potential%FieldQ = 0.0d0 !test wakefield
                 call kick1wake_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,exwake,eywake,&
-                   ezwake,Nz,npx,npy)
+                   ezwake,Nz,npx,npy,Flagsc)
               else
                 call map2_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
-                   Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen)
+                   Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,Flagsc)
               endif
               if(bitype.ne.4) then
                 call map1_BeamBunch(Bpts,Blnelem(i),z,tau1,bitype,&
