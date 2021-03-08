@@ -2077,7 +2077,7 @@
           !Flagsc=1, LSC
           !Flagsc=2, TSC
           !Flagsc=3, LSC + TSC
-          print*,"Biaobin, Flagsc=",Flagsc
+          !print*,"Biaobin, Flagsc=",Flagsc
           if (Flagsc.eq.1) then 
               !print*,"TSC is turned OFF, only LSC is ON."
               exn = 0.0d0

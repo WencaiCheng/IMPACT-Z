@@ -258,7 +258,7 @@
         real*8 :: gambet0,bet0
         real*8 :: z0,delta0,z1,delta1
 
-        print*,"m11,m33,m55,m56,m65,m66=",m11,m33,m55,m56,m65,m66
+        !print*,"m11,m33,m55,m56,m65,m66=",m11,m33,m55,m56,m65,m66
         !reference particle
         gambet0=sqrt(gam0**2-1.0d0)
         bet0=gambet0/gam0
