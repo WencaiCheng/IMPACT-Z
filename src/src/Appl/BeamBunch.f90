@@ -337,13 +337,15 @@
           call getparam_BeamLineElem(beamln,drange)
 
           !Biaobin, add options to control cavity behavior:
-          !ID=-0.5,   linear map
-          !ID=-1.0,   nonlinear map
+          !ID=-0.25,   linear map, comment end focus
+          !ID=-0.75,   nonlinear map, comment end focus
+          !ID=-0.5,    linear map
+          !ID=-1.0,    nonlinear map
           !otherwise, call maplinear_BeamLineElem()       
-          if( drange(5).eq.-0.5 ) then         
+          if( drange(5).eq.-0.25 .or. drange(5).eq.-0.5 ) then         
             call idealrf_linearmap(this,drange,tau,nseg,nst,ihlf)
           
-          else if( drange(5).eq.-1.0 ) then
+          else if( drange(5).eq.-0.75 .or. drange(5).eq.-1.0) then
             call idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf)
           
           else
@@ -5996,10 +5998,15 @@
             phi = this%Pts1(5,i)*harm+phi0lc
             cosphi = cos(phi)
             vtmpgrad = vtmp*cosphi*Scxl
-            this%Pts1(2,i) = this%Pts1(2,i)  &
-                         -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
-            this%Pts1(4,i) = this%Pts1(4,i)  &
-                         -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
+            if(drange(5).eq.-1.0) then
+                !print*,"end focus for nonlinear rf map."
+                this%Pts1(2,i) = this%Pts1(2,i)  &
+                             -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
+                this%Pts1(4,i) = this%Pts1(4,i)  &
+                             -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
+            else if(drange(5).eq.-0.75) then
+                !print*,"comment end focus for nonlinear cavity map."
+            end if
           enddo
         endif
         !drift under constant acceleration, using individual
@@ -6040,10 +6047,15 @@
             phi = this%Pts1(5,i)*harm+phi0lc
             cosphi = cos(phi)
             vtmpgrad = vtmp*cosphi*Scxl
-            this%Pts1(2,i) = this%Pts1(2,i) + &
-                         0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
-            this%Pts1(4,i) = this%Pts1(4,i) + &
-                         0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
+            if(drange(5).eq.-1.0) then
+                !print*,"end focus for nonlinear rf map."
+                this%Pts1(2,i) = this%Pts1(2,i) + &
+                             0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
+                this%Pts1(4,i) = this%Pts1(4,i) + &
+                             0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
+            else if(drange(5).eq.-0.75) then
+                !print*,"comment end focus for nonlinear cavity map."             
+            end if
             !apply the final longitudinal energy deviaton kicks
             !this does not work correctly at low energy
             phi = this%Pts1(5,i)*harm+phi0lc
@@ -6089,13 +6101,15 @@
         bet1 = gambet1/gam1
         !apply entrance focusing kick
         if(nst.eq.1 .and. mod(ihlf,2).eq.0) then
-            m21f = -vtmpgrad/(2.0d0*gam0)
-            m43f = -vtmpgrad/(2.0d0*gam0)
-            !********************************
-            !if comment end focus
-            !m21f = 0.0d0
-            !m43f = 0.0d0
-            !********************************
+            if(drange(5).eq.-0.5) then
+                !print*,"End focus for linear rf map."
+                m21f = -vtmpgrad/(2.0d0*gam0)
+                m43f = -vtmpgrad/(2.0d0*gam0)
+            else if(drange(5).eq.-0.25) then
+                !print*,"Comment end focus for linear rf map."
+                m21f = 0.0d0
+                m43f = 0.0d0
+            end if
           do i = 1, this%Nptlocal
             gam = gam0 - this%Pts1(6,i)
             !initial phase, impactz => geo phase
@@ -6151,13 +6165,15 @@
 
         !apply exit focusing kick
         if(nst.eq.nseg .and. mod(ihlf,2).eq.1) then
-            m21f = vtmpgrad/(2.0d0*gam1)
-            m43f = vtmpgrad/(2.0d0*gam1)
-            !******************************
-            !comment end focus
-            !m21f = 0.0d0
-            !m43f = 0.0d0
-            !******************************
+            if(drange(5).eq.-0.5) then
+                !print*,"End focus for linear rf map."
+                m21f = vtmpgrad/(2.0d0*gam1)
+                m43f = vtmpgrad/(2.0d0*gam1)
+            else if(drange(5).eq.-0.25) then
+                !print*,"Comment end focus for linear rf map."
+                m21f = 0.0d0
+                m43f = 0.0d0
+            end if
           do i = 1, this%Nptlocal
             x0  = this%Pts1(1,i)*Scxl
             xp0 = this%Pts1(2,i)/gambet1
