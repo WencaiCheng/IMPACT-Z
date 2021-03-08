@@ -597,6 +597,7 @@
         nstep = nstepend
         z = zend
 
+        !print*,totnp,Bpts%Nptlocal,Bpts%Npt
         tmp = abs(totnp*Bpts%Nptlocal - Bpts%Npt)
         if ( tmp > totnp ) then
           print*,"WARNING, particle number given in ImpactZ.in not consistent with particle.in."  

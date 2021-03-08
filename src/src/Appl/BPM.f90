@@ -269,7 +269,7 @@
 
           !matrix kick
           Pts1(1,i)    = m11*Pts1(1,i)
-          Pts1(3,i)    = m33*Pts1(1,i)
+          Pts1(3,i)    = m33*Pts1(3,i)
           z1    = m55*z0 +m56*delta0
           delta1= m65*z0 +m66*delta0
 
