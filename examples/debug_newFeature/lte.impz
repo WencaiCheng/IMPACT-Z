@@ -16,8 +16,10 @@
   steps=1;    ! 1 kicks/m
   maps=1;     ! 1 map/half_step
   
-  sc=0;       !space charge off
-  csr=0;      !csr off
+  tsc=1;       !TSC
+  lsc=1;       !LSC
+
+  csr=1;      !csr off
   zwake=0;    !longitudinal wakefield off
   trwake=0;   !transverse wakefield off
 &end
@@ -43,8 +45,10 @@ distribution_type = 45;
 !===============
 &lattice
 
-d1: drift, L=0.123 
+d1: drift, L=1.345
+mat1: ematrix, m56=0.08,m11=0.5,m33=0.5
+cav0: rfcw, L=2.0,volt=2e6,phase=45,freq=3.0e9,end_focus=0
 
-line: line=(5*d1)
+line: line=(cav0)
 
 &end
