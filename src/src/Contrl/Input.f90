@@ -36,7 +36,7 @@
         orstartflg,oflagmap,distparam,nparam,obcurr,obkenergy,obmass,&
         obcharge,obfreq,oxrad,oyrad,operdlen,onblem,onpcol,onprow,oflagerr,&
         oflagdiag,oflagsbstp,ophsini,onchrg,onptlist,ocurrlist,oqmcclist,&
-        Flagsc)
+        Flagsc,turn,outfq)
 
         implicit none
         include 'mpif.h'
@@ -54,7 +54,7 @@
         integer :: my_rank,nproc,ierr,np,itot,njunk1,njunk2,njunk3
         character*1 comst
         integer :: ii,jj,i
-        integer, intent(out) :: Flagsc
+        integer, intent(out) :: Flagsc, turn, outfq
 
         call MPI_COMM_RANK(MPI_COMM_WORLD,my_rank,ierr)
         call MPI_COMM_SIZE(MPI_COMM_WORLD,np,ierr)
@@ -170,6 +170,7 @@
                     distparam(18),distparam(19),distparam(20),distparam(21)
             ii = ii+1
           endif
+
 102       continue
           read(13,*)comst
           jj = jj + 1
@@ -177,9 +178,22 @@
             goto 102
           else
             backspace(13,err=789)
-            read(13,*)obcurr,obkenergy,obmass,obcharge,obfreq,ophsini,Flagsc
+            read(13,*)obcurr,obkenergy,obmass,obcharge,obfreq,ophsini
             ii = ii+1
           endif
+          
+          !Biaobin Li, 03/12/2021
+          !add a new line for control section
+103       continue
+          read(13,*)comst
+          jj = jj + 1
+          if(comst.eq."!") then
+            goto 103
+          else
+            backspace(13,err=789)
+            read(13,*) Flagsc,turn,outfq
+            ii = ii + 1
+          end if
 
           !count the # of beam line elements.
           itot=0

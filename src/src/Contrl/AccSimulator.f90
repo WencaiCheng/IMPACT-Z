@@ -43,7 +43,8 @@
         !# of num. total x, total and local y mesh pts., type of BC, 
         !# of beam elems, type of integrator.
         integer, private :: Nx,Ny,Nz,Nxlocal,Nylocal,Nzlocal,Flagbc,&
-                            Nblem,Flagmap,Flagdiag,Flagsc
+                            Nblem,Flagmap,Flagdiag
+        integer, private :: Flagsc,turn,outfq
 
         !# of processors in column and row direction.
         integer, private :: npcol, nprow
@@ -143,8 +144,9 @@
         call in_Input(Dim,Np,Nx,Ny,Nz,Flagbc,Flagdist,Rstartflg,&
               Flagmap,distparam,21,Bcurr,Bkenergy,Bmass,Bcharge,&
         Bfreq,xrad,yrad,Perdlen,Nblem,npcol,nprow,Flagerr,Flagdiag,&
-        Flagsubstep,phsini,nchrg,nptlist,currlist,qmcclist,Flagsc)
- 
+        Flagsubstep,phsini,nchrg,nptlist,currlist,qmcclist,Flagsc,&
+        turn,outfq)
+
         allocate(nptlist0(nchrg))
         allocate(currlist0(nchrg))
         allocate(qmcclist0(nchrg))
@@ -568,6 +570,7 @@
         real*8, dimension(2) :: xylc,xygl
         real*8 :: xsig2,ysig2,freqlaser,harm,sigx2,ezlaser
         real*8 :: tmp
+        integer :: ith_turn 
          
 !-------------------------------------------------------------------
 ! prepare initial parameters, allocate temporary array.
@@ -600,7 +603,8 @@
         !print*,totnp,Bpts%Nptlocal,Bpts%Npt
         tmp = abs(totnp*Bpts%Nptlocal - Bpts%Npt)
         if ( tmp > totnp ) then
-          print*,"WARNING, particle number given in ImpactZ.in not consistent with particle.in."  
+          print*,"WARNING, particle number given in ImpactZ.in &
+                  not consistent with particle.in."  
           print*,"tracking particle number=", totnp*Bpts%Nptlocal 
           print*,"particle number read from ImpactZ.in = ",Bpts%Npt
           stop      
@@ -617,7 +621,8 @@
 ! prepare for round pipe, open longitudinal
         if(Flagbc.eq.3) then
           if(myid.eq.0) then
-            print*,"Poisson solver not available for this boundary conditions"
+            print*,"Poisson solver not available for this boundary &
+                    conditions"
             stop
           endif
         endif
@@ -659,6 +664,11 @@
 ! start looping through 'Nblem' beam line elements.
 !
         tmpfile = 0
+        
+        !2021-03-12, loop for multi-turns tracking  
+        !outfq: -2,-8 element output every ofreq turns
+        do ith_turn=1,turn       
+         
         do i = iend+1, Nblem
 
           call getparam_BeamLineElem(Blnelem(i),blength,bnseg,bmpstp,&
@@ -764,11 +774,17 @@
           if(bitype.eq.-1) then
             call shift_BPM(Bpts%Pts1,bitype,Nplocal,Np)
           endif
+          
+          !for multi-turns tracking, output phase space every ofreq turns
           if(bitype.eq.-2) then
-            call getparam_BeamLineElem(Blnelem(i),drange)
-            realSamplePeriod = drange(2)
-            integerSamplePeriod = realSamplePeriod
-            call phase_Output(bmpstp,Bpts,integerSamplePeriod)
+            if (mod(ith_turn,outfq)==0 .or. ith_turn.eq.1) then
+                bmpstp = bmpstp+ith_turn
+                call getparam_BeamLineElem(Blnelem(i),drange)
+                realSamplePeriod = drange(2)
+                integerSamplePeriod = realSamplePeriod
+                call phase_Output(bmpstp,Bpts,integerSamplePeriod)
+            end if
+
           else if(bitype.eq.-3) then
             call getparam_BeamLineElem(Blnelem(i),drange)
             call accdens1d_Output(nstep,8,Bpts,Np,drange(2),-drange(3),&
@@ -789,21 +805,27 @@
             !output all particles in 6d phase space in files fort.bmpstp+myid
             !output all geomtry information in file fort.bmpstp+myid.
             call outpoint_Output(myid+bmpstp,Bpts,z,i,j,ibal,nstep,npx,npy,Ageom)
+            
           else if(bitype.eq.-8) then
-            call getparam_BeamLineElem(Blnelem(i),drange)
-            qchg = Bpts%Current/Scfreq
-            pmass = Bpts%Mass
-            nfile =bmpstp
-            nslice = drange(2)+0.1
-            alphax0 = drange(3)
-            betax0 = drange(4)
-            if(betax0.eq.0.0d0) betax0 = 1.0d0
-            alphay0 = drange(5)
-            betay0 = drange(6)
-            if(betax0.eq.0.0d0) betay0 = 1.0d0
-            gamma0 = -Bpts%refptcl(6)
-            call sliceprocdep_Output(Bpts%Pts1,Nplocal,Np,nslice,qchg,pmass,&
-             nfile,alphax0,betax0,alphay0,betay0,gamma0)
+            !every ofreq turns output 
+            if (mod(ith_turn,outfq).eq.0 .or. ith_turn.eq.1) then
+                call getparam_BeamLineElem(Blnelem(i),drange)
+                qchg = Bpts%Current/Scfreq
+                pmass = Bpts%Mass
+                nfile =bmpstp
+                nslice = drange(2)+0.1
+                alphax0 = drange(3)
+                betax0 = drange(4)
+                if(betax0.eq.0.0d0) betax0 = 1.0d0
+                alphay0 = drange(5)
+                betay0 = drange(6)
+                if(betax0.eq.0.0d0) betay0 = 1.0d0
+                gamma0 = -Bpts%refptcl(6)
+
+                nfile = nfile+ith_turn
+                call sliceprocdep_Output(Bpts%Pts1,Nplocal,Np,nslice,qchg,pmass,&
+                 nfile,alphax0,betax0,alphay0,betay0,gamma0)
+            end if
           else if(bitype.eq.-10) then
             !mismatch the beam at given location.
             !here, drange(3:8) stores the mismatch factor.
@@ -1420,6 +1442,8 @@
                 call geomerrT_BeamBunch(Bpts,Blnelem(i)) 
           end if
           zbleng = zbleng + blength
+        enddo
+
         enddo
 !end loop through nbeam line element
 !------------------------------------------------

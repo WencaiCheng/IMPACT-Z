@@ -2092,6 +2092,7 @@
               !print*,"Both LSC and TSC are turned ON."
           else
               print*,"ERROR, wrong Flagsc is given, Flagsc=", Flagsc
+              stop
           end if
 
           !0th order algorithm to transfer back from t beam frame to z.
