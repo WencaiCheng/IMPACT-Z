@@ -779,6 +779,10 @@
           if(bitype.eq.-2) then
             if (mod(ith_turn,outfq)==0 .or. ith_turn.eq.1) then
                 bmpstp = bmpstp+ith_turn
+                !for 1st turn, back to initial nfile ID
+                if (ith_turn.eq.1) then
+                    bmpstp = bmpstp-1
+                end if
                 call getparam_BeamLineElem(Blnelem(i),drange)
                 realSamplePeriod = drange(2)
                 integerSamplePeriod = realSamplePeriod
@@ -823,6 +827,11 @@
                 gamma0 = -Bpts%refptcl(6)
 
                 nfile = nfile+ith_turn
+                !for 1st turn, back to initial nfile ID
+                if (ith_turn.eq.1) then
+                    nfile = nfile-1 
+                end if
+
                 call sliceprocdep_Output(Bpts%Pts1,Nplocal,Np,nslice,qchg,pmass,&
                  nfile,alphax0,betax0,alphay0,betay0,gamma0)
             end if
