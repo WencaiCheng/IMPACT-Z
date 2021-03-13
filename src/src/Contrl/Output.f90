@@ -51,8 +51,14 @@
         integer :: i,my_rank,ierr,j
         double precision:: qmc,xl,xt
         double precision, dimension(6) :: localmax, glmax
-        double precision, dimension(37) :: tmplc,tmpgl
+        double precision, dimension(41) :: tmplc,tmpgl
         double precision :: t0,lcrmax,glrmax
+        double precision :: xpzlocal,pxpzlocal,ypzlocal,pypzlocal
+        double precision :: xpz,pxpz,ypz,pypz
+        double precision :: sig11,sig12,sig22,sig33,sig34,sig44
+        double precision :: ecx,ecy,ecxn,ecyn,ex,ey,exn,eyn
+        double precision :: etax,etaxp,etay,etayp
+        double precision :: betax,alphax,gammax,betay,alphay,gammay
 !        double precision :: alphax,alphay,alphaz
 !       for the calculation of bunched beam current.
 !        double precision, dimension(3) :: localaa, aa, localbb, bb 
@@ -89,6 +95,10 @@
         xpxlocal = 0.0
         ypylocal = 0.0
         zpzlocal = 0.0
+        xpzlocal  = 0.0
+        pxpzlocal = 0.0
+        ypzlocal  = 0.0
+        pypzlocal = 0.0
         xpx2local  = 0.0
         xpx3local  = 0.0
         x2pxlocal  = 0.0
@@ -185,6 +195,13 @@
           pz0lc3 = pz0lc3 + this%Pts1(6,i)*this%Pts1(6,i)*this%Pts1(6,i)
           pz0lc4 = pz0lc4 + this%Pts1(6,i)*this%Pts1(6,i)*this%Pts1(6,i)*&
                             this%Pts1(6,i)
+
+          !03/13/2021, B. Li, add twiss and dispersion output
+          xpzlocal  = xpzlocal  + this%Pts1(1,i)*this%Pts1(6,i)
+          pxpzlocal = pxpzlocal + this%Pts1(2,i)*this%Pts1(6,i)
+          ypzlocal  = ypzlocal  + this%Pts1(3,i)*this%Pts1(6,i)
+          pypzlocal = pypzlocal + this%Pts1(4,i)*this%Pts1(6,i)
+
           do j = 1, 6
             if(localmax(j).lt.abs(this%Pts1(j,i))) then
                localmax(j) = abs(this%Pts1(j,i))
@@ -232,8 +249,13 @@
         tmplc(35) = y2pylocal
         tmplc(36) = y2py2local
         tmplc(37) = y3pylocal
+        !add paras for dispersion and twiss paras output
+        tmplc(38) = xpzlocal
+        tmplc(39) = pxpzlocal
+        tmplc(40) = ypzlocal
+        tmplc(41) = pypzlocal
         
-        call MPI_REDUCE(tmplc,tmpgl,37,MPI_DOUBLE_PRECISION,&
+        call MPI_REDUCE(tmplc,tmpgl,41,MPI_DOUBLE_PRECISION,&
                         MPI_SUM,0,MPI_COMM_WORLD,ierr)
         call MPI_REDUCE(localmax,glmax,6,MPI_DOUBLE_PRECISION,MPI_MAX,0,&
                         MPI_COMM_WORLD,ierr)
@@ -257,20 +279,24 @@
           z0 = tmpgl(5)*den1
           pz0 = tmpgl(6)*den1
           sqx = tmpgl(7)*den1
-          sqsum1 = sqx - x0*x0
           sqpx = tmpgl(8)*den1
-          sqsum2 = sqpx - px0*px0
           sqy = tmpgl(9)*den1
-          sqsum3 = sqy - y0*y0
           sqpy = tmpgl(10)*den1
-          sqsum4 = sqpy - py0*py0
           sqz = tmpgl(11)*den1
-          sqsum5 = sqz - z0*z0
           sqpz = tmpgl(12)*den1
-          sqsum6 = sqpz - pz0*pz0
           xpx = tmpgl(13)*den1 - x0*px0
           ypy = tmpgl(14)*den1 - y0*py0
           zpz = tmpgl(15)*den1 - z0*pz0
+          xpz  = tmpgl(38)*den1 - x0*pz0
+          pxpz = tmpgl(39)*den1 - px0*pz0
+          ypz  = tmpgl(40)*den1 - y0*pz0
+          pypz = tmpgl(41)*den1 - py0*pz0
+          sqsum1 = sqx - x0*x0
+          sqsum2 = sqpx - px0*px0
+          sqsum3 = sqy - y0*y0
+          sqsum4 = sqpy - py0*py0
+          sqsum5 = sqz - z0*z0
+          sqsum6 = sqpz - pz0*pz0
           cubx = tmpgl(16)*den1
           cubxpx2 = tmpgl(28)*den1
           cubx2px = tmpgl(30)*den1
@@ -338,9 +364,52 @@
           if(xrms.ne.0.0 .and. pxrms.ne.0.0)xpxfac=1.0/(xrms*pxrms)
           if(yrms.ne.0.0 .and. pyrms.ne.0.0)ypyfac=1.0/(yrms*pyrms)
           if(zrms.ne.0.0 .and. pzrms.ne.0.0)zpzfac=1.0/(zrms*pzrms)
+          
+          !-------------------------------------
+          !03/13/2021, B. Li
+          !add twiss and dispersion paras output
+          !sigij, which exclude the contribution of dispersion
+          sig11 = sqsum1-xpz**2/sqsum6 
+          sig12 = xpx-xpz*pxpz/sqsum6
+          sig22 = sqsum2-pxpz**2/sqsum6
+          sig33 = sqsum3-ypz**2/sqsum6
+          sig34 = ypy-ypz*pypz/sqsum6
+          sig44 = sqsum4-pypz**2/sqsum6
+          !transforme to (x,px,y,py,z,delta) phase space
+          sig11 = sig11*Scxl**2             
+          sig12 = sig12*Scxl/gambet        
+          sig22 = sig22/gambet/gambet
+          sig33 = sig33*Scxl**2
+          sig34 = sig34*Scxl/gambet
+          sig44 = sig44/gambet/gambet
+          !emittance, which exclude dispersion
+          ecx = sqrt(sig11*sig22-sig12**2)
+          ecy = sqrt(sig33*sig44-sig34**2) 
+          ecxn = ecx*gambet
+          ecyn = ecy*gambet
+          !projected emittance
+          ex  = sqrt(sqsum1*sqsum2-xpx**2)*Scxl/gambet
+          ey  = sqrt(sqsum3*sqsum4-ypy**2)*Scxl/gambet
+          exn = ex*gambet
+          eyn = ey*gambet
+          !dispersion function
+          etax  = xpz/sqsum6*(-Scxl*gambet*bet)
+          etaxp = pxpz/sqsum6*(-bet)
+          etay  = ypz/sqsum6*(-Scxl*gambet*bet)
+          etayp = pypz/sqsum6*(-bet)
+          !transverse twiss parameters, with dispersion excluded
+          betax  = sig11/ecx
+          alphax =-sig12/ecx
+          gammax = sig22/ecx
+          betay  = sig33/ecy
+          alphay =-sig34/ecy
+          gammay = sig44/ecy
+
           write(18,99)z,this%refptcl(5),gam,energy,bet,sqrt(glrmax)*xl
-          write(24,100)z,x0*xl,xrms*xl,px0/gambet,pxrms/gambet,-xpx/epx,epx*xl
-          write(25,100)z,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,epy*xl
+          write(24,102)z,x0*xl,xrms*xl,px0/gambet,pxrms/gambet,-xpx/epx,&
+                       epx*xl,betax,gammax,etax,etaxp
+          write(25,102)z,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,&
+                       epy*xl,betay,gammay,etay,etayp
           write(26,100)z,z0*xt,zrms*xt,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xt
           write(27,100)z,glmax(1)*xl,glmax(2)/gambet,glmax(3)*xl,&
                        glmax(4)/gambet,glmax(5)*xt,glmax(6)*qmc
@@ -365,6 +434,7 @@
 99      format(8(1x,e13.6))
 100      format(7(1x,e13.6))
 101     format(1x,e13.6,3I10)
+102      format(14(1x,e13.6))
 
         t_diag = t_diag + elapsedtime_Timer(t0)
 
