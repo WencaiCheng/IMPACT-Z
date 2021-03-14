@@ -434,7 +434,7 @@
 99      format(8(1x,e13.6))
 100      format(7(1x,e13.6))
 101     format(1x,e13.6,3I10)
-102      format(14(1x,e13.6))
+102      format(11(1x,e13.6))
 
         t_diag = t_diag + elapsedtime_Timer(t0)
 
