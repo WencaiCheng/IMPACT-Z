@@ -1,0 +1,35 @@
+!control section
+!===============
+&control
+
+kinetic_energy = 100e6
+turn = 4
+steps = 1
+
+&end
+
+!beam section
+!============
+&beam
+
+Np= 1e4
+distribution_type = 45
+
+emit_nx = 0.15e-6, beta_x = 7.33
+emit_ny = 0.15e-6, beta_y = 1.73
+sigz = 1.0e-3, sigE=2e3
+
+&end
+
+
+!lattice section
+!===============
+&lattice
+QF: QUAD, L=0.06, K1=4.69527
+QD: QUAD, L=0.06, K1=-4.69527
+
+D1: drift, L=2.2
+
+FODO: Line=(QF,D1,QD,QD,D1,QF)
+Line: Line=(FODO)
+&end
