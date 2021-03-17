@@ -1150,7 +1150,7 @@
 ! start load balance. (at the location of new space charge calculation)
             if((mod(ibal,nbal).eq.0).and.(totnp.gt.1) ) then
               call MPI_BARRIER(comm2d,ierr)
-              if(myid.eq.0) then
+              if(myid.eq.0 .and. turn.eq.1) then
                 print*," load balance! "
               endif
 
