@@ -675,9 +675,9 @@
           px1 = xm21*x0 + xm22*px0
           y1  = xm33*y0 + xm34*py0
           py1 = xm43*y0 + xm44*py0
-          !z1  = z0 + tau/(gambet0**2)*delta0
+          z1  = z0 + tau/(gambet0**2)*delta0
           !frozen model
-          z1 = z0
+          !z1 = z0
           delta1 = delta0
           !transform back to ImpactZ's phase space
           pts(1,i) = x1/Scxl

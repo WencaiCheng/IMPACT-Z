@@ -286,7 +286,7 @@
                   this%Pts1(1,i) = this%Pts1(1,i)+tmppx/gambet0*tau/Scxl 
                   this%Pts1(3,i) = this%Pts1(3,i)+tmppy/gambet0*tau/Scxl
                   !frozen model
-                  !this%Pts1(5,i) = this%Pts1(5,i)+tmppt/gambet0*tau/Scxl/gambet0**2                                               
+                  this%Pts1(5,i) = this%Pts1(5,i)+tmppt/gambet0*tau/Scxl/gambet0**2                                               
                 enddo
                 this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)
           else
@@ -6152,7 +6152,8 @@
           y1  = y0 + m34m*yp0
           yp1 = m44m*yp0     
           !longitudinal direction same as linear map for drift 
-          z1  = z0 !frozen model, + tau/(gambet0**2)*delta0
+          !z1  = z0 !frozen model
+          z1  = z0 + tau/(gambet0**2)*delta0
           delta1 = m65m*z0 + m66m*delta0
           !transform back to ImpactZ phase space
           this%Pts1(1,i) = x1/Scxl
