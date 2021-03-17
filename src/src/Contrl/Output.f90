@@ -1905,7 +1905,8 @@
            do i = 1, this%Nptlocal,abs(samplePeriod)
             write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i)/gambet, &
                   this%Pts1(3,i)*Scxl,this%Pts1(4,i)/gambet, &
-                  -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)/gambet/bet0
+                  -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)
+                 !-this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)/gambet/bet0
                  !the following, X5=t
                  !-this%Pts1(5,i)*Scxl/Clight,-this%Pts1(6,i)
            enddo
@@ -1916,7 +1917,8 @@
             do j = 1, nptlist(i)/9,abs(samplePeriod)
               write(nfile,101)recvbuf(1,j)*Scxl,recvbuf(2,j)/gambet,&
                     recvbuf(3,j)*Scxl,recvbuf(4,j)/gambet,&
-                    -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)/gambet/bet0
+                    -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)
+                   !-recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)/gambet/bet0
                    !the following, X5=t
                    !-recvbuf(5,j)*Scxl/Clight,-recvbuf(6,j)
             enddo
