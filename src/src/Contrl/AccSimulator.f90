@@ -668,12 +668,14 @@
         !2021-03-12, loop for multi-turns tracking  
         !outfq: -2,-8 element output every ofreq turns
         do ith_turn=1,turn       
-         
+          if(myid.eq.0 .and. turn.gt.1) then
+              print*,"turn:",ith_turn
+          endif
         do i = iend+1, Nblem
 
           call getparam_BeamLineElem(Blnelem(i),blength,bnseg,bmpstp,&
                                      bitype)
-          if(myid.eq.0) then
+          if(myid.eq.0 .and. turn.eq.1) then
             print*,"enter elment (type code): ",i,bitype
           endif
           call getradius_BeamLineElem(Blnelem(i),piperad,piperad2)
@@ -962,7 +964,7 @@
 
           zedge = z
           call setparam_BeamLineElem(Blnelem(i),1,zedge)
-          if(myid.eq.0) print*,"zedge: ",zedge
+          if(myid.eq.0 .and. turn.eq.1) print*,"zedge: ",zedge
           if(Flagerr.eq.1) then
               call geomerrL_BeamBunch(Bpts,Blnelem(i)) 
           end if
@@ -1428,7 +1430,7 @@
             endif
 
             nstep = nstep + 1
-            if(myid.eq.0) then 
+            if(myid.eq.0 .and. turn.eq.1) then 
               print*,"j, nstep, z",j,nstep,z
             endif
           end do
