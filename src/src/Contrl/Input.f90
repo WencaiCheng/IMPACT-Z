@@ -260,7 +260,11 @@
                          ierr)
         call MPI_BCAST(ophsini,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
                          ierr)
-        call MPI_BCAST(Flagsc,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
+        call MPI_BCAST(Flagsc,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
+                         ierr)
+        call MPI_BCAST(turn,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
+                         ierr)
+        call MPI_BCAST(outfq,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
                          ierr)
 
         end subroutine in1_Input
