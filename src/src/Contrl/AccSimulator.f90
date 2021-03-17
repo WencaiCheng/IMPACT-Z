@@ -611,7 +611,7 @@
         endif
 
         if(Flagdiag.eq.1) then
-            call diagnostic1_Output(z,Bpts,nchrg,nptlist0)
+            call diagnostic1_Output(z,Bpts,nchrg,nptlist0,turn,0)
         else
             call diagnostic2_Output(Bpts,z,nchrg,nptlist0)
         endif
@@ -1421,12 +1421,17 @@
               endif
             endif
             !print*,"pass sec2: ",z
-
-
-            if(Flagdiag.eq.1) then
-                call diagnostic1_Output(z,Bpts,nchrg,nptlist0)
-            else
-                call diagnostic2_Output(Bpts,z,nchrg,nptlist0)
+            
+            !for one turn tracking, calculation beam information after
+            !every element; for multi-turn tracking, only at the end of
+            !one turn
+            if(turn.eq.1) then
+              if(Flagdiag.eq.1) then
+                  call diagnostic1_Output(z,Bpts,nchrg,nptlist0, &
+                                          turn,ith_turn)
+              else
+                  call diagnostic2_Output(Bpts,z,nchrg,nptlist0)
+              endif
             endif
 
             nstep = nstep + 1
@@ -1453,10 +1458,19 @@
                 call geomerrT_BeamBunch(Bpts,Blnelem(i)) 
           end if
           zbleng = zbleng + blength
-        enddo
+        enddo  !end loop through nbeam line element
 
-        enddo
-!end loop through nbeam line element
+        !do calculations for beam-sig values at the end of every turn
+        if(turn.gt.1) then
+          if(Flagdiag.eq.1) then
+              call diagnostic1_Output(z,Bpts,nchrg,nptlist0, &
+                                     turn,ith_turn )
+          else
+              call diagnostic2_Output(Bpts,z,nchrg,nptlist0)
+          endif
+        endif
+
+        enddo  !end loop for multi-turns tracking
 !------------------------------------------------
 
 ! final output.
