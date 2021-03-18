@@ -5986,7 +5986,8 @@
 
         !max. accelerating gradient (V/m)
         vtmp = drange(2)/this%Mass
-        harm = drange(3)/Scfreq
+        harm = drange(3)/Scfreq   !Scfreq, i.e. scaling frequency in
+                                  !line11 of ImpactZ.in
         !synchronous phase
         phi0lc = drange(4)*asin(1.0d0)/90
 
