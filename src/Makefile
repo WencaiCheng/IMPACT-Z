@@ -22,8 +22,8 @@
 
 CC = gfortran
 LINK = gfortran
-#FFLAGS = -O3
-FFLAGS = -g
+FFLAGS = -O3
+#FFLAGS = -g
 
 #**************************************************************************
 # List of .o files that EXENAME depends on.  Edit as appropriate for MP.

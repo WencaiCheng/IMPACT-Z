@@ -405,40 +405,20 @@
           alphay =-sig34/ecy
           gammay = sig44/ecy
           
-          if(turn.eq.1) then
-            write(18,99)z,this%refptcl(5),gam,energy,bet,sqrt(glrmax)*xl
-            write(24,102)z,x0*xl,xrms*xl,px0/gambet,pxrms/gambet,-xpx/epx,&
-                         epx*xl,betax,gammax,etax,etaxp
-            write(25,102)z,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,&
-                         epy*xl,betay,gammay,etay,etayp
-            write(26,100)z,z0*xt,zrms*xt,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xt
-            write(27,100)z,glmax(1)*xl,glmax(2)/gambet,glmax(3)*xl,&
-                         glmax(4)/gambet,glmax(5)*xt,glmax(6)*qmc
-            write(28,101)z,npctmin,npctmax,nptot
-            write(29,100)z,x03*xl,px03/gambet,y03*xl,py03/gambet,z03*xt,&
-                         pz03*qmc
-            write(30,100)z,x04*xl,px04/gambet,y04*xl,py04/gambet,z04*xt,&
-                         pz04*qmc
-            write(32,*)z,nptlist(1:nchrg)
-          else if(turn.gt.1) then
-            write(18,103)z,turn_ith,this%refptcl(5),gam,energy,bet,sqrt(glrmax)*xl
-            write(24,104)z,turn_ith,x0*xl,xrms*xl,px0/gambet,pxrms/gambet,-xpx/epx,&
-                         epx*xl,betax,gammax,etax,etaxp
-            write(25,104)z,turn_ith,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,&
-                         epy*xl,betay,gammay,etay,etayp
-           
-            !folowing lines keeps unchanged temporary
-            write(26,100)z,z0*xt,zrms*xt,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xt
-            write(27,100)z,glmax(1)*xl,glmax(2)/gambet,glmax(3)*xl,&
-                         glmax(4)/gambet,glmax(5)*xt,glmax(6)*qmc
-            write(28,101)z,npctmin,npctmax,nptot
-            write(29,100)z,x03*xl,px03/gambet,y03*xl,py03/gambet,z03*xt,&
-                         pz03*qmc
-            write(30,100)z,x04*xl,px04/gambet,y04*xl,py04/gambet,z04*xt,&
-                         pz04*qmc
-            write(32,*)z,nptlist(1:nchrg)
-          endif
-
+          write(18,103)z,this%refptcl(5),gam,energy,bet,sqrt(glrmax)*xl,turn_ith
+          write(24,104)z,x0*xl,xrms*xl,px0/gambet,pxrms/gambet,-xpx/epx,&
+                       epx*xl,betax,gammax,etax,etaxp,turn_ith
+          write(25,104)z,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,&
+                       epy*xl,betay,gammay,etay,etayp,turn_ith
+          write(26,100)z,z0*xt,zrms*xt,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xt
+          write(27,100)z,glmax(1)*xl,glmax(2)/gambet,glmax(3)*xl,&
+                       glmax(4)/gambet,glmax(5)*xt,glmax(6)*qmc
+          write(28,101)z,npctmin,npctmax,nptot
+          write(29,100)z,x03*xl,px03/gambet,y03*xl,py03/gambet,z03*xt,&
+                       pz03*qmc
+          write(30,100)z,x04*xl,px04/gambet,y04*xl,py04/gambet,z04*xt,&
+                       pz04*qmc
+          write(32,*)z,nptlist(1:nchrg)
 
           call flush(18)
           call flush(24)
