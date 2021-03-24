@@ -1,0 +1,55 @@
+!control section
+!===============
+&control
+core_num_T = 1;
+core_num_L = 1;
+meshx = 64;
+meshy = 64;
+meshz = 64;
+default_order = 1;
+kinetic_energy = 100e6;
+freq_rf_scale = 4.7715e7;
+
+&end
+
+!beam section
+!==============
+&beam
+mass = 0.511001e6;
+charge = -1.0;
+
+distribution_type = 45;
+Np = 1e2;
+total_charge = 75e-12;
+
+!sigx=7.8308e-5, sigpx=5e-8, sigxpx=0;
+!sigy=7.8308e-5, sigpy=5e-8, sigypy=0;
+emit_nx=0.15e-6, beta_x=8, alpha_x=0.0;
+emit_ny=0.15e-6, beta_y=8, alpha_y=0.0;
+sigz=0.1e-3,    sigE=0e3, chirp_h = -2;
+
+&end
+
+!lattice section
+!===============
+&lattice
+
+theta=2*pi/4;
+e1=theta/2;
+e2=theta/2;
+
+d1: DRIFT,L=1
+B1: BEND,L=0.2,ANGLE=theta,E1=e1,E2=e2
+
+!------------------------
+w0: WATCH,FILENAME_ID=1000,sample_freq=1, coordinate_convention='NORMAL'
+w1: WATCH,FILENAME_ID=1001,sample_freq=1, coordinate_convention='NORMAL'
+w2: WATCH,FILENAME_ID=1002,sample_freq=1, coordinate_convention='NORMAL'
+w3: WATCH,FILENAME_ID=1003,sample_freq=1, coordinate_convention='NORMAL'
+
+R1: line=(B1,d1)
+
+Line: line=(w0,R1,w1,R1,w2,R1,w3,R1)
+
+&end
+
