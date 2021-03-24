@@ -1160,6 +1160,28 @@
 
         end subroutine conv0th_BeamBunch
 
+        subroutine RingPhaseFold(this,Flagbc)
+        implicit none
+        include 'mpif.h'
+        type (BeamBunch), intent(inout) :: this
+        integer, intent(in) :: Flagbc
+        double precision :: pilc,tmp5
+        integer :: i0,ntmp5
+
+        pilc = 2.0*asin(1.0)
+      
+        if(Flagbc.eq.1) then ! open 3D
+          do i0 = 1, this%Nptlocal
+            !biaobin, the ring length is (-pi,pi), outside particle
+            !should fold into (-pi,pi)
+            ntmp5 = this%Pts1(5,i0)/pilc
+            tmp5 = this%Pts1(5,i0) - ntmp5*pilc
+            this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
+          end do
+        end if
+
+        end subroutine RingPhaseFold
+
         !from z to t beam frame 1st order transformation.
         subroutine conv1st_BeamBunch(this,tau,nplc,nptot,ptrange,&
                                      Flagbc,perd,xrad,yrad)
@@ -1201,8 +1223,10 @@
             if(abs(this%Pts1(5,i0)).ge.pilc) then
              !ilost = ilost + 1
              !goto 100
-             print*,"PAY ATTENTION: bunch length is outside (-pi,pi)."
             endif
+
+            !biaobin, the ring length is (-pi,pi), outside particle
+            !should fold into (-pi,pi)
             ntmp5 = this%Pts1(5,i0)/pilc
             tmp5 = this%Pts1(5,i0) - ntmp5*pilc
             this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
