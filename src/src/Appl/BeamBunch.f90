@@ -1208,7 +1208,6 @@
         bet = sqrt(gam**2-1.0)/gam
         bbyk = bet/xk
         rad = (xrad+yrad)/2 
-      
         do i = 1, 3
           ptrange(2*i-1) = 1.0e20
           ptrange(2*i) = -1.0e20
@@ -1287,6 +1286,9 @@
             this%Pts1(9,i) = this%Pts1(9,i0)
 100         continue
           enddo
+          !if(ilost.ne.0) then
+          !    print*,"ilost=",ilost
+          !endif
         else if(Flagbc.eq.2) then ! open 2D, 1D z periodic
           ilost = 0
           do i0 = 1, this%Nptlocal
