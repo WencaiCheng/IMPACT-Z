@@ -1,0 +1,575 @@
+ !control section
+!===============
+&control
+  core_num_T=1;
+  core_num_L=1;
+
+  meshx= 64;
+  meshy= 64;
+  meshz= 64;
+
+  default_order= 2;
+  kinetic_energy= 80.1883e6;       !kinetic energy [eV]
+
+  freq_rf_scale= 1.022e6/2;
+
+  steps=1;    ! 1 kicks/m
+  maps=1;     ! 1 map/half_step
+
+  tsc=0;       !tsc on
+  lsc=0;       !lsc on
+
+  csr=0;      !csr off
+  zwake=0;    !longitudinal wakefield off
+  trwake=0;   !transverse wakefield off
+
+  pipe_radius=1.014;
+
+  turn=1, outfq=10;
+  !turn=10000, outfq=1000;
+
+&end
+
+!beam section
+!==============
+&beam
+mass = 938.272310e6;
+charge = 1.0;
+
+Np = 10;
+total_charge = 6.24e-9;
+
+emit_nx = 9.8e-6, beta_x = 6.1074, alpha_x = 0;
+emit_ny = 1.6e-6, beta_y = 5.4026, alpha_x = 0;
+sigz=16.546;    
+!sigE=1e3;
+sigE=0.5e6;
+
+distribution_type = 45;
+&end 
+
+&lattice
+  E0=0.938272310*1e9;                              
+  C=2.99792458e8;                              
+  PMASS=E0;
+
+
+  DTR=PI/180;
+  EK=1.60*1e9;   
+  EINJ=0.08*1e9;                        
+  PC=sqrt(EK*(EK+2.0*PMASS)); 
+  PCI=sqrt(EINJ*(EINJ+2.0*PMASS));
+  BRHOEXT=PC/C;
+  BRHOINJ=PCI/C;
+  BRHO=BRHOINJ;
+  GAMMA=1+EK/PMASS;
+  BETA=sqrt(1-1/(GAMMA*GAMMA));
+  ANG=2*PI/24;
+  EE=ANG/2;
+  LBEND=2.1;
+
+MB:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+
+!========dipole elements
+R1MB01:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R1MB02:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R1MB03:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R1MB04:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R1MB05:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R1MB06:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R2MB01:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R2MB02:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R2MB03:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R2MB04:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R2MB05:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R2MB06:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R3MB01:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R3MB02:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R3MB03:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R3MB04:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R3MB05:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R3MB06:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R4MB01:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R4MB02:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R4MB03:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R4MB04:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R4MB05:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+R4MB06:SBEND, L=LBEND, ANGLE=ANG, E1=EE, E2=EE;
+
+  BCBND=0.238146;
+  LINBENDC=0.35; 
+  BCANG=(LINBENDC*BCBND)/BRHO;
+  BCEE=BCANG/2;
+
+!========BC elements   
+INBC1:SBEND,L=LINBENDC ,ANGLE=-BCANG,E1=-BCEE,E2=-BCEE;
+INBC2:SBEND,L=LINBENDC ,ANGLE=BCANG,E1=BCEE,E2=BCEE;
+INBC3:SBEND,L=LINBENDC ,ANGLE=BCANG,E1=BCEE,E2=BCEE;
+INBC4:SBEND,L=LINBENDC ,ANGLE=-BCANG,E1=-BCEE,E2=-BCEE;
+
+!========quadrupole field for injection
+QF06=0.802970525;
+QF04=0.752954942;
+QF03=0.876527786;
+QD02=-0.76457615;
+QF01=0.977430903;
+
+!========quadrupole elements
+LQF01=0.41;
+LQD02=0.90;
+LQF03=0.41;
+LQF04=0.45;
+LQF06=0.62;
+R1QF01:quadrupole, L=LQF01, K1=QF01/BRHO;
+R2QF01:quadrupole, L=LQF01, K1=QF01/BRHO;
+R3QF01:quadrupole, L=LQF01, K1=QF01/BRHO;
+R4QF01:quadrupole, L=LQF01, K1=QF01/BRHO;
+R1QD02:quadrupole, L=LQD02, K1=QD02/BRHO;
+R2QD02:quadrupole, L=LQD02, K1=QD02/BRHO;
+R3QD02:quadrupole, L=LQD02, K1=QD02/BRHO;
+R4QD02:quadrupole, L=LQD02, K1=QD02/BRHO;
+R1QF03:quadrupole, L=LQF03, K1=QF03/BRHO;
+R2QF03:quadrupole, L=LQF03, K1=QF03/BRHO;
+R3QF03:quadrupole, L=LQF03, K1=QF03/BRHO;
+R4QF03:quadrupole, L=LQF03, K1=QF03/BRHO;
+R1QF04:quadrupole, L=LQF04, K1=QF04/BRHO;
+R2QF04:quadrupole, L=LQF04, K1=QF04/BRHO;
+R3QF04:quadrupole, L=LQF04, K1=QF04/BRHO;
+R4QF04:quadrupole, L=LQF04, K1=QF04/BRHO;
+R1QD05:quadrupole, L=LQD02, K1=QD02/BRHO;
+R2QD05:quadrupole, L=LQD02, K1=QD02/BRHO;
+R3QD05:quadrupole, L=LQD02, K1=QD02/BRHO;
+R4QD05:quadrupole, L=LQD02, K1=QD02/BRHO;
+R1QF06:quadrupole, L=LQF06, K1=QF06/BRHO;
+R2QF06:quadrupole, L=LQF06, K1=QF06/BRHO;
+R3QF06:quadrupole, L=LQF06, K1=QF06/BRHO;
+R4QF06:quadrupole, L=LQF06, K1=QF06/BRHO;
+R1QF07:quadrupole, L=LQF06, K1=QF06/BRHO;
+R2QF07:quadrupole, L=LQF06, K1=QF06/BRHO;
+R3QF07:quadrupole, L=LQF06, K1=QF06/BRHO;
+R4QF07:quadrupole, L=LQF06, K1=QF06/BRHO;
+R1QD08:quadrupole, L=LQD02, K1=QD02/BRHO;
+R2QD08:quadrupole, L=LQD02, K1=QD02/BRHO;
+R3QD08:quadrupole, L=LQD02, K1=QD02/BRHO;
+R4QD08:quadrupole, L=LQD02, K1=QD02/BRHO;
+R1QF09:quadrupole, L=LQF04, K1=QF04/BRHO;
+R2QF09:quadrupole, L=LQF04, K1=QF04/BRHO;
+R3QF09:quadrupole, L=LQF04, K1=QF04/BRHO;
+R4QF09:quadrupole, L=LQF04, K1=QF04/BRHO;
+R1QF10:quadrupole, L=LQF03, K1=QF03/BRHO;
+R2QF10:quadrupole, L=LQF03, K1=QF03/BRHO;
+R3QF10:quadrupole, L=LQF03, K1=QF03/BRHO;
+R4QF10:quadrupole, L=LQF03, K1=QF03/BRHO;
+R1QD11:quadrupole, L=LQD02, K1=QD02/BRHO;
+R2QD11:quadrupole, L=LQD02, K1=QD02/BRHO;
+R3QD11:quadrupole, L=LQD02, K1=QD02/BRHO;
+R4QD11:quadrupole, L=LQD02, K1=QD02/BRHO;
+R1QF12:quadrupole, L=LQF01, K1=QF01/BRHO;
+R2QF12:quadrupole, L=LQF01, K1=QF01/BRHO;
+R3QF12:quadrupole, L=LQF01, K1=QF01/BRHO;
+R4QF12:quadrupole, L=LQF01, K1=QF01/BRHO;
+
+LQT=0.15;
+!========QT field for injection
+QR102=0;
+QR105=0;
+QR108=0;
+QR111=0;
+QR211=0;
+QR208=0;
+QR205=0;
+QR202=0;
+QR302=0;
+QR305=0;
+QR308=0;
+QR311=0;
+QR411=0;
+QR408=0;
+QR405=0;
+QR402=0;
+
+!========QT elements 
+R1QT02:QUADRUPOLE,L=LQT,K1=QR102/BRHO;
+R1QT05:QUADRUPOLE,L=LQT,K1=QR105/BRHO;
+R1QT08:QUADRUPOLE,L=LQT,K1=QR108/BRHO;
+R1QT11:QUADRUPOLE,L=LQT,K1=QR111/BRHO;
+R2QT11:QUADRUPOLE,L=LQT,K1=QR211/BRHO;
+R2QT08:QUADRUPOLE,L=LQT,K1=QR208/BRHO;
+R2QT05:QUADRUPOLE,L=LQT,K1=QR205/BRHO;
+R2QT02:QUADRUPOLE,L=LQT,K1=QR202/BRHO;
+R3QT02:QUADRUPOLE,L=LQT,K1=QR302/BRHO;
+R3QT05:QUADRUPOLE,L=LQT,K1=QR305/BRHO;
+R3QT08:QUADRUPOLE,L=LQT,K1=QR308/BRHO;
+R3QT11:QUADRUPOLE,L=LQT,K1=QR311/BRHO;
+R4QT11:QUADRUPOLE,L=LQT,K1=QR411/BRHO;
+R4QT08:QUADRUPOLE,L=LQT,K1=QR408/BRHO;
+R4QT05:QUADRUPOLE,L=LQT,K1=QR405/BRHO;
+R4QT02:QUADRUPOLE,L=LQT,K1=QR402/BRHO;
+
+!========sextupole field for injection
+SF01=0; 
+SD02=0; 
+LSEXT=0.2;
+!========sextupole elements 
+R1SF01:sextupole, L=LSEXT, K2=SF01/BRHO;
+R1SD02:sextupole, L=LSEXT, K2=SD02/BRHO;
+R1SD03:sextupole, L=LSEXT, K2=SD02/BRHO;
+R1SF04:sextupole, L=LSEXT, K2=SF01/BRHO;
+R2SF01:sextupole, L=LSEXT, K2=SF01/BRHO;
+R2SD02:sextupole, L=LSEXT, K2=SD02/BRHO;
+R2SD03:sextupole, L=LSEXT, K2=SD02/BRHO;
+R2SF04:sextupole, L=LSEXT, K2=SF01/BRHO;
+R3SF01:sextupole, L=LSEXT, K2=SF01/BRHO;
+R3SD02:sextupole, L=LSEXT, K2=SD02/BRHO;
+R3SD03:sextupole, L=LSEXT, K2=SD02/BRHO;
+R3SF04:sextupole, L=LSEXT, K2=SF01/BRHO;
+R4SF01:sextupole, L=LSEXT, K2=SF01/BRHO;
+R4SD02:sextupole, L=LSEXT, K2=SD02/BRHO;
+R4SD03:sextupole, L=LSEXT, K2=SD02/BRHO;
+R4SF04:sextupole, L=LSEXT, K2=SF01/BRHO;
+
+!========corrector elements 
+R1DH01:HKICKER, L=0.00, KICK=0.0;
+R1DV02:VKICKER, L=0.00, KICK=0.0;
+R1DH04:HKICKER, L=0.00, KICK=0.0;
+R1DV05:VKICKER, L=0.00, KICK=0.0;
+R1DV08:VKICKER, L=0.00, KICK=0.0;
+R1DH09:HKICKER, L=0.00, KICK=0.0;
+R1DV11:VKICKER, L=0.00, KICK=0.0;
+R1DH12:HKICKER, L=0.00, KICK=0.0;
+R2DH01:HKICKER, L=0.00, KICK=0.0;
+R2DV02:VKICKER, L=0.00, KICK=0.0;
+R2DH04:HKICKER, L=0.00, KICK=0.0;
+R2DV05:VKICKER, L=0.00, KICK=0.0;
+R2DV08:VKICKER, L=0.00, KICK=0.0;
+R2DH09:HKICKER, L=0.00, KICK=0.0;
+R2DV11:VKICKER, L=0.00, KICK=0.0;
+R2DH12:HKICKER, L=0.00, KICK=0.0;
+R3DH01:HKICKER, L=0.00, KICK=0.0;
+R3DV02:HKICKER, L=0.00, KICK=0.0;
+R3DH04:HKICKER, L=0.00, KICK=0.0;
+R3DV05:VKICKER, L=0.00, KICK=0.0;
+R3DV08:VKICKER, L=0.00, KICK=0.0;
+R3DH09:HKICKER, L=0.00, KICK=0.0;
+R3DV11:HKICKER, L=0.00, KICK=0.0;
+R3DH12:HKICKER, L=0.00, KICK=0.0;
+R4DH01:HKICKER, L=0.00, KICK=0.0;
+R4DV02:VKICKER, L=0.00, KICK=0.0;
+R4DH04:HKICKER, L=0.00, KICK=0.0;
+R4DV05:VKICKER, L=0.00, KICK=0.0;
+R4DV08:VKICKER, L=0.00, KICK=0.0;
+R4DH09:HKICKER, L=0.00, KICK=0.0;
+R4DV11:VKICKER, L=0.00, KICK=0.0;
+R4DH12:HKICKER, L=0.00, KICK=0.0;
+R3LMTDV:VKICKER, L=0.00, KICK=0.0;
+R3LMTDH:HKICKER, L=0.00, KICK=0.0;
+
+!========BPM elements 
+R1BPM01:MONITOR, L=0.0;
+R1BPM02:MONITOR, L=0.0;
+R1BPM03:MONITOR, L=0.0;
+R1BPM04:MONITOR, L=0.0;
+R1BPM05:MONITOR, L=0.0;
+R1BPM06:MONITOR, L=0.0;
+R1BPM07:MONITOR, L=0.0;
+R1BPM08:MONITOR, L=0.0;
+R1BPM09:MONITOR, L=0.0;
+R1BPM10:MONITOR, L=0.0;
+R1BPM11:MONITOR, L=0.0;
+R1BPM12:MONITOR, L=0.0;
+R2BPM01:MONITOR, L=0.0;
+R2BPM02:MONITOR, L=0.0;
+R2BPM03:MONITOR, L=0.0;
+R2BPM04:MONITOR, L=0.0;
+R2BPM05:MONITOR, L=0.0;
+R2BPM06:MONITOR, L=0.0;
+R2BPM07:MONITOR, L=0.0;
+R2BPM08:MONITOR, L=0.0;
+R2BPM09:MONITOR, L=0.0;
+R2BPM10:MONITOR, L=0.0;
+R2BPM11:MONITOR, L=0.0;
+R2BPM12:MONITOR, L=0.0;
+R3BPM01:MONITOR, L=0.0;
+R3BPM02:MONITOR, L=0.0;
+R3BPM03:MONITOR, L=0.0;
+R3BPM04:MONITOR, L=0.0;
+R3BPM05:MONITOR, L=0.0;
+R3BPM06:MONITOR, L=0.0;
+R3BPM07:MONITOR, L=0.0;
+R3BPM08:MONITOR, L=0.0;
+R3BPM09:MONITOR, L=0.0;
+R3BPM10:MONITOR, L=0.0;
+R3BPM11:MONITOR, L=0.0;
+R3BPM12:MONITOR, L=0.0;
+R4BPM01:MONITOR, L=0.0;
+R4BPM02:MONITOR, L=0.0;
+R4BPM03:MONITOR, L=0.0;
+R4BPM04:MONITOR, L=0.0;
+R4BPM05:MONITOR, L=0.0;
+R4BPM06:MONITOR, L=0.0;
+R4BPM07:MONITOR, L=0.0;
+R4BPM08:MONITOR, L=0.0;
+R4BPM09:MONITOR, L=0.0;
+R4BPM10:MONITOR, L=0.0;
+R4BPM11:MONITOR, L=0.0;
+R4BPM12:MONITOR, L=0.0;
+
+L1001  :DRIFT,L=3.570             ;
+L1001_a:DRIFT,L=0.475-0.35/2      ;
+L1001_b:DRIFT,L=1.425-0.475-0.35  ;
+L1001_c:DRIFT,L=3.570-1.425-0.35/2;
+L1002  :DRIFT,L=0.393             ;
+L1003  :DRIFT,L=1.537             ;
+L1004  :DRIFT,L=0.800             ;
+L1004_b  :DRIFT,L= 0.2            ;
+L1004_a  :DRIFT,L=0.45            ;
+L1005  :DRIFT,L=0.747             ;
+L1006  :DRIFT,L=0.000             ;
+L1007  :DRIFT,L=0.403             ;
+L1008  :DRIFT,L=3.800             ;
+L1009  :DRIFT,L=1.200             ;
+L1010  :DRIFT,L=0.573             ;
+L1011  :DRIFT,L=0.000             ;
+L1012  :DRIFT,L=0.277             ;
+L1013  :DRIFT,L=0.250             ;
+L1014  :DRIFT,L=0.1753            ;
+L1015  :DRIFT,L=0.2517            ;
+L1016  :DRIFT,L=0.000             ;
+L1017  :DRIFT,L=0.673             ;
+L1017_b  :DRIFT,L= 0.2            ;
+L1017_a  :DRIFT,L=0.323           ;
+L1018  :DRIFT,L=0.800             ;
+L1019  :DRIFT,L=0.900             ;
+L1020  :DRIFT,L=3.500             ;
+L1021  :DRIFT,L=0.900             ;
+L1022  :DRIFT,L=0.800             ;
+L1023  :DRIFT,L=0.587             ;
+L1023_a  :DRIFT,L= 0.2            ;
+L1023_b  :DRIFT,L=0.237           ;
+L1024  :DRIFT,L=0.000             ;
+L1025  :DRIFT,L=0.3382            ;
+L1026  :DRIFT,L=0.1748            ;
+L1027  :DRIFT,L=0.250             ;
+L1028  :DRIFT,L=0.277             ;
+L1029  :DRIFT,L=0.000             ;
+L1030  :DRIFT,L=0.573             ;
+L1031  :DRIFT,L=1.200             ;
+L1032  :DRIFT,L=3.800             ;
+L1033  :DRIFT,L=0.752             ;
+L1034  :DRIFT,L=0.000             ;
+L1035  :DRIFT,L=0.398             ;
+L1036  :DRIFT,L=0.800             ;
+L1036_a  :DRIFT,L= 0.2            ;
+L1036_b  :DRIFT,L=0.45            ;
+L1037  :DRIFT,L=0.317             ;
+L1038  :DRIFT,L=0.000             ;
+L1039  :DRIFT,L=5.183             ;
+
+L2001  :DRIFT,L=1.53              ;
+L2001_b  :DRIFT,L=1.137           ;
+L2001_a  :DRIFT,L=0.393           ;
+L2002  :DRIFT,L=0                 ;
+L2003  :DRIFT,L=3.97              ;
+L2004  :DRIFT,L=0.800             ;
+L2004_b  :DRIFT,L= 0.2            ;
+L2004_a  :DRIFT,L=0.45            ;
+L2005  :DRIFT,L=1.15              ;
+L2006  :DRIFT,L=1.5705            ;
+L2007  :DRIFT,L=0                 ;
+L2008  :DRIFT,L=2.2295            ;
+L2009  :DRIFT,L=1.200             ;
+L2010  :DRIFT,L=0.576             ;
+L2011  :DRIFT,L=0.000             ;
+L2012  :DRIFT,L=0.274             ;
+L2013  :DRIFT,L=0.250             ;
+L2014  :DRIFT,L=0.1753            ;
+L2015  :DRIFT,L=0.3377            ;
+L2016  :DRIFT,L=0.000             ;
+L2017  :DRIFT,L=0.587             ;
+L2017_b  :DRIFT,L= 0.2            ;
+L2017_a  :DRIFT,L=0.237           ;
+L2018  :DRIFT,L=0.800             ;
+L2019  :DRIFT,L=0.900             ;
+L2020  :DRIFT,L=3.500             ;
+L2021  :DRIFT,L=0.900             ;
+L2022  :DRIFT,L=0.800             ;
+L2023  :DRIFT,L=0.673             ;
+L2023_a  :DRIFT,L= 0.2            ;
+L2023_b  :DRIFT,L=0.323           ;
+L2024  :DRIFT,L=0.000             ;
+L2025  :DRIFT,L=0.2522            ;
+L2026  :DRIFT,L=0.1748            ;
+L2027  :DRIFT,L=0.250             ;
+L2028  :DRIFT,L=0.277             ;
+L2029  :DRIFT,L=0.000             ;
+L2030  :DRIFT,L=0.573             ;
+L2031  :DRIFT,L=1.200             ;
+L2032  :DRIFT,L=3.800             ;
+L2033  :DRIFT,L=0.4025            ;
+L2034  :DRIFT,L=0.000             ;
+L2035  :DRIFT,L=0.7475            ;
+L2036  :DRIFT,L=0.800             ;
+L2036_a  :DRIFT,L= 0.2            ;
+L2036_b  :DRIFT,L=0.45            ;
+L2037  :DRIFT,L=0.403             ;
+L2038  :DRIFT,L=0.000             ;
+L2039  :DRIFT,L=5.097             ;
+L3001  :DRIFT,L=5.140             ;
+L3002  :DRIFT,L=0.360             ;
+L3003  :DRIFT,L=0.365             ;
+L3004  :DRIFT,L=0.435             ;
+L3004_b  :DRIFT,L= 0.2            ;
+L3004_a  :DRIFT,L=0.085           ;
+L3005  :DRIFT,L=0.747             ;
+L3006  :DRIFT,L=0.000             ;
+L3007  :DRIFT,L=0.403             ;
+L3008  :DRIFT,L=3.800             ;
+L3008_a  :DRIFT,L=1.6825          ;
+L3008_b  :DRIFT,L=2.1175          ;
+L3009  :DRIFT,L=1.200             ;
+L3010  :DRIFT,L=0.573             ;
+L3011  :DRIFT,L=0.000             ;
+L3012  :DRIFT,L=0.277             ;
+L3013  :DRIFT,L=0.250             ;
+L3014  :DRIFT,L=0.1753            ;
+L3015  :DRIFT,L=0.2517            ;
+L3016  :DRIFT,L=0.000             ;
+L3017  :DRIFT,L=0.673             ;
+L3017_b  :DRIFT,L= 0.2            ;
+L3017_a  :DRIFT,L=0.323           ;
+L3018  :DRIFT,L=0.800             ;
+L3019  :DRIFT,L=0.900             ;
+L3020  :DRIFT,L=3.500             ;
+L3021  :DRIFT,L=0.900             ;
+L3022  :DRIFT,L=0.800             ;
+L3023  :DRIFT,L=0.587             ;
+L3023_a  :DRIFT,L= 0.2            ;
+L3023_b  :DRIFT,L=0.237           ;
+L3024  :DRIFT,L=0.000             ;
+L3025  :DRIFT,L=0.3382            ;
+L3026  :DRIFT,L=0.1748            ;
+L3027  :DRIFT,L=0.250             ;
+L3028  :DRIFT,L=0.277             ;
+L3029  :DRIFT,L=0.000             ;
+L3030  :DRIFT,L=0.573             ;
+L3031  :DRIFT,L=1.200             ;
+L3032  :DRIFT,L=3.800             ;
+L3033  :DRIFT,L=0.752             ;
+L3034  :DRIFT,L=0.000             ;
+L3035  :DRIFT,L=0.398             ;
+L3036  :DRIFT,L=0.800             ;
+L3036_a  :DRIFT,L= 0.2            ;
+L3036_b  :DRIFT,L=0.45            ;
+L3037  :DRIFT,L=0.317             ;
+L3038  :DRIFT,L=0.000             ;
+L3039  :DRIFT,L=5.183             ;
+L4001  :DRIFT,L=3.570             ;
+L4001_a:DRIFT,L=0.475-0.35/2      ;
+L4001_b:DRIFT,L=1.425-0.475-0.35  ;
+L4001_c:DRIFT,L=3.633-1.425-0.35/2;
+L4002  :DRIFT,L=0                 ;
+L4003  :DRIFT,L=1.867             ;
+L4004  :DRIFT,L=0.800             ;
+L4004_b  :DRIFT,L= 0.2            ;
+L4004_a  :DRIFT,L=0.45            ;
+L4005  :DRIFT,L=0.398             ;
+L4006  :DRIFT,L=0.000             ;
+L4007  :DRIFT,L=0.752             ;
+L4008  :DRIFT,L=3.800             ;
+L4009  :DRIFT,L=1.200             ;
+L4010  :DRIFT,L=0.573             ;
+L4011  :DRIFT,L=0.000             ;
+L4012  :DRIFT,L=0.277             ;
+L4013  :DRIFT,L=0.250             ;
+L4014  :DRIFT,L=0.1753            ;
+L4015  :DRIFT,L=0.3377            ;
+L4016  :DRIFT,L=0.000             ;
+L4017  :DRIFT,L=0.587             ;
+L4017_b  :DRIFT,L= 0.2            ;
+L4017_a  :DRIFT,L=0.237           ;
+L4018  :DRIFT,L=0.800             ;
+L4019  :DRIFT,L=0.900             ;
+L4020  :DRIFT,L=3.500             ;
+L4021  :DRIFT,L=0.900             ;
+L4022  :DRIFT,L=0.800             ;
+L4023  :DRIFT,L=0.673             ;
+L4023_a  :DRIFT,L= 0.2            ;
+L4023_b  :DRIFT,L=0.323           ;
+L4024  :DRIFT,L=0.000             ;
+L4025  :DRIFT,L=0.2522            ;
+L4026  :DRIFT,L=0.1748            ;
+L4027  :DRIFT,L=0.250             ;
+L4028  :DRIFT,L=0.277             ;
+L4029  :DRIFT,L=0.000             ;
+L4030  :DRIFT,L=0.573             ;
+L4031  :DRIFT,L=1.200             ;
+L4032  :DRIFT,L=3.800             ;
+L4033  :DRIFT,L=0.403             ;
+L4034  :DRIFT,L=0.000             ;
+L4035  :DRIFT,L=0.747             ;
+L4036  :DRIFT,L=0.800             ;
+L4036_a  :DRIFT,L= 0.2            ;
+L4036_b  :DRIFT,L=0.45            ;
+L4037  :DRIFT,L=0.403             ;
+L4038  :DRIFT,L=0.000             ;
+L4039  :DRIFT,L=5.097             ;
+
+
+!R1:LINE=(INBC3,L1001_b,INBC4,L1001_c,R1BPM01,L1002,R1DH01,L1003,                            
+
+R1:LINE=(L1001_a,INBC3,L1001_b,INBC4,L1001_c,R1BPM01,L1002,R1DH01,L1003,                            & 
+         R1QF01,L1004_a,R1QT02,L1004_b,R1QD02,L1005,R1BPM02,L1006,R1DV02,L1007,                     &
+         R1QF03,L1008,R1MB01,L1009,R1MB02,L1010,R1BPM04,                                            &
+         L1011,R1DH04,L1012,R1SF01,L1013,                                                           &
+         R1QF04,L1014,R1SD02,L1015,R1BPM05,L1016,R1DV05,L1017_a,R1QT05,L1017_b,                     &
+         R1QD05,L1018,R1QF06,L1019,R1MB03,L1020,R1MB04,L1021,R1QF07,L1022,                          &
+         R1QD08,L1023_a,R1QT08,L1023_b,R1DV08,L1024,R1BPM08,L1025,R1SD03,L1026,                     &
+         R1QF09,L1027,R1SF04,L1028,R1DH09,L1029,R1BPM09,L1030,R1MB05,L1031,R1MB06,                  &
+         L1032,R1QF10,L1033,R1DV11,L1034,R1BPM11,L1035,                                             &
+         R1QD11,L1036_a,R1QT11,L1036_b,R1QF12,L1037,R1BPM12,L1038,R1DH12,L1039);                    
+R2:LINE=(L2039,R2BPM12,L2038,R2DH12,L2037,R2QF12,L2036_b,R2QT11,L2036_a,                            &
+         R2QD11,L2035,R2BPM11,L2034,R2DV11,L2033,R2QF10,L2032,R2MB06,                               &
+         L2031,R2MB05,L2030,R2BPM09,L2029,R2DH09,L2028,R2SF04,L2027,                                &
+         R2QF09,L2026,R2SD03,L2025,R2BPM08,L2024,R2DV08,L2023_b,R2QT08,L2023_a,                     &
+         R2QD08,L2022,R2QF07,L2021,R2MB04,L2020,R2MB03,L2019,R2QF06,L2018,                          &
+         R2QD05,L2017_b,R2QT05,L2017_a,R2DV05,L2016,R2BPM05,L2015,R2SD02,L2014,                     &
+         R2QF04,L2013,R2SF01,L2012,R2DH04,L2011,R2BPM04,L2010,                                      &
+         R2MB02,L2009,R2MB01,L2008,R2DV02,L2007,R2BPM02,L2006,                                      &
+         R2QF03,L2005,R2QD02,L2004_b,R2QT02,L2004_a,                                                &
+         R2QF01,L2003,R2BPM01,L2002,R2DH01,L2001_b,R3LMTDV,L2001_a);                                
+R3:LINE=(L3001,R3BPM01,L3002,R3QF01,L3003,R3DH01,                                                   &
+         L3004_a,R3QT02,L3004_b,R3QD02,L3005,R3BPM02,L3006,R3DV02,L3007,                            &
+         R3QF03,L3008_a,R3LMTDH,L3008_b,R3MB01,L3009,R3MB02,L3010,R3BPM04,                          &
+         L3011,R3DH04,L3012,R3SF01,L3013,                                                           &
+         R3QF04,L3014,R3SD02,L3015,R3BPM05,L3016,R3DV05,L3017_a,R3QT05,L3017_b,                     &
+         R3QD05,L3018,R3QF06,L3019,R3MB03,L3020,R3MB04,L3021,R3QF07,L3022,                          &
+         R3QD08,L3023_a,R3QT08,L3023_b,R3DV08,L3024,R3BPM08,L3025,R3SD03,L3026,                     &
+         R3QF09,L3027,R3SF04,L3028,R3DH09,L3029,R3BPM09,L3030,R3MB05,L3031,R3MB06,                  &
+         L3032,R3QF10,L3033,R3DV11,L3034,R3BPM11,L3035,                                             &
+         R3QD11,L3036_a,R3QT11,L3036_b,R3QF12,L3037,R3BPM12,L3038,R3DH12,L3039);                    
+R4:LINE=(L4039,R4BPM12,L4038,R4DH12,L4037,R4QF12,L4036_b,R4QT11,L4036_a,                            &
+         R4QD11,L4035,R4BPM11,L4034,R4DV11,L4033,R4QF10,L4032,R4MB06,                               &
+         L4031,R4MB05,L4030,R4BPM09,L4029,R4DH09,L4028,R4SF04,L4027,                                &
+         R4QF09,L4026,R4SD03,L4025,R4BPM08,L4024,R4DV08,L4023_b,R4QT08,L4023_a,                     &
+         R4QD08,L4022,R4QF07,L4021,R4MB04,L4020,R4MB03,L4019,R4QF06,L4018,                          &
+         R4QD05,L4017_b,R4QT05,L4017_a,R4DV05,L4016,R4BPM05,L4015,R4SD02,L4014,                     &
+         R4QF04,L4013,R4SF01,L4012,R4DH04,L4011,R4BPM04,L4010,                                      &
+         R4MB02,L4009,R4MB01,L4008,R4QF03,L4007,R4BPM02,L4006,R4DV02,                               &
+         L4005,R4QD02,L4004_b,R4QT02,L4004_a,                                                       &
+         R4QF01,L4003,R4BPM01,L4002,R4DH01,L4001_c,INBC1,L4001_b,INBC2,L4001_a);                    
+
+
+RCS:LINE=(R1,R2,R3,R4);
+
+w0: watch, filename_ID=1000, sample_freq=1, slice_bin=20,coordinate_convention="NORMAL"
+
+! thin cavity
+cav0: RFCW, L=1e-4, volt=2.4e3, phase=0, freq=1.022e6, ac_mode=1, steps=3
+
+!line: line=(w0,cav0,RCS)
+
+!------------------------
+!L1  : DRIFT,L=5.097             ;
+line: line=(cav0)
+
+&end
