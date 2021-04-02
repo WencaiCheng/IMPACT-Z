@@ -65,6 +65,7 @@
 !        double precision :: pi,tmp5,tmp55
 !        integer :: ntmp5,nf
         integer :: npctmin,npctmax
+        double precision :: brho,time
 
         call starttime_Timer(t0)
 
@@ -404,8 +405,12 @@
           betay  = sig33/ecy
           alphay =-sig34/ecy
           gammay = sig44/ecy
+
+          !for checking RCS AC mode
+          brho = gambet*this%Mass/Clight
+          time = this%refptcl(5)*Scxl/Clight
           
-          write(18,103)z,this%refptcl(5),gam,energy,bet,sqrt(glrmax)*xl,turn_ith
+          write(18,103)z,this%refptcl(5),gam,energy,bet,sqrt(glrmax)*xl,time,brho,turn_ith
           write(24,104)z,x0*xl,xrms*xl,px0/gambet,pxrms/gambet,-xpx/epx,&
                        epx*xl,betax,gammax,etax,etaxp,turn_ith
           write(25,104)z,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,&
@@ -436,7 +441,7 @@
 101     format(1x,e13.6,3I10)
 102      format(11(1x,e13.6))
 
-103     format(6(1x,e13.6),1x,I5)
+103     format(8(1x,e13.6),1x,I5)
 104     format(11(1x,e13.6),1x,I5)
 
         t_diag = t_diag + elapsedtime_Timer(t0)

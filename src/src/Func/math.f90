@@ -9,7 +9,7 @@ module MathModule
   type :: mathTemplate
     contains
       procedure :: hamsl,iErf,randn
-      procedure :: LagrangeInterp, interp
+      procedure :: LagrangeInterp,interp,get_vhphi
   end type
   type(mathTemplate), public :: math
   ! === example use ==================================
@@ -239,5 +239,53 @@ implicit none
   end do
   LagrangeInterp=sum
 end function LagrangeInterp
+
+function get_vhphi(self,tj)
+  implicit none
+  class(mathTemplate) :: self
+  real*8 :: tj
+  real*8, allocatable :: t(:),volt(:),phase(:)
+  real*8 :: tmp1,tmp2,tmp3,tmp4
+  integer :: i,io,linenum,harmnum
+  real*8,dimension(3) :: get_vhphi
+  
+  open(unit=100, file='rfdata_ac.in')
+  
+  !get the total line number and harmonic number
+  read(100,*)linenum,harmnum
+  !print*,linenum,harmnum
+  
+  allocate(t(linenum))
+  !allocate(brho(linenum)) !no need to get brho
+  allocate(volt(linenum))
+  allocate(phase(linenum))
+  
+  do i=1,linenum
+      read(100,*,iostat=io)tmp1,tmp2,tmp3,tmp4
+      t(i) = tmp1             !s
+      !brho(i) = tmp2
+      volt(i) = tmp3*1.0d9    !PyORBIT uses GV, change to V
+      phase(i) = tmp4-90      !degree, IMPACT-Z use cos() function
+  end do
+  close(100)
+
+  if(tj>t(linenum)) then
+    print*,"ERROR, turn number too large, out of rf_curve time range."
+    stop
+  end if
+  
+  !get the value based on t0 using linear interp,
+  !pay attention to the order
+  get_vhphi(1) = self%interp(volt,t,tj,linenum)
+  get_vhphi(2) = harmnum
+  get_vhphi(3) = self%interp(phase,t,tj,linenum)
+ 
+  !print*,"volt=",get_vhphi(1),"h=",get_vhphi(2),"phi=",get_vhphi(3)
+  !deallocate the array
+  deallocate(t)
+  deallocate(volt)
+  deallocate(phase)
+
+end function get_vhphi
 
 end module MathModule

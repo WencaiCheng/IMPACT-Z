@@ -20,6 +20,7 @@
         use Timerclass
         use Fldmgerclass
         use PhysConstclass
+        use MathModule
         type BeamBunch
 !          private
           !beam freq, current, part. mass and charge.
@@ -263,6 +264,8 @@
         real*8 :: beta0,gam0,gambet0,tmppx,tmppy,tmppt,tmph,x3,qmass
         integer :: idealrf
         real*8, dimension(12) :: drange
+        real*8, dimension(3) :: vhphi
+        real*8 :: t_ref
 
         call starttime_Timer(t0)
 
@@ -336,6 +339,29 @@
         else
           !ideal RF cavity model with entrance and exit focusing
           call getparam_BeamLineElem(beamln,drange)
+          !Biaobin Li, 2021-04-02
+          !For RCS AC mode, volt and phase is changing, which read from
+          !rfdata_ac.in
+          !----------------------
+          !read in volt and phase based on t_ref
+          !ID=-0.55, end focus, nonlinear map
+          !ID=-0.65, no end focus, nonlinear map
+          if (abs(drange(5)+0.55)<1.0d-6 .or. abs(drange(5)+0.65)<1.0d-6) then
+             !get the time based on sync particle
+             t_ref = this%refptcl(5)*Scxl/Clight 
+             vhphi = math%get_vhphi(t_ref)  
+             !update volt/tau, phi, and harmonic number
+             drange(2) = vhphi(1)/(2*nseg*tau)    !volt/Lcav,gradient,V/m
+             drange(3) = vhphi(2)*Scfreq          !frf=h*f0
+             drange(4) = vhphi(3)                 !degree, already
+                                                  !changed to cos func, 
+             !map ID to -1.0 or -0.75 for transfer map choice
+             if (abs(drange(5)+0.55)<1.0d-6) then
+                 drange(5) = -1.0
+             else if (abs(drange(5)+0.65)<1.0d-6) then
+                 drange(5) = -0.75
+             end if
+          end if
 
           !Biaobin, add options to control cavity behavior:
           !ID=-0.25,   linear map, comment end focus
@@ -343,10 +369,10 @@
           !ID=-0.5,    linear map
           !ID=-1.0,    nonlinear map
           !otherwise, call maplinear_BeamLineElem()       
-          if( drange(5).eq.-0.25 .or. drange(5).eq.-0.5 ) then         
+          if(abs(drange(5)+0.25)<1.0d-6.or.abs(drange(5)+0.5)<1.0d-6) then         
             call idealrf_linearmap(this,drange,tau,nseg,nst,ihlf)
           
-          else if( drange(5).eq.-0.75 .or. drange(5).eq.-1.0) then
+          else if(abs(drange(5)+0.75)<1.0d-6.or.abs(drange(5)+1.0)<1.0d-6) then
             call idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf)
           
           else
@@ -6010,7 +6036,7 @@
 
         !print*,"nonlinear map for ideal cavity."
 
-        !max. accelerating gradient (V/m)
+        !drange(2), max. accelerating gradient (V/m)
         vtmp = drange(2)/this%Mass
         harm = drange(3)/Scfreq   !Scfreq, i.e. scaling frequency in
                                   !line11 of ImpactZ.in
@@ -6027,13 +6053,13 @@
             phi = this%Pts1(5,i)*harm+phi0lc
             cosphi = cos(phi)
             vtmpgrad = vtmp*cosphi*Scxl
-            if(drange(5).eq.-1.0) then
+            if(abs(drange(5)+1.0)<1.0d-6) then
                 !print*,"end focus for nonlinear rf map."
                 this%Pts1(2,i) = this%Pts1(2,i)  &
                              -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
                 this%Pts1(4,i) = this%Pts1(4,i)  &
                              -0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
-            else if(drange(5).eq.-0.75) then
+            else if(abs(drange(5)+0.75)<1.0d-6) then
                 !print*,"comment end focus for nonlinear cavity map."
             end if
           enddo
@@ -6076,13 +6102,13 @@
             phi = this%Pts1(5,i)*harm+phi0lc
             cosphi = cos(phi)
             vtmpgrad = vtmp*cosphi*Scxl
-            if(drange(5).eq.-1.0) then
+            if(abs(drange(5)+1.0)<1.0d-6) then
                 !print*,"end focus for nonlinear rf map."
                 this%Pts1(2,i) = this%Pts1(2,i) + &
                              0.5d0*vtmpgrad*gambetz/gam*this%Pts1(1,i)
                 this%Pts1(4,i) = this%Pts1(4,i) + &
                              0.5d0*vtmpgrad*gambetz/gam*this%Pts1(3,i)
-            else if(drange(5).eq.-0.75) then
+            else if(abs(drange(5)+0.75)<1.0d-6) then
                 !print*,"comment end focus for nonlinear cavity map."             
             end if
             !apply the final longitudinal energy deviaton kicks
@@ -6130,11 +6156,11 @@
         bet1 = gambet1/gam1
         !apply entrance focusing kick
         if(nst.eq.1 .and. mod(ihlf,2).eq.0) then
-            if(drange(5).eq.-0.5) then
+            if(abs(drange(5)+0.5)<1.0d-6) then
                 !print*,"End focus for linear rf map."
                 m21f = -vtmpgrad/(2.0d0*gam0)
                 m43f = -vtmpgrad/(2.0d0*gam0)
-            else if(drange(5).eq.-0.25) then
+            else if(abs(drange(5)+0.25)<1.0d-6) then
                 !print*,"Comment end focus for linear rf map."
                 m21f = 0.0d0
                 m43f = 0.0d0
@@ -6195,11 +6221,11 @@
 
         !apply exit focusing kick
         if(nst.eq.nseg .and. mod(ihlf,2).eq.1) then
-            if(drange(5).eq.-0.5) then
+            if(abs(drange(5)+0.5)<1.0d-6) then
                 !print*,"End focus for linear rf map."
                 m21f = vtmpgrad/(2.0d0*gam1)
                 m43f = vtmpgrad/(2.0d0*gam1)
-            else if(drange(5).eq.-0.25) then
+            else if(abs(drange(5)+0.25)<1.0d-6) then
                 !print*,"Comment end focus for linear rf map."
                 m21f = 0.0d0
                 m43f = 0.0d0
@@ -6222,5 +6248,5 @@
           enddo
         endif
         end subroutine idealrf_linearmap
-        
+
       end module BeamBunchclass

@@ -1033,6 +1033,8 @@
               ! spatial drift.
               !linear map integrator
               if(Flagmap.eq.1) then
+                !biaobin, 2021-04-02
+                !for ideal drift, quad, rf-cavity maps, comes here
                 call map1_BeamBunch(Bpts,Blnelem(i),z,tau1,bitype,&
                                     bnseg,j,ihlf)
               else
