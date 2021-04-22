@@ -130,7 +130,7 @@
         else if(flagdist.eq.46) then
           call CylinderSin_Dist(this,nparam,distparam,grid)
         else if(flagdist.eq.47) then
-          call CylinderGaussDist(this,nparam,distparam,grid)
+          call GaussDist_6D(this,nparam,distparam,grid,gam,bet0)
         else if(flagdist.eq.48) then
           call CircleUniformGaussDist(this,nparam,distparam,grid)
         else
@@ -2049,11 +2049,11 @@
                      (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
 
             ! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
-            xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
+            xz = (2*xtmp(5)-1.0d0)*sig5*sqrt(3.0d0)
             this%Pts1(5,i) = xmu5 + xz
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
-            this%pts1(6,i) = sigpz*sqrt(-2.0*log(xtmp(6)))* &
+            this%pts1(6,i) = sig6*sqrt(-2.0*log(xtmp(6)))* &
                              cos(twopi*xx) 
             !then add energy chirp, muzpz is energy chirp h here
             this%pts1(6,i) = this%pts1(6,i) + xmu6 &
@@ -2072,10 +2072,11 @@
         t_kvdist = t_kvdist + elapsedtime_Timer(t0)
         end subroutine Cylinder_Dist
         
-        !Biaobin Li, 2020-11-17
-        !generate a gaussian cylinder distribution.
-        !transverse is gaussian distribution
-        subroutine CylinderGaussDist(this,nparam,distparam,grid)
+        !Biaobin Li, 2021-04-22
+        !47 dis-type: 6-D gaussian distribution
+        !(x,px,y,py,z,dgam): gaussian distribution
+        ! muzpz is b, i.e. delta = a*z + b*z^2
+        subroutine GaussDist_6D(this,nparam,distparam,grid,gam0,bet0)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
@@ -2100,7 +2101,7 @@
         real*8 :: eps,epsilon,xz,xmod,rk,psi,xx
         real*8, dimension(6) :: xtmp
         integer :: j,pid
-        real*8 :: hh,gam0,r56
+        real*8 :: hh,gam0,bet0,r56
         integer*8 :: iseed
 
         call starttime_Timer(t0)
@@ -2182,14 +2183,26 @@
                      (-muxpx*x1/rootx+sqrt(-2.0*log(xtmp(3)))*cos(twopi*xtmp(4)))
             this%Pts1(4,i) = xmu4 + sig4* &
                      (-muypy*x3/rooty+sqrt(-2.0*log(xtmp(3)))*sin(twopi*xtmp(4)))
+
+            ! z distribution     
             !-----------------------
-            ! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
-            xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
+            !! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
+            !xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
+            !this%Pts1(5,i) = xmu5 + xz
+ 
+            ! z, gaussian distribution
+            xz = sig5*sqrt(-2.0d0*log(xtmp(5))) *cos(twopi*xtmp(6))
             this%Pts1(5,i) = xmu5 + xz
+
+            ! dgam distribution
+            !------------------
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
-            this%Pts1(6,i) = xmu6 + sigpz*sqrt(-2.0*log(xtmp(6)))* &
-                             cos(twopi*xx) 
+            this%Pts1(6,i) = sig6*sqrt(-2.0*log(xtmp(5)))* &
+                             sin(twopi*xtmp(6)) 
+            !muzpz is 2nd order chirp here, for SPAS Linac design
+            this%pts1(6,i) = xmu6 +this%pts1(6,i) &
+                             -muzpz*gam0*bet0**2*(-Scxl*bet0*xz)**2
         enddo
         
         this%Nptlocal = avgpts
@@ -2202,7 +2215,7 @@
         enddo
        
         t_kvdist = t_kvdist + elapsedtime_Timer(t0)
-        end subroutine CylinderGaussDist
+        end subroutine GaussDist_6D
 
         !biaobin, 2020-12-16
         !transverse is uniform distribution, longi-gauss dist
