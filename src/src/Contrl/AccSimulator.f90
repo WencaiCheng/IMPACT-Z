@@ -45,6 +45,8 @@
         integer, private :: Nx,Ny,Nz,Nxlocal,Nylocal,Nzlocal,Flagbc,&
                             Nblem,Flagmap,Flagdiag
         integer, private :: Flagsc,turn,outfq
+        !biaobin, get the RingLength
+        real*8, private :: Lc
 
         !# of processors in column and row direction.
         integer, private :: npcol, nprow
@@ -145,7 +147,7 @@
               Flagmap,distparam,21,Bcurr,Bkenergy,Bmass,Bcharge,&
         Bfreq,xrad,yrad,Perdlen,Nblem,npcol,nprow,Flagerr,Flagdiag,&
         Flagsubstep,phsini,nchrg,nptlist,currlist,qmcclist,Flagsc,&
-        turn,outfq)
+        turn,outfq,Lc)
 
         allocate(nptlist0(nchrg))
         allocate(currlist0(nchrg))
@@ -1072,7 +1074,9 @@
             if (Bcurr.lt.1.0e-10 .or. Flagsc.eq.0)  then !no space-charge
                !biaobin, this func plays the same role as RingPhaseFold
                !1. aperture is considered
-               call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad,piperad2)
+               !2. phase fold based on Ring Length
+               call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad, &
+                    piperad2,Lc)
 !              call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
 
             else !calculate space charge forces

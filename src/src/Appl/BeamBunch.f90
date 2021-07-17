@@ -487,7 +487,7 @@
 
         !counter the particles get lost outside the xrad and yrad.
         !we have not put the lost through rf bucket yet.
-        subroutine lostcount_BeamBunch(this,nplc,nptot,xrad,yrad)
+        subroutine lostcount_BeamBunch(this,nplc,nptot,xrad,yrad,Lc)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
@@ -497,11 +497,22 @@
         double precision :: tmpx,tmpy,pilc,xl,rad,tmp5
         integer :: ilost,i0,ierr,ntmp5
         real*8 :: tmpbet,rcpgammai,gam
+        real*8, intent(in) :: Lc
+        real*8 :: bet0,f0,fs
 
         pilc = 2.0*asin(1.0)
         xl = Scxl
         rad = (xrad+yrad)/2 
         gam = -this%refptcl(6)
+        bet0= sqrt(1.0d0-1.0d0/gam**2)
+
+        !biaobin, phase fold based on circulation freq
+        !-------------
+        !PAY ATTENTION:
+        !-------------
+        !if running Linac simu, one should set f0=fs 
+        fs = Scfreq    !scaling freq set in ImpactZ.in 
+        f0 = bet0*Clight/Lc
 
         ilost = 0
         do i0 = 1, this%Nptlocal
@@ -516,9 +527,15 @@
           this%Pts1(3,i) = this%Pts1(3,i0)
           this%Pts1(4,i) = this%Pts1(4,i0)
 
+          !biaobin, change the phase refer to RING
+          this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)
+          !phase folding
           ntmp5 = this%Pts1(5,i0)/pilc
           tmp5 = this%Pts1(5,i0) - ntmp5*pilc
           this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
+
+          !biaobin, back to phase based on fs
+          this%Pts1(5,i0) = fs/f0*this%Pts1(5,i0)
 
           this%Pts1(5,i) = this%Pts1(5,i0)
           this%Pts1(6,i) = this%Pts1(6,i0)

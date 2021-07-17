@@ -36,7 +36,7 @@
         orstartflg,oflagmap,distparam,nparam,obcurr,obkenergy,obmass,&
         obcharge,obfreq,oxrad,oyrad,operdlen,onblem,onpcol,onprow,oflagerr,&
         oflagdiag,oflagsbstp,ophsini,onchrg,onptlist,ocurrlist,oqmcclist,&
-        Flagsc,turn,outfq)
+        Flagsc,turn,outfq,Lc)
 
         implicit none
         include 'mpif.h'
@@ -55,6 +55,7 @@
         character*1 comst
         integer :: ii,jj,i
         integer, intent(out) :: Flagsc, turn, outfq
+        real*8, intent(out) :: Lc
 
         call MPI_COMM_RANK(MPI_COMM_WORLD,my_rank,ierr)
         call MPI_COMM_SIZE(MPI_COMM_WORLD,np,ierr)
@@ -198,12 +199,14 @@
           !count the # of beam line elements.
           itot=0
           njunk3 = 0
+          Lc = 0.0
 123       continue
             read(13,*,end=789)comst
             if(comst.ne."!") then
               backspace(13,err=789)
               read(13,*,end=789)xjunk,njunk1,njunk2,njunk3
               itot = itot + 1
+              Lc = Lc + xjunk
             endif
             if(njunk3.eq.-99)then
               goto 789
@@ -265,6 +268,8 @@
         call MPI_BCAST(turn,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
                          ierr)
         call MPI_BCAST(outfq,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
+                         ierr)
+        call MPI_BCAST(Lc,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
                          ierr)
 
         end subroutine in1_Input
