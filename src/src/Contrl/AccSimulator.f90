@@ -782,12 +782,12 @@
           
           !for multi-turns tracking, output phase space every ofreq turns
           if(bitype.eq.-2) then
-            if (mod(ith_turn,outfq)==0 .or. ith_turn.eq.1) then
-                bmpstp = bmpstp+ith_turn
-                !for 1st turn, back to initial nfile ID
-                if (ith_turn.eq.1) then
-                    bmpstp = bmpstp-1
-                end if
+            !biaobin, watch, fort.1000
+            !(watch,RCS), for 11 turns tracking, outfq=5:
+            !fort.1000, fort.1005, fort.1010
+            !refers to: initial, after 5th turn, after 10th turn output.
+            if (mod(ith_turn-1,outfq)==0 .or. ith_turn.eq.1) then
+                bmpstp = bmpstp+ith_turn-1
                 call getparam_BeamLineElem(Blnelem(i),drange)
                 realSamplePeriod = drange(2)
                 integerSamplePeriod = realSamplePeriod
