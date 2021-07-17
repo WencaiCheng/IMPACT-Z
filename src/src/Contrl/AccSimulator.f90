@@ -1376,6 +1376,8 @@
             if(Flagmap.eq.1) then
             ! kick particles in velocity space.
               if((flagwake.eq.1) .or. (flagcsr.eq.1)) then
+                !biaobin, if Potential%FieldQ = 0.0d0, i.e. potential
+                !from space charge is set to 0, space charge is OFF.  
                 !Potential%FieldQ = 0.0d0 !test wakefield
                 call kick1wake_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,exwake,eywake,&
