@@ -1070,15 +1070,10 @@
             !Flagsc=2, TSC
             !Flagsc=3, LSC + TSC
             if (Bcurr.lt.1.0e-10 .or. Flagsc.eq.0)  then !no space-charge
-               !print*,"current=",Bcurr,"Flagsc=",Flagsc
-               !print*,"Space charge kick is turned OFF." 
-!              call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad,piperad2)
+               !biaobin, this func plays the same role as RingPhaseFold
+               !1. aperture is considered
+               call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad,piperad2)
 !              call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
-               
-               !biaobin, 2021-03-24
-               !the ring length is (-pi,pi), outside particle
-               !should fold into (-pi,pi)
-               call RingPhaseFold(Bpts,Flagbc)
 
             else !calculate space charge forces
               call conv1st_BeamBunch(Bpts,tau2,Nplocal,Np,ptrange,&
