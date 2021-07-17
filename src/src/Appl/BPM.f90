@@ -123,14 +123,15 @@
         btype = this%Itype
 
         end subroutine getparam3_BPM
-
+        
+        !biaobin, shift 6D coordinates to centre
         subroutine shift_BPM(Pts1,itype,innp,nptot)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: itype,innp,nptot
         double precision, pointer, dimension(:,:) :: Pts1
-        double precision:: x0lc,px0lc,y0lc,py0lc
-        double precision, dimension(4) :: tmplc,tmpgl
+        double precision:: x0lc,px0lc,y0lc,py0lc,phi0lc,dgam0lc
+        double precision, dimension(6) :: tmplc,tmpgl
         integer :: i,j,ierr
 
         tmplc = 0.0
@@ -140,31 +141,42 @@
           px0lc = 0.0
           y0lc = 0.0
           py0lc = 0.0
+          phi0lc = 0.0
+          dgam0lc = 0.0
           do i = 1, innp
             x0lc = x0lc + Pts1(1,i)
             px0lc = px0lc + Pts1(2,i)
             y0lc = y0lc + Pts1(3,i)
             py0lc = py0lc + Pts1(4,i)
+            phi0lc = phi0lc + Pts1(5,i)
+            dgam0lc = dgam0lc + Pts1(6,i)
           enddo
 
           tmplc(1) = x0lc
           tmplc(2) = px0lc
           tmplc(3) = y0lc
           tmplc(4) = py0lc
+          tmplc(5) = phi0lc
+          tmplc(6) = dgam0lc
         
-          call MPI_ALLREDUCE(tmplc,tmpgl,4,MPI_DOUBLE_PRECISION,&
+          call MPI_ALLREDUCE(tmplc,tmpgl,6,MPI_DOUBLE_PRECISION,&
                             MPI_SUM,MPI_COMM_WORLD,ierr)
 
           tmpgl(1) = tmpgl(1)/nptot
           tmpgl(2) = tmpgl(2)/nptot
           tmpgl(3) = tmpgl(3)/nptot
           tmpgl(4) = tmpgl(4)/nptot
+          tmpgl(5) = tmpgl(5)/nptot
+          tmpgl(6) = tmpgl(6)/nptot
+
 
           do i = 1, innp
             Pts1(1,i) = Pts1(1,i) - tmpgl(1)
             Pts1(2,i) = Pts1(2,i) - tmpgl(2)
             Pts1(3,i) = Pts1(3,i) - tmpgl(3)
             Pts1(4,i) = Pts1(4,i) - tmpgl(4)
+            Pts1(5,i) = Pts1(5,i) - tmpgl(5)
+            Pts1(6,i) = Pts1(6,i) - tmpgl(6)
           enddo
         else if(itype.eq.(-1)) then
           x0lc = 0.0
