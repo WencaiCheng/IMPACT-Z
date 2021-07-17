@@ -2200,9 +2200,18 @@
             call random_number(xx)
             this%Pts1(6,i) = sig6*sqrt(-2.0*log(xtmp(5)))* &
                              sin(twopi*xtmp(6)) 
-            !muzpz is 2nd order chirp here, for SPAS Linac design
+            !biaobin, muzpz is 2nd order chirp here, for SPAS Linac design
+            !muzpz will make affection in grid settings in compdomain,
+            !thus cannot be used as 2nd order chirp here. Give the value
+            !explicitly here
             this%pts1(6,i) = xmu6 +this%pts1(6,i) &
                              -muzpz*gam0*bet0**2*(-Scxl*bet0*xz)**2
+
+            !!biaobin, saps initial 2nd chirp, b=-7165, downward curve
+            !this%pts1(6,i) = xmu6 +this%pts1(6,i) &
+            !                 +7165*gam0*bet0**2*(-Scxl*bet0*xz)**2
+ 
+
         enddo
         
         this%Nptlocal = avgpts
