@@ -1075,8 +1075,13 @@
                !biaobin, this func plays the same role as RingPhaseFold
                !1. aperture is considered
                !2. phase fold based on Ring Length
-               call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad, &
-                    piperad2,Lc)
+
+               !ONLY phase fold in turn>1, i.e. RING simu case.
+               !every step, will be called.
+               if(turn .gt. 1) then
+                 call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad, &
+                      piperad2,Lc)
+               endif
 !              call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
 
             else !calculate space charge forces

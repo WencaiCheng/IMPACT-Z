@@ -511,6 +511,9 @@
         !PAY ATTENTION:
         !-------------
         !if running Linac simu, one should set f0=fs 
+     
+        !skip this func in upstream: 
+        !only when turn>1, this func will be called
         fs = Scfreq    !scaling freq set in ImpactZ.in 
         f0 = bet0*Clight/Lc
 
