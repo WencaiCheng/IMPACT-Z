@@ -1913,6 +1913,8 @@
            !write (*,*) 'dumping phase space Impact-T format,&
            !             z=-c/w*(T-T0)*bet0'
            !output is (x, xp, z, dgam=gami-gam0)
+           write(nfile,102)"x(m)","gambetx/gambet0","y(m)",&
+                  "gambety/gambet0","z=-bet0*c*t(m)","dgam=gam-gam0"
            do i = 1, this%Nptlocal,abs(samplePeriod)
             write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i)/gambet, &
                   this%Pts1(3,i)*Scxl,this%Pts1(4,i)/gambet, &
@@ -1943,6 +1945,7 @@
 
 100     format(9(1x,e14.7))
 101     format(6(1x,e14.7))
+102     format(6(1x,A20))
 
         deallocate(nptlist)
         deallocate(recvbuf)
