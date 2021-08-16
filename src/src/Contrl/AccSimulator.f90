@@ -44,7 +44,10 @@
         !# of beam elems, type of integrator.
         integer, private :: Nx,Ny,Nz,Nxlocal,Nylocal,Nzlocal,Flagbc,&
                             Nblem,Flagmap,Flagdiag
-        integer, private :: Flagsc,turn,outfq
+        !biaobin, new line
+        !simutype=1, linac 
+        !simutype=2, ring
+        integer, private :: Flagsc,turn,outfq,simutype
         !biaobin, get the RingLength
         real*8, private :: Lc
 
@@ -147,7 +150,7 @@
               Flagmap,distparam,21,Bcurr,Bkenergy,Bmass,Bcharge,&
         Bfreq,xrad,yrad,Perdlen,Nblem,npcol,nprow,Flagerr,Flagdiag,&
         Flagsubstep,phsini,nchrg,nptlist,currlist,qmcclist,Flagsc,&
-        turn,outfq,Lc)
+        turn,outfq,Lc,simutype)
 
         allocate(nptlist0(nchrg))
         allocate(currlist0(nchrg))
@@ -1076,17 +1079,14 @@
                !1. aperture is considered
                !2. phase fold based on Ring Length
 
-               !ONLY phase fold in turn>1, i.e. RING simu case.
-               !every step, will be called.
-               if(turn .gt. 1) then
-                 call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad, &
-                      piperad2,Lc)
-               endif
+               call lostcount_BeamBunch(Bpts,Nplocal,Np,piperad, &
+                      piperad2,Lc,simutype)
 !              call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
 
             else !calculate space charge forces
               call conv1st_BeamBunch(Bpts,tau2,Nplocal,Np,ptrange,&
-                                   Flagbc,Perdlen,piperad,piperad2)
+                                   Flagbc,Perdlen,piperad,piperad2,&
+                                   Lc,simutype)
               call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
               flagcsr = 0
               if(bitype.eq.4) then

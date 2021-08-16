@@ -487,7 +487,8 @@
 
         !counter the particles get lost outside the xrad and yrad.
         !we have not put the lost through rf bucket yet.
-        subroutine lostcount_BeamBunch(this,nplc,nptot,xrad,yrad,Lc)
+        subroutine lostcount_BeamBunch(this,nplc,nptot,xrad,yrad,Lc, &
+                   simutype)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
@@ -498,6 +499,7 @@
         integer :: ilost,i0,ierr,ntmp5
         real*8 :: tmpbet,rcpgammai,gam
         real*8, intent(in) :: Lc
+        integer, intent(in) :: simutype
         real*8 :: bet0,f0,fs
 
         pilc = 2.0*asin(1.0)
@@ -506,14 +508,10 @@
         gam = -this%refptcl(6)
         bet0= sqrt(1.0d0-1.0d0/gam**2)
 
-        !biaobin, phase fold based on circulation freq
-        !-------------
-        !PAY ATTENTION:
-        !-------------
-        !if running Linac simu, one should set f0=fs 
-     
-        !skip this func in upstream: 
-        !only when turn>1, this func will be called
+        !biaobin, for ring simulation, phase should be fold 
+        !based on f0
+        !simutype=1, Linac, no folding
+        !simutype=2, Ring
         fs = Scfreq    !scaling freq set in ImpactZ.in 
         f0 = bet0*Clight/Lc
 
@@ -530,15 +528,19 @@
           this%Pts1(3,i) = this%Pts1(3,i0)
           this%Pts1(4,i) = this%Pts1(4,i0)
 
-          !biaobin, change the phase refer to RING
-          this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)
-          !phase folding
-          ntmp5 = this%Pts1(5,i0)/pilc
-          tmp5 = this%Pts1(5,i0) - ntmp5*pilc
-          this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
-
-          !biaobin, back to phase based on fs
-          this%Pts1(5,i0) = fs/f0*this%Pts1(5,i0)
+          !biaobin, only apply phase fold for RING simu 
+          !--------------------------------------------
+          if (simutype.eq.2) then
+            print*,"ring simu."
+            !biaobin, change the phase refer to f0
+            this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)
+            !phase folding
+            ntmp5 = this%Pts1(5,i0)/pilc
+            tmp5 = this%Pts1(5,i0) - ntmp5*pilc
+            this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
+            !biaobin, back to phase based on fs
+            this%Pts1(5,i0) = fs/f0*this%Pts1(5,i0)
+          endif
 
           this%Pts1(5,i) = this%Pts1(5,i0)
           this%Pts1(6,i) = this%Pts1(6,i0)
@@ -1208,12 +1210,12 @@
 
         !from z to t beam frame 1st order transformation.
         subroutine conv1st_BeamBunch(this,tau,nplc,nptot,ptrange,&
-                                     Flagbc,perd,xrad,yrad)
+                                     Flagbc,perd,xrad,yrad,Lc,simutype)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
-        double precision, intent(in) :: tau,xrad,yrad,perd
-        integer, intent(in) :: Flagbc
+        double precision, intent(in) :: tau,xrad,yrad,perd,Lc
+        integer, intent(in) :: Flagbc,simutype
         double precision, dimension(6), intent(out) :: ptrange
         integer, intent(out) :: nplc,nptot
         integer :: i
@@ -1221,7 +1223,7 @@
         double precision :: pilc,gam,bet,bbyk,rcpgammai,betai,rad
         double precision :: twopi,radtest,tmp0,tmpx,tmpy,tmp5,halfperd
         integer :: ilost,i0,ierr,ntmp5
-        real*8 :: tmpbet
+        real*8 :: tmpbet,f0,fs
 
         pilc = 2.0*asin(1.0)
         twopi = 2.0*pilc
@@ -1230,6 +1232,11 @@
 
         gam = -this%refptcl(6)
         bet = sqrt(gam**2-1.0)/gam
+        
+        !biaobin, for ring simu, phase should be fold based on f0
+        fs = Scfreq
+        f0 = bet*Clight/Lc
+
         bbyk = bet/xk
         rad = (xrad+yrad)/2 
         do i = 1, 3
@@ -1249,10 +1256,18 @@
             endif
 
             !biaobin, the ring length is (-pi,pi), outside particle
-            !should fold into (-pi,pi)
-            ntmp5 = this%Pts1(5,i0)/pilc
-            tmp5 = this%Pts1(5,i0) - ntmp5*pilc
-            this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
+            !should fold into (-pi,pi) based on the f0 
+            if (simutype.eq.2) then
+              this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)      
+
+              ntmp5 = this%Pts1(5,i0)/pilc
+              tmp5 = this%Pts1(5,i0) - ntmp5*pilc
+              this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
+
+              this%Pts1(5,i0) = fs/f0*this%Pts1(5,i0)      
+            !-------
+            !for linac, no phase folding
+            end if
 
             ! The following steps go from z to t frame.
             ! 2) Linear algorithm to transfer from z to t frame.

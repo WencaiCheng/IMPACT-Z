@@ -36,7 +36,7 @@
         orstartflg,oflagmap,distparam,nparam,obcurr,obkenergy,obmass,&
         obcharge,obfreq,oxrad,oyrad,operdlen,onblem,onpcol,onprow,oflagerr,&
         oflagdiag,oflagsbstp,ophsini,onchrg,onptlist,ocurrlist,oqmcclist,&
-        Flagsc,turn,outfq,Lc)
+        Flagsc,turn,outfq,Lc,simutype)
 
         implicit none
         include 'mpif.h'
@@ -54,7 +54,7 @@
         integer :: my_rank,nproc,ierr,np,itot,njunk1,njunk2,njunk3
         character*1 comst
         integer :: ii,jj,i
-        integer, intent(out) :: Flagsc, turn, outfq
+        integer, intent(out) :: Flagsc, turn, outfq,simutype
         real*8, intent(out) :: Lc
 
         call MPI_COMM_RANK(MPI_COMM_WORLD,my_rank,ierr)
@@ -192,7 +192,7 @@
             goto 103
           else
             backspace(13,err=789)
-            read(13,*) Flagsc,turn,outfq
+            read(13,*) Flagsc,turn,outfq,simutype
             ii = ii + 1
           end if
 
@@ -269,6 +269,9 @@
                          ierr)
         call MPI_BCAST(outfq,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
                          ierr)
+        call MPI_BCAST(simutype,1,MPI_INTEGER,0,MPI_COMM_WORLD,&
+                         ierr)
+
         call MPI_BCAST(Lc,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,&
                          ierr)
 
