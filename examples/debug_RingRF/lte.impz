@@ -25,6 +25,7 @@
 
   pipe_radius=1.014;
 
+  ringsimu=1;
   turn=1, outfq=10;
   !turn=10000, outfq=1000;
 
@@ -564,12 +565,13 @@ RCS:LINE=(R1,R2,R3,R4);
 w0: watch, filename_ID=1000, sample_freq=1, slice_bin=20,coordinate_convention="NORMAL"
 
 ! thin cavity
-cav0: RFCW, L=1e-4, volt=2.4e3, phase=0, freq=1.022e6, ac_mode=1, steps=3
+!cav0: RFCW, L=1e-4, volt=2.4e3, phase=0, freq=1.022e6, ac_mode=1, steps=1
+cav0: ringrf, volt=2.4e3, phase=0, harm=2, ac_mode=0
 
-!line: line=(w0,cav0,RCS)
+line: line=(w0,cav0,RCS)
 
 !------------------------
 !L1  : DRIFT,L=5.097             ;
-line: line=(cav0)
+!line: line=(cav0)
 
 &end
