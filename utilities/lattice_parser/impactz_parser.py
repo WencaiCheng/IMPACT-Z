@@ -325,6 +325,13 @@ class impactz_parser(lattice_parser):
         self.lattice['WATCH']['COORDINATE_CONVENTION'] = 'NORMAL' #(x,gambetx,y,gambety,t,gam)
         self.lattice['WATCH']['SLICE_INFORMATION'] = 1  # by default add -8 element simultaneously
         self.lattice['WATCH']['SLICE_BIN'] = 128
+
+        # RingRF BPM element
+        self.lattice['RINGRF']['VOLT']  = 0.0     #eV
+        self.lattice['RINGRF']['PHASE'] = 0.0     #deg in sin func  
+        self.lattice['RINGRF']['HARM']  = 1
+        self.lattice['RINGRF']['PIPE_RADIUS'] = 0.0
+        self.lattice['RINGRF']['AC_MODE'] = 0
         
         # shift the centroid of beam to the axis origin point
         #----------------------------------------------------
@@ -737,6 +744,22 @@ class impactz_parser(lattice_parser):
                 else:
                     print('Unknown flag for SLICE_INFORMATION, it should be 0 or 1.')
                     sys.exit()
+
+            elif elem['TYPE'] == 'RINGRF':
+                if elem['PIPE_RADIUS'] == '0.0' :
+                    elem['PIPE_RADIUS'] = self.control['PIPE_RADIUS'] 
+
+                if elem['AC_MODE'] == '1':
+                    mode = 2
+                else:
+                    mode = 1
+                lte_lines.append('0 0 0 -42')
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append(elem['VOLT'])
+                lte_lines.append(elem['PHASE'])
+                lte_lines.append(elem['HARM'])
+                lte_lines.append(str(mode))
+                lte_lines.append('/ \n')
 
        
         lte_lines = ' '.join(lte_lines)

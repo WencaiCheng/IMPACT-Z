@@ -24,6 +24,7 @@
   trwake=1;   !transverse wakefield off
   
   pipe_radius=0.028;
+  ringsimu = 1
   
 &end
 
