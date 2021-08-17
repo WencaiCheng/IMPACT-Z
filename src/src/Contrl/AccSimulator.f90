@@ -1067,7 +1067,7 @@
                 !biaobin, 2021-04-02
                 !for ideal drift, quad, rf-cavity maps, comes here
                 call map1_BeamBunch(Bpts,Blnelem(i),z,tau1,bitype,&
-                                    bnseg,j,ihlf)
+                                    bnseg,j,ihlf,Lc,simutype)
               else
                 call map1_BeamBunch(Bpts,z,tau2)
               endif
@@ -1415,7 +1415,7 @@
               endif
               if(bitype.ne.4) then
                 call map1_BeamBunch(Bpts,Blnelem(i),z,tau1,bitype,&
-                                    bnseg,j,ihlf)
+                                    bnseg,j,ihlf,Lc,simutype)
               else
                 !print*,"before sec2: ",z,angz
               if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
