@@ -531,7 +531,7 @@
           !biaobin, only apply phase fold for RING simu 
           !--------------------------------------------
           if (simutype.eq.2) then
-            print*,"ring simu."
+            !print*,"debug, ring simu."
             !biaobin, change the phase refer to f0
             this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)
             !phase folding

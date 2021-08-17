@@ -33,6 +33,7 @@
         use PhysConstclass
         use NumConstclass
         use Distributionclass
+        use MathModule
         implicit none
         !# of phase dim., num. total and local particles, int. dist. 
         !and restart switch, error study switch, substep for space-charge
@@ -574,9 +575,10 @@
         real*8 :: rsiglaser,rlaserwvleng
         real*8, dimension(2) :: xylc,xygl
         real*8 :: xsig2,ysig2,freqlaser,harm,sigx2,ezlaser
-        real*8 :: tmp
+        real*8 :: tmp, t_ref
         integer :: ith_turn 
-         
+        real*8, dimension(3) :: vhphi 
+        
 !-------------------------------------------------------------------
 ! prepare initial parameters, allocate temporary array.
 !        iend = 0
@@ -897,6 +899,27 @@
             call getparam_BeamLineElem(Blnelem(i),drange)
             call kickRF_BPM(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&
                             Bpts%Mass)
+
+          !biaobin, RingRF thin cavity model.
+          !AC model: read rfdata_ac.in for time changing (volt,phi0)
+          else if(bitype.eq.-42)then
+            call getparam_BeamLineElem(Blnelem(i),drange)
+
+            !drange(6)=1, DC model
+            !drange(6)=2, AC model
+            if (int(drange(6)).eq.2) then
+              !for AC model, get the time based on sync particle
+              t_ref = Bpts%refptcl(5)*Scxl/Clight
+              vhphi = math%get_vhphi(t_ref)
+              !update volt, phi and harmonic number
+              drange(3) = vhphi(1)   ![V]
+              drange(4) = vhphi(2)   !harmonic number
+              drange(5) = vhphi(3)   !degree, in cos func      
+            endif
+
+            call RingRF_BPM(Bpts,Nplocal,drange(3),drange(4),drange(5),&
+                            Bpts%Mass,Lc)
+
           !read in discrete wakefield
           else if(bitype.eq.-41)then
             call getparam_BeamLineElem(Blnelem(i),2,tmpwk)
@@ -1539,5 +1562,43 @@
         call end_Output(time)
 
         end subroutine destruct_AccSimulator
+
+        !biaobin, RingRF func        
+        !--------------------
+        subroutine RingRF_BPM(this,innp,vmax,harm,phi0,mass,Lc)
+        implicit none
+        include 'mpif.h'
+        type(BeamBunch),intent(inout) :: this
+
+        integer, intent(in) :: innp
+        !double precision, pointer, dimension(:,:) :: Pts1
+        double precision, intent(in) :: vmax,phi0,mass,harm,Lc
+        integer :: i
+        real*8 :: vtmp,phi0lc,phi
+        real*8 :: gam0,bet0,pilc
+        real*8 :: gam1,bet1
+
+        !print*,"debug, phi0=",phi0,"vmax=",vmax,"harm=",harm,"Lc=",Lc
+        vtmp = vmax/mass
+        phi0lc = phi0*asin(1.0)/90
+        gam0 = -this%refptcl(6)
+        bet0 = sqrt(1.0d0-1.0d0/gam0**2)
+        pilc = 2.0d0*asin(1.0) 
+
+        !update the ref particle energy
+        this%refptcl(6) = this%refptcl(6) - vtmp*cos(phi0lc)
+        gam1 = -this%refptcl(6)
+        bet1 = sqrt(1.0d0-1.0d0/gam1**2)
+
+        !update particle i energy
+        do i = 1,innp
+          !phi = phi0lc + harm*this%Pts1(5,i)
+          phi = phi0lc + 2*pilc*harm*bet0/Lc*this%Pts1(5,i)*Scxl
+          this%Pts1(6,i) = this%Pts1(6,i)+vtmp*(cos(phi0lc)-cos(phi))
+
+          !update X5, since X5 actually refers to ti
+          this%Pts1(5,i) = this%Pts1(5,i)*bet0/bet1
+        enddo 
+        end subroutine RingRF_BPM
 
       end module AccSimulatorclass
