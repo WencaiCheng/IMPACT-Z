@@ -6057,6 +6057,9 @@
 
         !print*,"nonlinear map for ideal cavity."
 
+        !scale freq
+        ws = 2*Pi*Scfreq
+
         !drange(2), max. accelerating gradient (V/m)
         vtmp = drange(2)/this%Mass
         harm = drange(3)/Scfreq   !Scfreq, i.e. scaling frequency in
@@ -6090,11 +6093,17 @@
         gam0 = -this%refptcl(6)
         gambet = sqrt(gam0**2-1.0d0)
         bet0 = sqrt(1.0d0-1.0d0/gam0**2)
-        !biaobin, evolution freq at entrance 
-        w0 = 2*Pi*bet0*Clight/Lc
-        !scale freq
-        ws = 2*Pi*Scfreq
 
+        if (int(simutype) .eq. 1) then
+          w0 = ws !linac simulation, harm refers to fs, thus fs should be fRF
+        else if (int(simutype).eq.2) then
+          !biaobin, for ring, harm refers to evo freq
+          !evolution freq at entrance 
+          w0 = 2*Pi*bet0*Clight/Lc
+        else 
+          print*,"Unknown simutype=",simutype,". should be Linac or Ring."
+          stop
+        end if
         do i = 1, this%Nptlocal
           !entrance momentum of individual particle
           gami_1 = gam0 - this%Pts1(6,i)
