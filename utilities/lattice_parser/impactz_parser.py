@@ -199,6 +199,7 @@ class impactz_parser(lattice_parser):
         self.control['PIPE_RADIUS'] = 0.014 #pipe radius[m], by default, 0.014m
         self.control['TURN'] = 1
         self.control['OUTFQ'] = 1
+        self.control['RINGSIMU']  = 0 
 
         # turn all para values to str data type
         for key in self.control:
@@ -550,10 +551,16 @@ class impactz_parser(lattice_parser):
         control_lines.append( '0.0 \n' )
 
         # line-12, Biaobin Li added in 03/12/2021
+        if self.control['RINGSIMU'] == '1':
+            simutype = 2
+        else:
+            simutype = 1
+
         Flagsc = self._get_sc_flag()
         control_lines.append( str(Flagsc) )
         control_lines.append( self.control['TURN'] )
         control_lines.append( self.control['OUTFQ'] )
+        control_lines.append( str(simutype) )
         control_lines.append( '\n' )
 
         control_lines = ' '.join(control_lines)
