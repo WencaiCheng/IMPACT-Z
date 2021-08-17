@@ -1,5 +1,6 @@
 import sys
 import re
+from math import *
 
 class lattice_parser:
     '''
@@ -42,19 +43,19 @@ class lattice_parser:
     def _delete_comment_blank_lines(self, lines):
         '''
         delete comment (start with !) and blank lines,
-        white spaces in line are also deleted. 
+        white spaces in each line are also deleted;
+        delete comments at the end of each line;              
         '''
         # get the index of comment and blank line
-        j = 0;
+        j = 0
         index=[]
         for line in lines:
             
             # delete all white space in each line
             lines[j] = lines[j].replace(' ','')
-            
             # also \t tab space
-            lines[j] = lines[j].replace('\t','')
-    
+            lines[j] = lines[j].replace('\t','')           
+            
             # get the index of comment and blank lines
             if re.match(r'^!',line):
                 index.append(j)
@@ -70,7 +71,13 @@ class lattice_parser:
         for j in index:
             del lines[j-cnt]
             cnt += 1
-        
+          
+        # delete all comments at the end of each line
+        j = 0
+        for line in lines:
+            lines[j] = line.split('!')[0]
+            j += 1
+            
         return lines
 
     def _delete_redundant_comma(self, lines):
@@ -102,8 +109,15 @@ class lattice_parser:
         delete all \n in lines
         '''
         j = 0
-        for line in lines:
+        for line in lines:            
+            # delete ;\n
+            lines[j] = line.replace(';\n','')
+         
+            # in case no semicolon at the end of each line
+            # only \n at the end
+            line = lines[j]
             lines[j] = line.replace('\n','')
+            
             j += 1
         
         return lines
@@ -140,16 +154,25 @@ class lattice_parser:
             # 1. type = element
             # 2. type = line
             
-            if re.match(r'(\w+):(LINE)=',line,re.IGNORECASE):
+            if re.match(r'\w+=\(?[\-\+]?\w+[\+\-\*\/]?',line):
+                #mathematical exression sentence, such as: L1=2.1; angle=pi/24
+                line_type = 'MATH_EXPR'
+    
+            elif re.match(r'(\w+):(LINE)=',line,re.IGNORECASE):
                 # print(line)
                 line_type = 'LINE'
+            
             elif re.match(r'(\w+):([a-zA-Z]+)(,)', line):
                 # print(line)
                 line_type = 'ELEMENT'
+                
             else:
-                print('Unrecognized ELEMENT or LINE name: ',line,',')
-                print("ELEMENT NAME and LINE name should be (r'[a-zA-Z0-9_]+') style.")
+                print('Unrecognized MATH_EXPR, ELEMENT, LINE name: ',line)
                 sys.exit()
+                
+            if line_type == 'MATH_EXPR':
+                # use exec to run the expression
+                exec(line.lower())   #use lower() in case pi is used.
         
             if line_type == 'ELEMENT': 
                 # handle with element line    
@@ -166,7 +189,17 @@ class lattice_parser:
                 for para in tmp[1:]:
                     para_name = para.split('=')[0].upper()  #use upper case for all para_name
                     para_value = para.split('=')[1]
-                    elem[para_name] = para_value
+                    
+                    # check if "2/pi" or "3/4" math expression exists
+                    try:
+                        eval(para_value.lower())  #lower, in case pi is used.                  
+                    except:
+                        pass
+                    else:
+                        para_value = eval(para_value.lower())
+                                   
+                    # back to str type
+                    elem[para_name] = str(para_value)
                     
                 lattice[elem_name] = elem   
                 
@@ -242,3 +275,15 @@ class lattice_parser:
             return True
         except ValueError:
             return False      
+
+
+if __name__=='__main__':
+
+    # usage examples
+    # =====================
+    file_name = 'lattice.lte'
+    line_name = 'RCS'
+
+    lte = lattice_parser(file_name,line_name)
+    lines = lte.get_brieflines()
+    trackline = lte.get_trackline(lines)
