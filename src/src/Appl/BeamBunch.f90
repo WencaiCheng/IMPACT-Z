@@ -248,14 +248,15 @@
         end subroutine drift1org_BeamBunch
 
         ! Drift beam half step using linear map for external field.
-        subroutine drift1_BeamBunch(this,beamln,z,tau,bitype,nseg,nst,ihlf)
+        subroutine drift1_BeamBunch(this,beamln,z,tau,bitype,nseg,nst,&
+                   ihlf,Lc,simutype)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
         type (BeamLineElem), intent(inout) :: beamln
         double precision, intent(inout) :: z
         double precision, intent (in) :: tau
-        integer, intent(in) :: bitype,nseg,nst
+        integer, intent(in) :: bitype,nseg,nst,simutype
         integer, intent(inout) :: ihlf
         double precision, dimension(6) :: temp
         double precision, dimension(6,6) :: xm
@@ -266,6 +267,7 @@
         real*8, dimension(12) :: drange
         real*8, dimension(3) :: vhphi
         real*8 :: t_ref
+        real*8, intent(in) :: Lc
 
         call starttime_Timer(t0)
 
@@ -281,7 +283,7 @@
           !This keeps compatibility with previous version. 
           call getparam_BeamLineElem(beamln,3,x3)
           if (x3<0) then   
-                !print*,"linear map,x3= ",x3            
+                !print*,"drift linear map,x3= ",x3            
                 do i = 1, this%Nptlocal
                   tmppx = this%Pts1(2,i)
                   tmppy = this%Pts1(4,i)
@@ -293,7 +295,7 @@
                 enddo
                 this%refptcl(5) = this%refptcl(5) + tau/(Scxl*beta0)
           else
-                !print*,"real map,x3= ",x3
+                !print*,"drift real map,x3= ",x3
                 do i = 1, this%Nptlocal
                   tmppx = this%Pts1(2,i)
                   tmppy = this%Pts1(4,i)
@@ -339,14 +341,15 @@
         else
           !ideal RF cavity model with entrance and exit focusing
           call getparam_BeamLineElem(beamln,drange)
-          !Biaobin Li, 2021-04-02
-          !For RCS AC mode, volt and phase is changing, which read from
-          !rfdata_ac.in
-          !----------------------
-          !read in volt and phase based on t_ref
-          !ID=-0.55, end focus, nonlinear map
-          !ID=-0.65, no end focus, nonlinear map
           if (abs(drange(5)+0.55)<1.0d-6 .or. abs(drange(5)+0.65)<1.0d-6) then
+             !Biaobin Li, 2021-04-02
+             !For RCS AC mode, volt and phase is changing, which read from
+             !rfdata_ac.in
+             !----------------------
+             !read in volt and phase based on t_ref
+             !ID=-0.55, end focus, nonlinear map
+             !ID=-0.65, no end focus, nonlinear map
+
              !get the time based on sync particle
              t_ref = this%refptcl(5)*Scxl/Clight 
              vhphi = math%get_vhphi(t_ref)  
@@ -373,7 +376,8 @@
             call idealrf_linearmap(this,drange,tau,nseg,nst,ihlf)
           
           else if(abs(drange(5)+0.75)<1.0d-6.or.abs(drange(5)+1.0)<1.0d-6) then
-            call idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf)
+            call idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf,&
+                 Lc,simutype)
           
           else
             ! original 103 element?       
@@ -6032,13 +6036,14 @@
         end subroutine scatter2errwake_BeamBunch
 
 ! ================================================================================
-        subroutine idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf)
+        subroutine idealrf_nonlinearmap(this,drange,tau,nseg,nst,ihlf,&
+                   Lc,simutype)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
         real*8, dimension(12), intent(in) :: drange
-        double precision, intent (in) :: tau
-        integer, intent(in) :: nseg,nst
+        double precision, intent (in) :: tau,Lc
+        integer, intent(in) :: nseg,nst,simutype
         integer, intent(inout) :: ihlf
         integer :: i
         real*8 :: vtmp,vtmpgrad,phi0lc,phi,&
@@ -6046,6 +6051,9 @@
         real*8 :: gam0,gam,gambet,gambetz
         real*8 :: gami_1,gambeti_1,gambetzi_1,dgami
         real*8 :: gami_2,gambeti_2
+        !reference bet at entrance and exit
+        real*8 :: bet0,bet1
+        real*8 :: w0,ws
 
         !print*,"nonlinear map for ideal cavity."
 
@@ -6081,6 +6089,12 @@
         !particle momentum to propagate particles
         gam0 = -this%refptcl(6)
         gambet = sqrt(gam0**2-1.0d0)
+        bet0 = sqrt(1.0d0-1.0d0/gam0**2)
+        !biaobin, evolution freq at entrance 
+        w0 = 2*Pi*bet0*Clight/Lc
+        !scale freq
+        ws = 2*Pi*Scfreq
+
         do i = 1, this%Nptlocal
           !entrance momentum of individual particle
           gami_1 = gam0 - this%Pts1(6,i)
@@ -6105,10 +6119,11 @@
 
         !update the reference particle energy
         this%refptcl(6) = this%refptcl(6) - tau*vtmp*cos(phi0lc)
- 
+        gam0 = -this%refptcl(6)
+        bet1 = sqrt(1.0d0-1.0d0/gam0**2)
+
         !apply exit focusing kick
         if(nst.eq.nseg .and. mod(ihlf,2).eq.1) then
-          gam0 = -this%refptcl(6)
           do i = 1, this%Nptlocal
             gam = gam0 - this%Pts1(6,i)
             gambetz = sqrt(gam**2-1.0d0-this%Pts1(2,i)**2-this%Pts1(4,i)**2)
@@ -6126,8 +6141,15 @@
             end if
             !apply the final longitudinal energy deviaton kicks
             !this does not work correctly at low energy
-            phi = this%Pts1(5,i)*harm+phi0lc
+            !phi = this%Pts1(5,i)*harm+phi0lc
+
+            !biaobin, update phi with changing evolution freq
+            phi = harm*w0/ws*this%Pts1(5,i) +phi0lc
             this%Pts1(6,i) = this%Pts1(6,i)+2*nseg*tau*vtmp*(cos(phi0lc)-cos(phi))
+
+            !biaobin, keep zi unchanged, Ti should be updated
+            this%Pts1(5,i) = this%Pts1(5,i)*bet0/bet1
+
           enddo
         endif
         
