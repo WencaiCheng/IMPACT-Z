@@ -491,6 +491,12 @@ In order to keep the format consistence with other elements (for re expression),
 
 
 
+The original `0 0 0 -1`  only shift transverse coordinates, now 6D shift.
+
+==question:== Then what's `-21` elements used for?
+
+
+
 ### RingRF
 
 BPM type element, zero length. Thin cavity model applied in Ring simulation, both DC and AC model.
@@ -539,6 +545,14 @@ col 3: voltage (GV)
 
 col 4: phase (degree), sin function, auto changed to cos in math.f90
 ```
+
+
+
+如何做到 RF curve 文件只读取一次：
+
+只在第一次遇到时读取文件，最后 deallocate 即可。
+
+
 
 
 
