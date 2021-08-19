@@ -16,3 +16,4 @@ echo "# install IMPACT-Z" >> ~/.zshrc
 echo "# =============" >> ~/.zshrc
 
 echo "export PATH=$ROOTPATH/utilities:$ROOTPATH/src:\$PATH" >> ~/.zshrc
+echo "export PATH=$ROOTPATH/utilities/lattice_parser:\$PATH" >> ~/.zshrc

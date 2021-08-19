@@ -421,7 +421,7 @@
 
           write(27,100)z,glmax(1)*xl,glmax(2)/gambet,glmax(3)*xl,&
                        glmax(4)/gambet,glmax(5)*xt,glmax(6)*qmc
-          write(28,101)z,npctmin,npctmax,nptot
+          write(28,101)z,npctmin,npctmax,nptot,turn_ith
           write(29,100)z,x03*xl,px03/gambet,y03*xl,py03/gambet,z03*xt,&
                        pz03*qmc
           write(30,100)z,x04*xl,px04/gambet,y04*xl,py04/gambet,z04*xt,&
@@ -441,7 +441,7 @@
 
 99      format(6(1x,e13.6))
 100      format(7(1x,e13.6))
-101     format(1x,e13.6,3I10)
+101     format(1x,e13.6,4I10)
 102      format(11(1x,e13.6))
 
 103     format(8(1x,e13.6),1x,I5)

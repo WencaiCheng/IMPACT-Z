@@ -13,3 +13,4 @@ src/*.mod
 ImpactZexe
 .settings
 ImpactZ.in
+utilities/**/*.pyc
