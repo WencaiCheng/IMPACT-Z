@@ -1,11 +1,11 @@
 import sys
 import re
 from collections import defaultdict
-from tools.py.data import const
 from copy import deepcopy
-from tools.py.lattice_convertor.lattice_parser import lattice_parser
 from math import sqrt, pi
 import math
+import const
+from lattice_parser import lattice_parser
 
 nest_dict = lambda: defaultdict(nest_dict) # to define a['key1']['key2'] = value
                  

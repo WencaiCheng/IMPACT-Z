@@ -554,6 +554,34 @@ col 4: phase (degree), sin function, auto changed to cos in math.f90
 
 
 
+# data process
+
+## fort.24 & fort.25
+
+Add 4 additional columns data output:
+
+| 8     | 9      | 10   | 11    | 12   |
+| ----- | ------ | ---- | ----- | ---- |
+| betax | gammax | etax | etaxp | turn |
+
+## fort.18
+
+7th col: time(s)
+
+8th col: brho (T m)
+
+9th col: turn
+
+
+
+
+
+
+
+
+
+
+
 
 
 # to do
