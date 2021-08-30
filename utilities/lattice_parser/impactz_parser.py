@@ -436,8 +436,8 @@ class impactz_parser(lattice_parser):
         
         
         # line-1 
-        control_lines.append(self.control['CORE_NUM_L'])
         control_lines.append(self.control['CORE_NUM_T'])
+        control_lines.append(self.control['CORE_NUM_L'])
         control_lines.append( '\n' )
         
         # line-2
