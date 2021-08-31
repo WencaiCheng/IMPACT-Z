@@ -713,13 +713,13 @@ class impactz_parser(lattice_parser):
                     sys.exit()   
             
             elif elem['TYPE'] == 'WATCH':
-                if elem['COORDINATE_CONVENTION'] == 'NORMAL':
+                if elem['COORDINATE_CONVENTION'].upper() == 'NORMAL':
                     sample_sign = -1
                     
-                elif elem['COORDINATE_CONVENTION'] == 'IMPACT-Z':
+                elif elem['COORDINATE_CONVENTION'].upper() == 'IMPACT-Z':
                     sample_sign = 1                    
                 else:
-                    print('Unknown coordinate convention for -2 element.')
+                    print('Unknown coordinate convention for -2 element:',elem['COORDINATE_CONVENTION'])
                     sys.exit()
                     
                 elem['SAMPLE_FREQ'] = abs(int(elem['SAMPLE_FREQ'])) *sample_sign   
