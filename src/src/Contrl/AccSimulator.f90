@@ -1410,6 +1410,11 @@
                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,exwake,eywake,&
                    ezwake,Nz,npx,npy,Flagsc)
               else
+                !biaobin, 21-09-01
+                !for drift, quad elements, no wake and csr, comes here
+                !If want to consider Lwake only, SC OFF, Field=0 should 
+                !also set here
+                !Potential%FieldQ = 0.0d0 !test wakefield
                 call map2_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,Flagsc)
               endif
