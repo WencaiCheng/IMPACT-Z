@@ -392,6 +392,9 @@ Kick particles use given transfer matrix. Currently only support (m11,m33,m55,m5
 | R56            |       | double | 0.0     | momentum compaction factor, because we used z>0 for beam head, so positive m56 results bunch length compression in four dipole chicane. |
 | R65            |       | double | 0.0     | for energy chirp, R65<0 for chicane compression, R65>0 for de-chirp. |
 | R66            |       | double | 1.0     |                                                              |
+| T566           |       | double | 0.0     |                                                              |
+
+
 
 
 

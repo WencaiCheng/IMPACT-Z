@@ -9,17 +9,17 @@
   meshz= 64;
   
   default_order= 1;
-  W= 100e6;       !kinetic energy [eV]
+  kinetic_energy= 100e6-0.511e6;       !kinetic energy [eV]
   
   freq_rf_scale= 2.856e9;
   
   steps=1;    ! 1 kicks/m
   maps=1;     ! 1 map/half_step
   
-  tsc=1;       !TSC
-  lsc=1;       !LSC
+  tsc=0;       !TSC
+  lsc=0;       !LSC
 
-  csr=1;      !csr off
+  csr=0;      !csr off
   zwake=0;    !longitudinal wakefield off
   trwake=0;   !transverse wakefield off
 &end
@@ -36,7 +36,6 @@ total_charge = 75e-12;
 emit_nx = 0.15e-6, beta_x = 8, alpha_x = 0;
 emit_ny = 0.15e-6, beta_y = 8, alpha_x = 0;
 sigz=0.1e-3,    sigE=5e3; 
-chirp_h = 0;
 
 distribution_type = 45;
 &end
@@ -49,6 +48,10 @@ d1: drift, L=1.345
 mat1: ematrix, m56=0.08,m11=0.5,m33=0.5
 cav0: rfcw, L=2.0,volt=2e6,phase=45,freq=3.0e9,end_focus=0
 
-line: line=(cav0)
+!mat1: ematrix, R56=0.01, T566=-3/2*0.01
+mat1: ematrix, R56=0.01
+
+
+line: line=(mat1)
 
 &end
