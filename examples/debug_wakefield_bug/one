@@ -5,6 +5,7 @@
 ./cleanUp
 genimpactzin lte.impz line_debug
 
-mpirun -np 4 ImpactZexe ImpactZ.in
+ImpactZexe 
+#mpirun -np 4 ImpactZexe ImpactZ.in
 
 

@@ -2159,6 +2159,8 @@
               ezn = 0.0d0
           else if (Flagsc.eq.3) then
               !print*,"Both LSC and TSC are turned ON."
+          else if (Flagsc.eq.4) then
+              !print*,"SC is OFF, however, wake and csr could be ON."
           else
               print*,"ERROR, wrong Flagsc is given, Flagsc=", Flagsc
               stop

@@ -894,9 +894,10 @@
             !drange(7): m65
             !drange(8): m66
             !drange(9): T566
-            !drange(10): U5666? ..., max para number is 10.
-            call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&
-            drange(6),drange(7),drange(8),drange(9),-Bpts%refptcl(6),Bpts%Mass)
+            !drange(10):T655
+            call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),&
+            drange(5),drange(6),drange(7),drange(8),drange(9),&
+            drange(10),-Bpts%refptcl(6),Bpts%Mass)
 
           else if(bitype.eq.-40)then
             call getparam_BeamLineElem(Blnelem(i),drange)
@@ -1100,6 +1101,7 @@
             !Flagsc=1, LSC
             !Flagsc=2, TSC
             !Flagsc=3, LSC + TSC
+            !Flagsc=4, SC OFF, wake or csr ON
             if (Bcurr.lt.1.0e-10 .or. Flagsc.eq.0)  then !no space-charge
                !biaobin, this func plays the same role as RingPhaseFold
                !1. aperture is considered
@@ -1254,13 +1256,20 @@
               endif
 !-------------------------------------------------------------------------
 ! solve 3D Poisson's equation
-              if(Flagbc.eq.1) then
-                ! solve Poisson's equation using 3D isolated boundary condition.
-                call update3O_FieldQuant(Potential,chgdens,Ageom,&
-                grid2d,Nxlocal,Nylocal,Nzlocal,npx,npy,nylcr,nzlcr)
+              if(Flagsc.eq.4) then
+                  !biaobin, 2021-09-02, for SC OFF, but cavity-wake ON case 
+                  !print*,"space charge is OFF, however, &
+                  !        wake and csr could be ON."
+                  Potential%FieldQ=0.0d0
               else
-                print*,"no such boundary condition type!!!"
-                stop
+                if(Flagbc.eq.1) then
+                  ! solve Poisson's equation using 3D isolated boundary condition.
+                  call update3O_FieldQuant(Potential,chgdens,Ageom,&
+                  grid2d,Nxlocal,Nylocal,Nzlocal,npx,npy,nylcr,nzlcr)
+                else
+                  print*,"no such boundary condition type!!!"
+                  stop
+                endif
               endif
             endif
 

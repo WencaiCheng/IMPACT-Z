@@ -318,6 +318,7 @@ class impactz_parser(lattice_parser):
         self.lattice['EMATRIX']['R65'] = 0.0
         self.lattice['EMATRIX']['R66'] = 1.0
         self.lattice['EMATRIX']['T566'] = 0.0
+        self.lattice['EMATRIX']['T655'] = 0.0
 
         # watch
         #-------------
@@ -656,6 +657,7 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(elem['R65'])
                 lte_lines.append(elem['R66'])
                 lte_lines.append(elem['T566'])
+                lte_lines.append(elem['T655'])
                 lte_lines.append('/ \n')
 
             elif elem['TYPE'] == 'SHIFTCENTER':
@@ -859,7 +861,11 @@ class impactz_parser(lattice_parser):
         Set Flagsc value based on TSC and LSC values in lte.impz
         '''
         if   self.control['TSC']=='0' and self.control['LSC']=='0':
-            Flagsc=0
+            if self.control['ZWAKE']=='1' or self.control['TRWAKE']=='1' or self.control['CSR']=='1':
+                #SC OFF, however, wake or csr ON case
+                Flagsc=4
+            else:
+                Flagsc=0
         elif self.control['TSC']=='0' and self.control['LSC']=='1':
             Flagsc=1
         elif self.control['TSC']=='1' and self.control['LSC']=='0':

@@ -1,15 +1,20 @@
 !control section
 !===============
 &control
-core_num_T = 2;
-core_num_L = 2;
+core_num_T = 1;
+core_num_L = 1;
 meshx = 64;
 meshy = 64;
 meshz = 64;
 default_order = 2;
-W = 100e6;
+kinetic_energy = 100e6-0.511001e6;
 
 freq_rf_scale = 4.7715e7;
+
+lsc=0;
+!zwake=1;
+csr=1;
+
 &end
 
 !beam section
