@@ -235,6 +235,7 @@
             call construct_BPM(beamln0(ibpm),bnseg(i),bmpstp(i),&
                  bitype(i),blength(i))
             tmpbpm(1) = 0.0
+            !biaobin, val1 is parameter value after type, i.e. radius
             tmpbpm(2) = val1(i)
             tmpbpm(3) = val2(i)
             tmpbpm(4) = val3(i)
@@ -884,7 +885,7 @@
           else if(bitype.eq.-22)then
             call getparam_BeamLineElem(Blnelem(i),drange)
             !length steps maps type radius m11 m33 m56 m65
-            !drange(1) is type, i.e. -22
+            !drange(1): 0 
             !drange(2): radius, not used
             !drange(3): m11
             !drange(4): m33
@@ -892,8 +893,10 @@
             !drange(6): m56, since we use z>0 head convention, m56>0 for chicane.
             !drange(7): m65
             !drange(8): m66
+            !drange(9): T566
+            !drange(10): U5666? ..., max para number is 10.
             call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&
-            drange(6),drange(7),drange(8),-Bpts%refptcl(6),Bpts%Mass)
+            drange(6),drange(7),drange(8),drange(9),-Bpts%refptcl(6),Bpts%Mass)
 
           else if(bitype.eq.-40)then
             call getparam_BeamLineElem(Blnelem(i),drange)
