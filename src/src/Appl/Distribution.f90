@@ -2075,7 +2075,6 @@
         !Biaobin Li, 2021-04-22
         !47 dis-type: 6-D gaussian distribution
         !(x,px,y,py,z,dgam): gaussian distribution
-        ! muzpz is b, i.e. delta = a*z + b*z^2
         subroutine GaussDist_6D(this,nparam,distparam,grid,gam0,bet0)
         implicit none
         include 'mpif.h'
@@ -2198,22 +2197,8 @@
             !------------------
             if(xtmp(6).eq.0.0) xtmp(6) = epsilon
             call random_number(xx)
-            this%Pts1(6,i) = sig6*sqrt(-2.0*log(xtmp(5)))* &
+            this%Pts1(6,i) = xmu6 +sig6*sqrt(-2.0*log(xtmp(5)))* &
                              sin(twopi*xtmp(6)) 
-            !biaobin, muzpz will make affection in grid settings in compdomain,
-            !thus cannot be used as 2nd order chirp. Give the value
-            !explicitly. 
-            !this%pts1(6,i) = xmu6 +this%pts1(6,i) &
-            !                 -muzpz*gam0*bet0**2*(-Scxl*bet0*xz)**2
-
-            !with b=0 of 2nd chirp. 
-            this%pts1(6,i) = xmu6 +this%pts1(6,i) 
-
-            !!biaobin, saps initial 2nd chirp, b=-7165, downward curve
-            !this%pts1(6,i) = xmu6 +this%pts1(6,i) &
-            !                 +7165*gam0*bet0**2*(-Scxl*bet0*xz)**2
- 
-
         enddo
         
         this%Nptlocal = avgpts
