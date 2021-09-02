@@ -1100,6 +1100,7 @@
             !Flagsc=1, LSC
             !Flagsc=2, TSC
             !Flagsc=3, LSC + TSC
+            !Flagsc=4, SC OFF, wake or csr ON
             if (Bcurr.lt.1.0e-10 .or. Flagsc.eq.0)  then !no space-charge
                !biaobin, this func plays the same role as RingPhaseFold
                !1. aperture is considered
@@ -1254,13 +1255,20 @@
               endif
 !-------------------------------------------------------------------------
 ! solve 3D Poisson's equation
-              if(Flagbc.eq.1) then
-                ! solve Poisson's equation using 3D isolated boundary condition.
-                call update3O_FieldQuant(Potential,chgdens,Ageom,&
-                grid2d,Nxlocal,Nylocal,Nzlocal,npx,npy,nylcr,nzlcr)
+              if(Flagsc.eq.4) then
+                  !biaobin, 2021-09-02, for SC OFF, but cavity-wake ON case 
+                  !print*,"space charge is OFF, however, &
+                  !        wake and csr could be ON."
+                  Potential%FieldQ=0.0d0
               else
-                print*,"no such boundary condition type!!!"
-                stop
+                if(Flagbc.eq.1) then
+                  ! solve Poisson's equation using 3D isolated boundary condition.
+                  call update3O_FieldQuant(Potential,chgdens,Ageom,&
+                  grid2d,Nxlocal,Nylocal,Nzlocal,npx,npy,nylcr,nzlcr)
+                else
+                  print*,"no such boundary condition type!!!"
+                  stop
+                endif
               endif
             endif
 

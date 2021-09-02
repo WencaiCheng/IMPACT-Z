@@ -859,7 +859,11 @@ class impactz_parser(lattice_parser):
         Set Flagsc value based on TSC and LSC values in lte.impz
         '''
         if   self.control['TSC']=='0' and self.control['LSC']=='0':
-            Flagsc=0
+            if self.control['ZWAKE']=='1' or self.control['TRWAKE']=='1' or self.control['CSR']=='1':
+                #SC OFF, however, wake or csr ON case
+                Flagsc=4
+            else:
+                Flagsc=0
         elif self.control['TSC']=='0' and self.control['LSC']=='1':
             Flagsc=1
         elif self.control['TSC']=='1' and self.control['LSC']=='0':
