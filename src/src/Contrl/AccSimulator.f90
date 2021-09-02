@@ -894,9 +894,10 @@
             !drange(7): m65
             !drange(8): m66
             !drange(9): T566
-            !drange(10): U5666? ..., max para number is 10.
-            call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),drange(5),&
-            drange(6),drange(7),drange(8),drange(9),-Bpts%refptcl(6),Bpts%Mass)
+            !drange(10):T655
+            call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),&
+            drange(5),drange(6),drange(7),drange(8),drange(9),&
+            drange(10),-Bpts%refptcl(6),Bpts%Mass)
 
           else if(bitype.eq.-40)then
             call getparam_BeamLineElem(Blnelem(i),drange)

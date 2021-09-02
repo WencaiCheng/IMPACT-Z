@@ -49,7 +49,7 @@ mat1: ematrix, m56=0.08,m11=0.5,m33=0.5
 cav0: rfcw, L=2.0,volt=2e6,phase=45,freq=3.0e9,end_focus=0
 
 !mat1: ematrix, R56=0.01, T566=-3/2*0.01
-mat1: ematrix, R56=0.01
+mat1: ematrix, R56=0.01, T566=98, T655=-7165
 
 
 line: line=(mat1)
