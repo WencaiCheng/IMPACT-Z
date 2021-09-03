@@ -22,6 +22,10 @@
   csr=0;      !csr off
   zwake=0;    !longitudinal wakefield off
   trwake=0;   !transverse wakefield off
+
+  sample_out = 1e3;
+  slice_bin=256;
+
 &end
 
 !beam section
@@ -30,7 +34,7 @@
 mass = 0.511001e6;
 charge = -1.0;
 
-Np = 100;
+Np = 64e6;
 total_charge = 75e-12;
 
 emit_nx = 0.15e-6, beta_x = 8, alpha_x = 0;
@@ -51,7 +55,8 @@ cav0: rfcw, L=2.0,volt=2e6,phase=45,freq=3.0e9,end_focus=0
 !mat1: ematrix, R56=0.01, T566=-3/2*0.01
 mat1: ematrix, R56=0.01, T566=98, T655=-7165
 
+w0: watch, filename_ID=1000
 
-line: line=(mat1)
+line: line=(w0,mat1)
 
 &end

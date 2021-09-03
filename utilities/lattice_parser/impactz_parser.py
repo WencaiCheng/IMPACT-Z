@@ -198,8 +198,10 @@ class impactz_parser(lattice_parser):
         self.control['TRWAKE'] = 0
         self.control['PIPE_RADIUS'] = 0.014 #pipe radius[m], by default, 0.014m
         self.control['TURN'] = 1
-        self.control['OUTFQ'] = 1
+        self.control['N_TURN_OUT'] = 1
         self.control['RINGSIMU']  = 0 
+        self.control['SAMPLE_OUT'] = 1e5   #WATCH element, output how many particles
+        self.control['SLICE_BIN'] = 128    #WATCH element, output how many particles
 
         # turn all para values to str data type
         for key in self.control:
@@ -323,10 +325,10 @@ class impactz_parser(lattice_parser):
         # watch
         #-------------
         self.lattice['WATCH']['FILENAME_ID'] = 1000
-        self.lattice['WATCH']['SAMPLE_FREQ'] = 1
+        self.lattice['WATCH']['SAMPLE_FREQ'] = 0
         self.lattice['WATCH']['COORDINATE_CONVENTION'] = 'NORMAL' #(x,gambetx,y,gambety,t,gam)
         self.lattice['WATCH']['SLICE_INFORMATION'] = 1  # by default add -8 element simultaneously
-        self.lattice['WATCH']['SLICE_BIN'] = 128
+        self.lattice['WATCH']['SLICE_BIN'] = 0
 
         # RingRF BPM element
         self.lattice['RINGRF']['VOLT']  = 0.0     #eV
@@ -369,12 +371,22 @@ class impactz_parser(lattice_parser):
             if elem['TYPE'] in ['DRIFT','MONITOR','HKICKER','VKICKER','SEXTUPOLE']:
                 elem['TYPE'] = 'DRIFT'
 
+            # update the not-yet-setting lattice element parameters with the default 
+            # values.
             if elem['TYPE'] in self.lattice.keys():
                 tmp = deepcopy(self.lattice[elem['TYPE']])
-                      
-                for elem_para in elem.keys():
-                    tmp[elem_para] = elem[elem_para] 
                 
+                #NAME and TYPR for element in lte.impz are not in the self.lattice[elem['TYPE']].keys()
+                table =  list(self.lattice[elem['TYPE']].keys())
+                table.append('NAME')
+                table.append('TYPE')
+                for elem_para in elem.keys():
+                    if elem_para not in table:
+                        print("ERROR: unknown element parameter ",elem_para," for ",elem['TYPE'])
+                        print("PROGRAM STOP!")
+                        sys.exit()
+
+                    tmp[elem_para] = elem[elem_para] 
                 # replace trackline
                 trackline[j] = tmp
                 j += 1        
@@ -568,7 +580,7 @@ class impactz_parser(lattice_parser):
         Flagsc = self._get_sc_flag()
         control_lines.append( str(Flagsc) )
         control_lines.append( self.control['TURN'] )
-        control_lines.append( self.control['OUTFQ'] )
+        control_lines.append( self.control['N_TURN_OUT'] )
         control_lines.append( str(simutype) )
         control_lines.append( '\n' )
 
@@ -725,6 +737,16 @@ class impactz_parser(lattice_parser):
                 else:
                     print('Unknown coordinate convention for -2 element:',elem['COORDINATE_CONVENTION'])
                     sys.exit()
+
+                # if SAMPLE_FREQ not set in the lattice line, replace with the value in control section
+                if elem['SAMPLE_FREQ']=='0':
+                    Np = float(self.beam['NP'])
+                    sample_out = float(self.control['SAMPLE_OUT'])
+                    if Np < sample_out:
+                        elem['SAMPLE_FREQ'] = '1'
+                    elif Np > sample_out:
+                        freq = math.ceil(Np/sample_out)
+                        elem['SAMPLE_FREQ'] = str(freq)
                     
                 elem['SAMPLE_FREQ'] = abs(int(elem['SAMPLE_FREQ'])) *sample_sign   
                 elem['SAMPLE_FREQ'] = str(elem['SAMPLE_FREQ'])
@@ -736,6 +758,9 @@ class impactz_parser(lattice_parser):
                 lte_lines.append('/ \n')
                 
                 # whether add -8 element
+                if elem['SLICE_BIN']=='0':
+                    elem['SLICE_BIN']=self.control['SLICE_BIN']
+
                 if elem['SLICE_INFORMATION'] == '0':
                     pass
                 
