@@ -149,10 +149,13 @@ The values following are all default values.
 	
 	pipe_radius=0.014;  !pipe radius, [m]
 	
-	turn=1;  !for ring multi-turn simulation  
-	outfq=1;
-	
 	RingSimu=0;
+	turn=1;  !for ring multi-turn simulation  
+	n_turn_out=1; !every n_turn_out turn, WATCH element make outputs
+	
+	sample_out=1e5;  !WATCH element sample out how many particles
+	                 !if Np<1e5, sample_out=Np
+	slice_bin=128;   !slice bin for watch element
 	
 &end
 ```
@@ -185,6 +188,7 @@ ImpactZ.in 中新增加了一行：
 - tsc=0, lsc=1: Flagsc=1
 - tsc=1, lsc=0: Flagsc=2
 - tsc=1, lsc=1: Flagsc=3
+- Flagsc=4, sc is OFF, however, csr or wake could be ON.
 
 No need to set current being 0 for space charge OFF.
 
@@ -192,7 +196,7 @@ No need to set current being 0 for space charge OFF.
 
 ==To do==
 
-- [ ] If space charge OFF, but wakefield ON ?
+- [x] If space charge OFF, but wakefield ON ?
 
 
 
@@ -393,6 +397,7 @@ Kick particles use given transfer matrix. Currently only support (m11,m33,m55,m5
 | R65            |       | double | 0.0     | for energy chirp, R65<0 for chicane compression, R65>0 for de-chirp. |
 | R66            |       | double | 1.0     |                                                              |
 | T566           |       | double | 0.0     |                                                              |
+| T655           |       | double | 0.0     | i.e. $\delta=az+bz^2$,  $T_{655}=b$                          |
 
 
 
@@ -452,15 +457,24 @@ In IMPACT-Z source code:
 
 ### WATCH
 
-Output particle distribution and beam slice information into fort.N and fort.2N files, where N is the filename_ID. 
+```bash
+w0: watch, filename_ID=1000
+
+#with the default settings in the control section, the line equals:
+w0: watch, filename_ID=1000, sample_freq = ceil(Np/1e5), slice_bin=128
+```
+
+
+
+Output particle distribution and beam slice information into fort.N and fort.(N+1e4) files, where N is the filename_ID. 
 
 | Parameter Name        | Units | Type   | Default | Description                                                  |
 | --------------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
 | filename_ID           |       | int    | 1000    | number larger than 1000 is recommended                       |
-| sample_freq           |       | int    | 1       | if sample_freq=10, every 10 particles output 1 particle      |
+| sample_freq           |       | int    | 0       | If sample_freq=10, every 10 particles output 1 particle. If not set (`sample_freq=0`), `sample_out` in control section will set the `sample_freq` based on the `Np` particle number. |
 | coordinate_convention |       | string | normal  | 'NORMAL' or 'IMPACT-Z'                                       |
 | slice_information     |       | int    | 1       | whether output slice information, i.e. whether add -8 element simultaneously |
-| slice_bin             |       | int    | 128     | bins number for getting histogram slice information.         |
+| slice_bin             |       | int    | 0       | bins number for getting histogram slice information. If not set (`slice_bin=0`), `slice_bin` in control section will set the value. |
 
 If  coordinate_convention='normal', output phase space is $(x,\gamma\beta_x,y,\gamma\beta_y,t,\gamma)$, where $x,y,t$ are in .  For coordinate_convention='IMPACT-Z', output phase space is $(xw/c,\gamma\beta_x,yw/c,\gamma\beta_y,wt,-(\gamma-\gamma_0))$,  where $w$ is $w=2\pi f$, $f$ is the scaling frequency.
 
@@ -479,6 +493,13 @@ If filename_ID = 1001, then the output file would be fort.1001 and fort.6001. fo
 | 9             | m     | $<y>$                                      |
 | 10            |       | x-direction mismatch factor ???            |
 | 11            |       | y-direction mismatch factor ???            |
+
+==To do:==
+
+Use `coordinate_convention` to output different coordinate:
+
+- (x, gambetx/gambet0, y, gambety/gambet0, z, delta)
+- (x, gambetx, y, gambety, z, dgam)
 
 
 
