@@ -351,8 +351,9 @@ class impactz_parser(lattice_parser):
         
         # shift the centroid of beam to the axis origin point
         #----------------------------------------------------
-        # shift to center, has no para right now 
-        self.lattice['SHIFTCENTER']
+        # shift to center, add L for nothing but for regular expression
+        # match
+        self.lattice['SHIFTCENTER']['L'] = 0.0
 
         #turn all lattice elem values to string data type
         for elem in self.lattice.keys():
