@@ -171,12 +171,12 @@
 
 
           do i = 1, innp
-            Pts1(1,i) = Pts1(1,i) - tmpgl(1)
-            Pts1(2,i) = Pts1(2,i) - tmpgl(2)
-            Pts1(3,i) = Pts1(3,i) - tmpgl(3)
-            Pts1(4,i) = Pts1(4,i) - tmpgl(4)
+           ! Pts1(1,i) = Pts1(1,i) - tmpgl(1)
+           ! Pts1(2,i) = Pts1(2,i) - tmpgl(2)
+           ! Pts1(3,i) = Pts1(3,i) - tmpgl(3)
+           ! Pts1(4,i) = Pts1(4,i) - tmpgl(4)
             Pts1(5,i) = Pts1(5,i) - tmpgl(5)
-            Pts1(6,i) = Pts1(6,i) - tmpgl(6)
+           ! Pts1(6,i) = Pts1(6,i) - tmpgl(6)
           enddo
         else if(itype.eq.(-1)) then
           x0lc = 0.0
