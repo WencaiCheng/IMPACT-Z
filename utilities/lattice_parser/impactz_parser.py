@@ -183,6 +183,7 @@ class impactz_parser(lattice_parser):
     def __default_control(self):    
         self.control['CORE_NUM_T'] = 1  #transverse direction computor core number      
         self.control['CORE_NUM_L'] = 1  #longitudinal direction 
+        self.control['INTEGRATOR'] = 1  # 1 for linear map, 2 for lorentz integrator
         self.control['MESHX'] = 64
         self.control['MESHY'] = 64
         self.control['MESHZ'] = 64
@@ -472,7 +473,8 @@ class impactz_parser(lattice_parser):
         
         Np = int(float(self.beam['NP']))
         control_lines.append( str(Np) )
-        control_lines.append( '1 0 1 \n' )
+        control_lines.append( self.control['INTEGRATOR'] )
+        control_lines.append( '0 1 \n' )
         
         # line-3
         control_lines.append( self.control['MESHX'] )
