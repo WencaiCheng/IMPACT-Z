@@ -266,7 +266,7 @@
         integer :: idealrf
         real*8, dimension(12) :: drange
         real*8, dimension(3) :: vhphi
-        real*8 :: t_ref
+        real*8 :: t_ref, brho, K1
         real*8, intent(in) :: Lc
 
         call starttime_Timer(t0)
@@ -310,33 +310,49 @@
           endif   
         else if(bitype.eq.1) then
           call getparam_BeamLineElem(beamln,3,x3)
-          if(x3<0.0d0 .and. x3>-10.0d0 ) then
-            !gradient file ID<0, gradient is
-            !K1=1/(B\rho_0)*\frac{\partial By}{\partial x},
-            !using transfer map to propgate particles
-            !
-            !ID(-10,0), linear map
-            !ID<-10, nonlinear map
-            call transfmapK_Quadrupole_linearmap(z,tau,beamln%pquad,this%refptcl,this%Nptlocal,&
-                                    this%Pts1,qmass)
-          else if(x3<-10.0d0) then
-            call transfmapK_Quadrupole_nonlinearmap(z,tau,beamln%pquad,this%refptcl,this%Nptlocal,&
-                                    this%Pts1,qmass)
-          else
-            call maplinear_BeamLineElem(beamln,z,tau,xm,this%refptcl,this%Charge,&
-                       this%Mass)
-            do i = 1, this%Nptlocal
-              do j = 1, 6
-                temp(j) = 0.0
-                do k = 1, 6
-                  temp(j) = temp(j) + this%Pts1(k,i)*xm(j,k)
-                enddo
-              enddo
-              do j = 1,6
-                this%Pts1(j,i) = temp(j)
-              enddo
-            enddo
+          !file ID=-5,-15, input value is K1, K1=1/(B\rho_0)*\frac{\partial By}{\partial x},
+          !file ID=-6,-16, input value is gradient [T/m].
+          if( abs(x3+6.0)<1.0d-6 .or. abs(x3+16.0)<1.0d-6 ) then
+            !means input is gradient, change it to K1
+            gam0 = -this%refptcl(6)
+            gambet0 = sqrt(gam0**2-1.0)
+            brho = gambet0/qmass/Clight  !gradient>0, focus, no matter electron or proton
+            K1 = beamln%pquad%Param(2)/brho   !K1=gradient/Brho, gradient [T/m]
+          else if( abs(x3+5.0)<1.0d-6 .or. abs(x3+15.0)<1.0d-6) then
+            ! input value is K1  
+            K1 = beamln%pquad%Param(2) 
+          else 
+            print*,"Unkown ID for QUAD is given: ", x3
+            stop
           endif
+          !print*,"K1=",K1," ,ID=", x3
+
+          !abs(ID) in (0,10), linear map
+          !abs(ID) > 10, nonlinear map
+          if( abs(x3)>0.0d0 .and. abs(x3)<10.0d0 ) then
+            call transfmapK_Quadrupole_linearmap(z,tau,K1,this%refptcl,this%Nptlocal,&
+                                    this%Pts1,qmass)
+          else if(abs(x3)>10.0d0) then
+            call transfmapK_Quadrupole_nonlinearmap(z,tau,K1,this%refptcl,this%Nptlocal,&
+                                    this%Pts1,qmass)
+          
+          endif                        
+          !Ji use this section for linear map 6*6 matrix, I comment it.                         
+          !else
+          !  call maplinear_BeamLineElem(beamln,z,tau,xm,this%refptcl,this%Charge,&
+          !             this%Mass)
+          !  do i = 1, this%Nptlocal
+          !    do j = 1, 6
+          !      temp(j) = 0.0
+          !      do k = 1, 6
+          !        temp(j) = temp(j) + this%Pts1(k,i)*xm(j,k)
+          !      enddo
+          !    enddo
+          !    do j = 1,6
+          !      this%Pts1(j,i) = temp(j)
+          !    enddo
+          !  enddo
+          !endif
 
         else
           !ideal RF cavity model with entrance and exit focusing

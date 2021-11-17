@@ -114,8 +114,8 @@ Right now, only add those parameters I used mostly and understood well. ==DO NOT
 Code design methods:
 
 -  If not in dict keys list, then set default values
-- not case sensitive, use upper to match element or parameters name
-- priority, if sentence
+-  not case sensitive, use upper to match element or parameters name
+-  priority, if sentence
 
 
 
@@ -127,6 +127,8 @@ The values following are all default values.
 &control
   core_num_T=1;
   core_num_L=1;
+  
+  integrator= 1;  
   
   meshx= 64;
   meshy= 64;
@@ -171,6 +173,19 @@ The values following are all default values.
   p_central_mev, 数值上即等于 $\gamma_0\beta_0$ [MeV/c], 即 $pc=\sqrt{\epsilon^2-\epsilon_0^2}=\gamma\beta m_0c^2=\sqrt{W^2+2W\epsilon_0}$
 
 - f_scale, [Hz], scaling frequency.
+
+
+
+| Parameter Name | Units | Type | Default | Description                                                  |
+| -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
+| integrator     |       | int  | 1       | 1 for linear map, i.e. transfer matrix; 2 for nonlinear Lorentz integrator. |
+| steps          |       | int  | 1       | 1 kicks/m.                                                   |
+
+
+
+
+
+
 
 
 
@@ -259,10 +274,17 @@ The listed values are default values if un-defined in input file.
 	total_charge = 1.0e-12;
 	distribution_type = 45;
 	
-	sigx = 0.0,	sigpx = 0.0,  sigxpx  = 0.0;	
-	sigy = 0.0, sigpy = 0.0,  sigypy  = 0.0;
-	sigz = 0.0, sigE  = 0.0,  chirp_h = 0.0;  
-
+	! 因为 IMPACT-Z V2.0 中的 sigmax 并非 RMS “sigx”，仅当sigij=0时，两者相等。
+	! 因此，不妨删除 sigij的设定，在python 中只能为0
+	sigx  = 0.0;  ![m]
+	sigxp = 0.0;  ![gambetx/gambet0]
+	sigy  = 0.0;  ![m] 
+	sigyp = 0.0;  ![gambety/gambet0]
+	sigz  = 0.0;  ![m]
+  sigdE  = 0.0;  ![eV] 
+	
+	! 当ij 有耦合时，必须用 twiss 参数给出分布
+	! dispersion not support yet
   emit_nx = 0.0;
   emit_x = 0.0 ;
   beta_x = 1.0;
@@ -272,6 +294,13 @@ The listed values are default values if un-defined in input file.
   emit_y = 0.0;
   beta_y = 1.0;
   alpha_y = 0.0;
+  
+  ! longitudinal, (z [deg], dE [MeV])
+  ! 注意纵向 twiss 参数用的坐标单位与上面的 RMS 值单位不同
+  emit_z = 0.0; ![deg MeV], 只有“几何”，不乘 gambet0
+  beta_z = 1.0; ![deg/MeV]
+  alpha_z= 0.0; ![1], so gamma_z [MeV/deg]
+  
 &end
 ```
 
@@ -279,19 +308,20 @@ The listed values are default values if un-defined in input file.
 - charge, for electron, charge=-1.0, for proton, charge=1.0
 - total_charge, [C], if total_charge=0, space charge will be turned off.
 - Np, particle number.
-- sigx, sigy, sigz, beam RMS size in unit of [m].
-- sigpx, sigpy, beam RMS momentum, px and py refer to $\gamma\beta_x$ and $\gamma\beta_y$.
+- sigx, sigy, sigz, beam RMS size [m].
+- sigxp, sigyp, $sigxp=\gamma\beta_x/\gamma_0\beta_0$.
 - sigE, [eV], beam RMS energy spread.
-- chirp_h  [/m], beam energy chirp h. h consistent with z, z>0 is head. So for four dipole chicane, negative chirp results in bunch length compression.
+
+
+
+notes:
+
+- Use EMATRIX to introduce energy chirp.
+
+- If emit_x or emit_nx not equal to 0, then use twiss parameters for (x, px, y, py) distribution, otherwise, use sig values
+
 - distribution_type, if equal to 19, read-in beam distribution, coordinate definition is ???
 - mismatch, off-set not added yet
-
-
-
-如果:
-
-- If emit_x or emit_nx not equal to 0, then use twiss parameters for (x, px, y, py) distribution
-- otherwise, use sig values
 
 
 
@@ -330,6 +360,16 @@ For space charge simulations, one should increase the steps number where beam si
 
 
 
+In fortran/ImpactZ.in level:
+
+```
+ID = -1, linear map
+
+ID =0 or >0, nonlinear map.
+```
+
+
+
 ### QUAD
 
 A quadrupole implemented as a linear matrix or nonlinear map, see Wolski's book for more information.
@@ -337,16 +377,30 @@ A quadrupole implemented as a linear matrix or nonlinear map, see Wolski's book 
 | Parameter Name | Units       | Type   | Default | Description                                                  |
 | -------------- | ----------- | ------ | ------- | ------------------------------------------------------------ |
 | L              | m           | double | 0.0     | length                                                       |
-| steps          |       | int    | 0      | how much section is divided into |
-| map_steps      |       | int    | 0      | map steps |
-| order          |       | int    | 0      | 1 or 2, linear map or nonlinear map                          |
+| steps          |             | int    | 0       | how much section is divided into                             |
+| map_steps      |             | int    | 0       | map steps                                                    |
+| order          |             | int    | 0       | 1 or 2, linear map or nonlinear map; By default is 0, then `order` in control is used. |
 | $K_1$          | $\rm{/m^2}$ | double | 0.0     | quadrupole strength, $K_1=\frac{1}{(B\rho)_0}\frac{\partial B_y}{\partial x}$ |
-| pipe_radius | m           | double | 0.0   | pip radius |
-| Dx | m           | double | 0.0     | x misalignment error |
-| Dy | m           | double | 0.0     | y misalignment error |
-| rotate_x | rad         | double | 0.0     | rotation error in x direction |
-| rotate_y | rad         | double | 0.0     | rotation error in y direction |
-| ratate_z | rad         | double | 0.0     | rotation error in y direction |
+| grad           | T/m         | double | 0.0     | gradient $=\frac{\partial B_y}{\partial x}$, if `grad` value is non-zero, then `grad` is used. |
+| pipe_radius    | m           | double | 0.0     | pip radius                                                   |
+| Dx             | m           | double | 0.0     | x misalignment error                                         |
+| Dy             | m           | double | 0.0     | y misalignment error                                         |
+| rotate_x       | rad         | double | 0.0     | rotation error in x direction                                |
+| rotate_y       | rad         | double | 0.0     | rotation error in y direction                                |
+| ratate_z       | rad         | double | 0.0     | rotation error in y direction                                |
+
+
+
+In ImpactZ.in, 不再保持与墙老师的 manual 兼容，ID>0 用来读rfdata 文件代号ID。
+
+```
+ID = -5, -15: (linear map, K1) and (nonlinear map, K1)
+ID = -6, -16: (linear map, grad) and (nonlinear map, grad)
+```
+
+
+
+
 
 
 
@@ -451,7 +505,26 @@ In IMPACT-Z source code:
 
 
 
+### WAKEON and WAKEOFF
 
+This is for test the wakefield, where we put the drift between the wake ON and OFF elements.
+
+```bash
+!usage:
+wake1: wakeon,  wakefile_ID=41
+wake2: wakeoff, wakefile_ID=41
+d1: drfit, L=100
+
+line: line=(wake1,d1,wake2)
+```
+
+
+
+| Parameter Name | Units | Type | Default | Description                                                  |
+| -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
+| zwake          |       | int  | 0       | 0/1, if zero, longitudinal wake is turned off                |
+| trwake         |       | int  | 0       | 0/1, if zero, transverse wakes are turned off                |
+| wakefile_ID    |       | int  | None    | If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
 
 
 
@@ -598,6 +671,10 @@ Add 4 additional columns data output:
 
 
 
+## -8 元件
+
+增加 对于 dE 的统计直方图
+
 
 
 
@@ -738,3 +815,114 @@ add structure wakefield (given in rfdata41.in file) for 103 cavity, and only tur
 - remove the mpif.h file under the Appl, Control, DataStruct, and Func directories.
 - delete mpistub.o in the Makefile
 - use the appropriate parallel fortran compiler such as mpif90.
+
+
+
+# Debug
+
+## 回溯问题
+
+对于RCS 长束团而言，横向的一级回溯需要 comment 掉：
+
+==注意：只改动了 open3D 的SC 算法，对于其他SC边界条件，没有修改。==
+
+
+
+```fortran
+1397               call cvbkforth1st_BeamBunch(Bpts)
+```
+
+横向漂回去，在哪里？
+
+```fortran
+1653         subroutine cvbkforth1st_BeamBunch(this)
+1654         implicit none
+1655         include 'mpif.h'
+1656         type (BeamBunch), intent(inout) :: this
+1657         integer :: i
+1658         double precision :: gamma0,xk,xl
+1659         double precision :: rcpgammai,betai,beta
+1660
+1661         xl = Scxl
+1662         xk = 1/xl
+1663
+1664         gamma0 = -this%refptcl(6)
+1665         beta = sqrt(gamma0*gamma0 - 1.0)/gamma0
+1666
+1667         do i = 1, this%Nptlocal
+1668           rcpgammai = 1.0/(-this%Pts1(6,i)+gamma0)
+1669           betai = sqrt(1.0-rcpgammai*rcpgammai*(1+this%Pts1(2,i)**2+ &
+1670                                             this%Pts1(4,i)**2) )
+1671           this%Pts1(5,i) = this%Pts1(5,i)*xk/(-gamma0*betai)
+1672           this%Pts1(1,i) = this%Pts1(1,i)*xk
+1673           this%Pts1(3,i) = this%Pts1(3,i)*xk
+1674         enddo
+1675
+1676         do i = 1, this%Nptlocal
+1677           rcpgammai = 1.0/(-this%Pts1(6,i)+gamma0)
+1678           betai = sqrt(1.0-rcpgammai*rcpgammai*(1+this%Pts1(2,i)**2+ &
+1679                        this%Pts1(4,i)**2) )
+1680           this%Pts1(1,i) = this%Pts1(1,i)*xl
+1681           this%Pts1(3,i) = this%Pts1(3,i)*xl
+1682           this%Pts1(5,i) = -gamma0*betai*this%Pts1(5,i)*xl
+1683         enddo
+1684
+1685         end subroutine cvbkforth1st_BeamBunch
+```
+
+
+
+真正由 z-frame => t-frame 后，由 t-frame => z-frame 的在：
+
+```fortran
+!Accsimulator.f90
+
+! transform from z-frame to t-frame
+1115               call conv1st_BeamBunch(Bpts,tau2,Nplocal,Np,ptrange,&              
+
+...
+
+! transform back from t-fram to z-frame
+!--------------------------------------
+!coment it, then 0thcv
+1397               call cvbkforth1st_BeamBunch(Bpts)
+
+! It is in Accsimulator.f90/kick1wake_BeamBunch and map2_BeamBunch
+1415             if(Flagmap.eq.1) then
+1416             ! kick particles in velocity space.
+1417               if((flagwake.eq.1) .or. (flagcsr.eq.1)) then
+1418                 !biaobin, if Potential%FieldQ = 0.0d0, i.e. potential
+1419                 !from space charge is set to 0, space charge is OFF.
+1420                 !Potential%FieldQ = 0.0d0 !test wakefield
+1421                 call kick1wake_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
+1422                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,exwake,eywake,&
+1423                    ezwake,Nz,npx,npy,Flagsc)
+1424               else
+1425                 !biaobin, 21-09-01
+1426                 !for drift, quad elements, no wake and csr, comes here
+1427                 !If want to consider Lwake only, SC OFF, Field=0 should
+1428                 !also set here
+1429                 !Potential%FieldQ = 0.0d0 !test wakefield
+1430                 call map2_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
+1431                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,Flagsc)
+1432               endif
+
+! scatter1_BeamBunch()
+! 只是坐标变换这里，但注意用的是 betai=betaz
+2182           rays(1,n) = rays(1,n)*xk                  !X=x*xk
+2183           rays(2,n) = rays(2,n)+tau*xycon*exn
+2184           rays(3,n) = rays(3,n)*xk                  !Y=y*xk
+2185           rays(4,n) = rays(4,n)+tau*xycon*eyn
+2186           rays(5,n) = rays(5,n)*xk/(-gam*betai)     !T=z*xk/(-gam0*betz), gam0 is    
+                                                         !beam-frame => lab-frame
+2187           rays(6,n) = rays(6,n)-tau*tcon*ezn
+2188         enddo
+2189
+2190         t_ntrslo = t_ntrslo + elapsedtime_Timer( t0 )
+2191
+2192         end subroutine scatter1_BeamBunch
+
+```
+
+
+

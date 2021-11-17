@@ -508,15 +508,14 @@
         !ID<0, the gradient is K1 in unit of [m^-2] 
         !biaobin, ID(-10,0), linear map
         !         ID<-10, nonlinear map
-        subroutine transfmapK_Quadrupole_nonlinearmap(tt,tau,this,refpt,Nplc,pts,qmass)
+        subroutine transfmapK_Quadrupole_nonlinearmap(tt,tau,K1,refpt,Nplc,pts,qmass)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: Nplc
         double precision, intent(inout) :: tt
-        double precision, intent(in) :: tau,qmass
+        double precision, intent(in) :: tau,qmass,K1
         double precision, dimension(6), intent(inout) :: refpt
         double precision, dimension(6) :: tmp
-        type (Quadrupole), intent(in) :: this
         double precision, pointer, dimension(:,:) :: pts
         real*8 :: xm11,xm12,xm21,xm22,xm33,xm34,xm43,xm44,gam,gambetz,&
                   betaz,beta0,rtkstrzz,rtkstr,kstr,gambet0
@@ -535,7 +534,7 @@
           !individual particle momentum
           gambet = sqrt(gam**2-1.0d0) 
           !Param(2) is the K defined in MAD, i.e. G/Brho
-          kstr = pts(7,i)/qmass*gambet0/gambet*this%Param(2)
+          kstr = pts(7,i)/qmass*gambet0/gambet*K1
           rtkstr = sqrt(abs(kstr))
           rtkstrzz = rtkstr*tau
           if(kstr.gt.0.0) then
@@ -595,15 +594,14 @@
 
         end subroutine transfmapK_Quadrupole_nonlinearmap
         
-        subroutine transfmapK_Quadrupole_linearmap(tt,tau,this,refpt,Nplc,pts,qmass) 
+        subroutine transfmapK_Quadrupole_linearmap(tt,tau,K1,refpt,Nplc,pts,qmass) 
         implicit none
         include 'mpif.h'
         integer, intent(in) :: Nplc
         double precision, intent(inout) :: tt
-        double precision, intent(in) :: tau,qmass
+        double precision, intent(in) :: tau,qmass,K1
         double precision, dimension(6), intent(inout) :: refpt
         double precision, dimension(6) :: tmp
-        type (Quadrupole), intent(in) :: this
         double precision, pointer, dimension(:,:) :: pts
         real*8 :: xm11,xm12,xm21,xm22,xm33,xm34,xm43,xm44,gam,gambetz,&
                   betaz,beta0,rtkstrzz,rtkstr,kstr,gambet0
@@ -615,7 +613,7 @@
         !print*,"linear map quadrupole."
 
           !linear map, same K1 for all particles
-          kstr = this%Param(2)  
+          kstr = K1 
           rtkstr = sqrt(abs(kstr))
           rtkstrzz = rtkstr*tau
           if(kstr.gt.0.0) then
