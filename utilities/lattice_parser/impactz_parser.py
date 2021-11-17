@@ -563,6 +563,7 @@ class impactz_parser(lattice_parser):
             self.beam['SIGYP'] = str(sigyp)
 
         # Z-dE
+        # deg-MeV
         emitz = float(self.beam['EMIT_Z'])
 
         if emitz != 0.0:           
