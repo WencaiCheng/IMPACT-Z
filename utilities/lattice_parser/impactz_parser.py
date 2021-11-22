@@ -861,11 +861,14 @@ class impactz_parser(lattice_parser):
                     mode = 2
                 else:
                     mode = 1
+                 
+                phase = float(elem['PHASE']) - 90
+
                 lte_lines.append('0 0 0 -42')
                 lte_lines.append(elem['PIPE_RADIUS'])
                 lte_lines.append(elem['VOLT'])
-                lte_lines.append(elem['PHASE'])
                 lte_lines.append(elem['HARM'])
+                lte_lines.append(str(phase))
                 lte_lines.append(str(mode))
                 lte_lines.append('/ \n')
 
