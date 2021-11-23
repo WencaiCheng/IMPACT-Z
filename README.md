@@ -1,4 +1,4 @@
-# 1. lte2impactzin
+# lte2impactzin
 
 # syntax
 
@@ -601,7 +601,7 @@ BPM type element, zero length. Thin cavity model applied in Ring simulation, bot
 In ImpactZ.in file, -42 element is added:
 
 ```bash 
-0 0 0 -42 radius(m) volt(eV) phase(degree) harmNum flag
+0 0 0 -42 radius(m) volt(eV) harmNum phase(degree) flag
 ```
 
 where `flag` is used for option `AC or DC model`.
@@ -610,8 +610,6 @@ where `flag` is used for option `AC or DC model`.
 flag=1, DC, default value
 flag=2, AC
 ```
-
-
 
 
 
@@ -648,6 +646,52 @@ col 4: phase (degree), sin function, auto changed to cos in math.f90
 如何做到 RF curve 文件只读取一次：
 
 只在第一次遇到时读取文件，最后 deallocate 即可。
+
+
+
+### GAP
+
+BPM type element, zero length. GAP model for low energy beam.
+
+In ImpactZ.in file, -43 element is added:
+
+```bash 
+0 0 0 -43 radius(m) volt(eV) freq phase(degree)
+```
+
+IMPACT-Z use cos convention.
+
+
+
+For python level:
+
+```
+rfgap: gap, radius= 18e-3, volt=124831, freq=324e6, phase=0
+
+```
+
+In python level, sin convention is applied.
+
+
+
+| Parameter Name | Units  | Type   | Default | Description                                                  |
+| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
+| volt           | V      | double | 0.0     | peak voltage                                                 |
+| phase          | degree | double | 0.0     | driven phase,  sin() function is used (same as ELEGANT, different with IMPACT-Z), $E_z=A\cdot \rm{sin}(kz+\phi)$, phase=90 is the crest for acceleration。Automatic change to cos func when generate Impactz.in |
+| freq           | Hz     | double | 324e6   | RF frequency                                                 |
+| pipe_radius    | m      | double | 0.0     | pip radius, not used yet                                     |
+
+
+
+ <img src="pics/image-20211123100427234.png" alt="image-20211123100427234" style="zoom:67%;" />
+
+
+
+
+
+
+
+
 
 
 
