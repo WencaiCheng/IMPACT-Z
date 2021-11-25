@@ -656,7 +656,7 @@ BPM type element, zero length. GAP model for low energy beam.
 In ImpactZ.in file, -43 element is added:
 
 ```bash 
-0 0 0 -43 radius(m) volt(eV) freq phase(degree)
+0 0 0 -43 radius(m) volt(eV) freq phase(degree) /
 ```
 
 IMPACT-Z use cos convention.
