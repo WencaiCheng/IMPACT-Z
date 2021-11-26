@@ -2100,7 +2100,7 @@
         real*8 :: eps,epsilon,xz,xmod,rk,psi,xx
         real*8, dimension(6) :: xtmp
         integer :: j,pid
-        real*8 :: hh,gam0,bet0,r56
+        real*8 :: hh,gam0,bet0,r56,truncate_at
         integer*8 :: iseed
 
         call starttime_Timer(t0)
