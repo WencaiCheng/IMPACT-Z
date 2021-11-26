@@ -416,8 +416,10 @@
           write(25,104)z,y0*xl,yrms*xl,py0/gambet,pyrms/gambet,-ypy/epy,&
                        epy*xl,betay,gammay,etay,etayp,turn_ith
           !write(26,100)z,z0*xt,zrms*xt,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xt
+
           !biaobin, if unit of [m] is wanted: [rad] -> [m]
-          write(26,100)z,z0*xl,zrms*xl,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xl
+          !z=-Scxl*T*bet0
+          write(26,100)z,z0*xl*bet,zrms*xl*bet,pz0*qmc,pzrms*qmc,-zpz/epz,epz*qmc*xl
 
           write(27,100)z,glmax(1)*xl,glmax(2)/gambet,glmax(3)*xl,&
                        glmax(4)/gambet,glmax(5)*xt,glmax(6)*qmc
@@ -446,7 +448,7 @@
 
 103     format(8(1x,e13.6),1x,I5)
 104     format(11(1x,e13.6),1x,I5)
-
+1000    format(3(1x,A20))
         t_diag = t_diag + elapsedtime_Timer(t0)
 
         end subroutine diagnostic1_Output

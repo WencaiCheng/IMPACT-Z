@@ -183,6 +183,7 @@ class impactz_parser(lattice_parser):
     def __default_control(self):    
         self.control['CORE_NUM_T'] = 1  #transverse direction computor core number      
         self.control['CORE_NUM_L'] = 1  #longitudinal direction 
+        self.control['INTEGRATOR'] = 1  # 1 for linear map, 2 for lorentz integrator
         self.control['MESHX'] = 64
         self.control['MESHY'] = 64
         self.control['MESHZ'] = 64
@@ -217,13 +218,9 @@ class impactz_parser(lattice_parser):
         self.beam['SIGY'] = 0.0     #[m]      
         self.beam['SIGZ'] = 0.0     #[m]
         
-        self.beam['SIGPX'] = 0.0    #sig_gambetx/gambet0 [rad]
-        self.beam['SIGPY'] = 0.0    #sig_gambety/gambet0 [rad]
-        self.beam['SIGE']  = 0.0    #                    [eV] 
-        
-        self.beam['SIGXPX'] = 0.0
-        self.beam['SIGYPY'] = 0.0
-        self.beam['CHIRP_H'] = 0.0 #z>0 is head, h<0 for chicane compressor
+        self.beam['SIGXP'] = 0.0    #sig_gambetx/gambet0 [rad]
+        self.beam['SIGYP'] = 0.0    #sig_gambety/gambet0 [rad]
+        self.beam['SIGE']  = 0.0   # （E-E0)  [eV] 
         
         # for twiss parameters settings
         self.beam['EMIT_X'] = 0.0
@@ -235,10 +232,14 @@ class impactz_parser(lattice_parser):
         self.beam['EMIT_NY'] = 0.0   
         self.beam['BETA_Y'] = 1.0
         self.beam['ALPHA_Y'] = 0.0
+
+        self.beam['EMIT_Z'] = 0.0   # deg MeV
+        self.beam['BETA_Z'] = 1.0   # deg/MeV
+        self.beam['ALPHA_Z'] = 0.0  # 1
         
         # in future, may use elegant's style to define every phase space 
         # distribution respectively
-        self.beam['DISTRIBUTION_TYPE'] = 45
+        self.beam['DISTRIBUTION_TYPE'] = 2
         
         # turn all para values to str data type
         for key in self.beam:
@@ -260,6 +261,7 @@ class impactz_parser(lattice_parser):
         self.lattice['QUAD']['MAPS'] = 0
         self.lattice['QUAD']['ORDER'] = 0
         self.lattice['QUAD']['K1'] = 0.0 
+        self.lattice['QUAD']['GRAD'] = 0.0 
         self.lattice['QUAD']['PIPE_RADIUS'] = 0.0
         self.lattice['QUAD']['DX'] = 0.0
         self.lattice['QUAD']['DY'] = 0.0
@@ -348,6 +350,12 @@ class impactz_parser(lattice_parser):
         self.lattice['RINGRF']['HARM']  = 1
         self.lattice['RINGRF']['PIPE_RADIUS'] = 0.0
         self.lattice['RINGRF']['AC_MODE'] = 0
+         
+        # GAP BPM element for low beam energy
+        self.lattice['GAP']['VOLT']  = 0.0     #eV
+        self.lattice['GAP']['FREQ']  = 324e6
+        self.lattice['GAP']['PHASE'] = 0.0     #deg in sin func  
+        self.lattice['GAP']['PIPE_RADIUS'] = 0.0
         
         # shift the centroid of beam to the axis origin point
         #----------------------------------------------------
@@ -472,7 +480,8 @@ class impactz_parser(lattice_parser):
         
         Np = int(float(self.beam['NP']))
         control_lines.append( str(Np) )
-        control_lines.append( '1 0 1 \n' )
+        control_lines.append( self.control['INTEGRATOR'] )
+        control_lines.append( '0 1 \n' )
         
         # line-3
         control_lines.append( self.control['MESHX'] )
@@ -513,7 +522,15 @@ class impactz_parser(lattice_parser):
         gam0 = (float(self.control['KINETIC_ENERGY'])+float(self.beam['MASS']))/float(self.beam['MASS'])
         gambet0 = sqrt(gam0**2-1.0)
         bet0 = gambet0/gam0
+        
+        # set sigxxp, sigyyp, sigzdE by default 0
+        sigxxp=0.0
+        sigyyp=0.0
+        sigzdE=0.0
+
         # twiss2sig
+        # NOTE that (sigi,sigj,sigij) is different from what we know about RMS values,
+        # see notes 2021-02-22
         # ---------
         # X-PX
         emitx = float(self.beam['EMIT_X'])
@@ -525,13 +542,14 @@ class impactz_parser(lattice_parser):
             betax = float(self.beam['BETA_X'])
             alphax = float(self.beam['ALPHA_X'])
             
+            # attention: this is not RMS "sigx"
             sigx  = sqrt(emitx*betax/(1+alphax**2))
-            sigpx = sqrt(emitx/betax)*gambet0
-            sigxpx = alphax/sqrt(1+alphax**2)
+            sigxp = sqrt(emitx/betax)
+            sigxxp= alphax/sqrt(1+alphax**2)
             
+            # replace the default values
             self.beam['SIGX'] = str(sigx)
-            self.beam['SIGPX'] = str(sigpx)
-            self.beam['SIGXPX'] = str(sigxpx)
+            self.beam['SIGXP'] = str(sigxp)
         
         # Y-PY
         emity = float(self.beam['EMIT_Y'])
@@ -543,37 +561,54 @@ class impactz_parser(lattice_parser):
             betay = float(self.beam['BETA_Y'])
             alphay = float(self.beam['ALPHA_Y'])
             
-            sigy  = sqrt(emity*betay/(1+alphay**2))
-            sigpy = sqrt(emity/betay)*gambet0
-            sigypy = alphay/sqrt(1+alphay**2)
+            sigy   = sqrt(emity*betay/(1+alphay**2))
+            sigyp  = sqrt(emity/betay)
+            sigyyp = alphay/sqrt(1+alphay**2)
+             
+            self.beam['SIGY']  = str(sigy)
+            self.beam['SIGYP'] = str(sigyp)
+
+        # Z-dE
+        # deg-MeV
+        emitz = float(self.beam['EMIT_Z'])
+
+        if emitz != 0.0:           
+            betaz = float(self.beam['BETA_Z'])
+            alphaz = float(self.beam['ALPHA_Z'])
             
-            self.beam['SIGY'] = str(sigy)
-            self.beam['SIGPY'] = str(sigpy)
-            self.beam['SIGYPY'] = str(sigypy) 
+            sigz   = sqrt(emitz*betaz/(1+alphaz**2))
+            sigdE  = sqrt(emitz/betaz)
+            sigzdE = alphaz/sqrt(1+alphaz**2)
             
-        # transform to IMPACT-Z coordinates    
-        sigx  = float(self.beam['SIGX'])/Scxl
-        #sigpx = float(self.beam['SIGPX'])
-        sigxpx = float(self.beam['SIGXPX']) # no unit para
-        sigy  = float(self.beam['SIGY'])/Scxl
-        #sigpy = float(self.beam['SIGPY'])    
-        sigypy = float(self.beam['SIGYPY'])
-        sig_phi = float(self.beam['SIGZ'])/Scxl/bet0 
-        sig_dgam = float(self.beam['SIGE'])/float(self.beam['MASS']) 
+            # From (deg, MeV) change to (m, eV)
+            sigz  = sigz/180*pi *Scxl*bet0
+            sigdE = sigdE*1e6
+
+            self.beam['SIGZ'] = str(sigz)
+            self.beam['SIGE'] = str(sigdE)
+ 
+        # change to IMPACT-Z coordinates definition
+        sigX    = float(self.beam['SIGX'])/Scxl  
+        sigPx   = float(self.beam['SIGXP'])*gambet0
+        sigY    = float(self.beam['SIGY'])/Scxl  
+        sigPy   = float(self.beam['SIGYP'])*gambet0        
+        sigT    = float(self.beam['SIGZ'])/Scxl/bet0   # m2rad
+        sigdgam = float(self.beam['SIGE'])/float(self.beam['MASS']) #eV 2 1 
+        # sigxxp, sigyyp, sigzdE, no unit para 
         
-        control_lines.append( str(sigx) )
-        control_lines.append( self.beam['SIGPX'] )
-        control_lines.append( str(sigxpx) )
+        control_lines.append( str(sigX) )
+        control_lines.append( str(sigPx) )
+        control_lines.append( str(sigxxp) )
         control_lines.append( '1.0 1.0 0.0 0.0 \n' )
 
-        control_lines.append( str(sigy) )
-        control_lines.append( self.beam['SIGPY'] )
-        control_lines.append( str(sigypy) )
+        control_lines.append( str(sigY) )
+        control_lines.append( str(sigPy) )
+        control_lines.append( str(sigyyp) )
         control_lines.append( '1.0 1.0 0.0 0.0 \n' )
        
-        control_lines.append( str(sig_phi) )
-        control_lines.append( str(sig_dgam) ) 
-        control_lines.append( self.beam['CHIRP_H'] )  #[/m], muz used for chirp setting
+        control_lines.append( str(sigT)    )
+        control_lines.append( str(sigdgam) ) 
+        control_lines.append( str(sigzdE)  ) 
         control_lines.append( '1.0 1.0 0.0 0.0 \n' )
         
         # line-11
@@ -630,11 +665,16 @@ class impactz_parser(lattice_parser):
                 map_flag = self._get_quadmap_flag(elem)
                 self._set_steps_maps_radius(elem)
 
+                if float(elem['GRAD']) == 0.0:
+                    value = elem['K1']
+                else:
+                    value = elem['GRAD']
+
                 lte_lines.append(elem['L'])
                 lte_lines.append(elem['STEPS'])
                 lte_lines.append(elem['MAPS'])
                 lte_lines.append('1')
-                lte_lines.append( elem['K1'] )
+                lte_lines.append( value )
                 lte_lines.append( map_flag )
                 lte_lines.append(elem['PIPE_RADIUS'])
                 lte_lines.append(elem['DX'])
@@ -827,12 +867,28 @@ class impactz_parser(lattice_parser):
                     mode = 2
                 else:
                     mode = 1
+                 
+                phase = float(elem['PHASE']) - 90
+
                 lte_lines.append('0 0 0 -42')
                 lte_lines.append(elem['PIPE_RADIUS'])
                 lte_lines.append(elem['VOLT'])
-                lte_lines.append(elem['PHASE'])
                 lte_lines.append(elem['HARM'])
+                lte_lines.append(str(phase))
                 lte_lines.append(str(mode))
+                lte_lines.append('/ \n')
+
+            elif elem['TYPE'] == 'GAP':
+                if elem['PIPE_RADIUS'] == '0.0' :
+                    elem['PIPE_RADIUS'] = self.control['PIPE_RADIUS'] 
+
+                phase = float(elem['PHASE']) - 90
+
+                lte_lines.append('0 0 0 -43')
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append(elem['VOLT'])
+                lte_lines.append(elem['FREQ'])
+                lte_lines.append(str(phase))
                 lte_lines.append('/ \n')
 
        
@@ -858,15 +914,27 @@ class impactz_parser(lattice_parser):
         if elem['ORDER'] == '0':
             # set by DEFAULT_ORDER
             elem['ORDER'] = self.control['DEFAULT_ORDER']
-
-        if elem['ORDER'] == '1':     #linear map
-            flag = '-5'
-        elif elem['ORDER'] == '2':    #nonlinear map
-            flag = '-15'
+        if float(elem['GRAD']) == 0.0:
+            # value is K1
+            if elem['ORDER'] == '1':     #linear map
+                flag = '-5'
+            elif elem['ORDER'] == '2':    #nonlinear map
+                flag = '-15'
+            else:
+                print('Element',elem['NAME'],':unknown ORDER for QUAD is given.')
+                sys.exit()
         else:
-            print('Element',elem['NAME'],':unknown ORDER is given.')
-            sys.exit()
+            # value is gradient
+            if elem['ORDER'] == '1':     #linear map
+                flag = '-6'
+            elif elem['ORDER'] == '2':    #nonlinear map
+                flag = '-16'
+            else:
+                print('Element',elem['NAME'],':unknown ORDER for QUAD is given.')
+                sys.exit()
         return flag
+
+
     
     def _get_bendmap_flag(self, elem :dict):
         if elem['ORDER'] == '0':

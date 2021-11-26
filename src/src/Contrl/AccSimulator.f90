@@ -924,6 +924,15 @@
             call RingRF_BPM(Bpts,Nplocal,drange(3),drange(4),drange(5),&
                             Bpts%Mass,Lc)
 
+          !biaobin, GAP model in low beam energy range, similar with
+          ! TraceWin's GAP element
+          else if(bitype.eq.-43)then
+            call getparam_BeamLineElem(Blnelem(i),drange)
+            !drange(2) is pipe radius, not used yet
+            call GAP_BPM(Bpts,Nplocal,drange(3),drange(4),drange(5),&
+                            Bpts%Mass)
+                         
+
           !read in discrete wakefield
           else if(bitype.eq.-41)then
             call getparam_BeamLineElem(Blnelem(i),2,tmpwk)
@@ -1609,7 +1618,9 @@
 
         !update particle i energy
         do i = 1,innp
-          !phi = phi0lc + harm*this%Pts1(5,i)
+          !phi = phi0lc + harm*this%Pts1(5,i)  !if refers to freq_scale
+
+          !harm refers to evo-frequency in ring:
           phi = phi0lc + 2*pilc*harm*bet0/Lc*this%Pts1(5,i)*Scxl
           this%Pts1(6,i) = this%Pts1(6,i)+vtmp*(cos(phi0lc)-cos(phi))
 
@@ -1617,5 +1628,56 @@
           this%Pts1(5,i) = this%Pts1(5,i)*bet0/bet1
         enddo 
         end subroutine RingRF_BPM
+
+        subroutine GAP_BPM(this,innp,vmax,freq,phi0,mass)
+        implicit none
+        include 'mpif.h'
+        type(BeamBunch),intent(inout) :: this
+
+        integer, intent(in) :: innp
+        !double precision, pointer, dimension(:,:) :: Pts1
+        double precision, intent(in) :: vmax,freq,phi0,mass
+        integer :: i
+        real*8 :: vtmp,phi0lc,phi,harm
+        real*8 :: gam0,bet0,pilc
+        real*8 :: gam1,bet1
+        real*8 :: betbar,gambar,lamda,kxy,kz
+
+        vtmp = vmax/mass
+        phi0lc = phi0*asin(1.0)/90
+        gam0 = -this%refptcl(6)
+        bet0 = sqrt(1.0d0-1.0d0/gam0**2)
+        pilc = 2.0d0*asin(1.0) 
+        harm = freq/Scfreq
+
+        !print*,"debug, vmax=",vmax,"freq=",freq,"phi0=",phi0,"harm=",harm
+
+        !update the ref particle energy
+        this%refptcl(6) = this%refptcl(6) - vtmp*cos(phi0lc)
+        gam1 = -this%refptcl(6)
+        bet1 = sqrt(1.0d0-1.0d0/gam1**2)
+
+        !for thin gap in low energy checking with TraceWin
+        betbar = (bet0+bet1)/2.0d0
+        gambar = (gam0+gam1)/2.0d0
+        lamda = 2.0d0*pilc*Scxl/harm
+        kxy = -pilc*vtmp*sin(phi0lc)/(betbar**2*gambar**2*lamda) 
+        !kz, results is not right yet
+        !kz = 2.0d0*pilc*vtmp*sin(phi0lc)/(betbar**2*lamda)
+
+        !update particle i 
+        do i = 1,innp
+          phi = phi0lc + harm*this%Pts1(5,i)
+          this%Pts1(2,i) = kxy*this%Pts1(1,i)*Scxl+this%Pts1(2,i)
+          this%Pts1(4,i) = kxy*this%Pts1(3,i)*Scxl+this%Pts1(4,i)
+          !this%Pts1(6,i) = this%Pts1(6,i) -kz*this%Pts1(5,i)*Scxl*bet0
+
+          this%Pts1(6,i) = this%Pts1(6,i)+vtmp*(cos(phi0lc)-cos(phi))
+
+          !update X5, since X5 actually refers to ti
+          this%Pts1(5,i) = this%Pts1(5,i)*bet0/bet1
+        enddo 
+        end subroutine GAP_BPM
+
 
       end module AccSimulatorclass
