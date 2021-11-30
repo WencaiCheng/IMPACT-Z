@@ -2100,7 +2100,7 @@
         real*8 :: eps,epsilon,xz,xmod,rk,psi,xx
         real*8, dimension(6) :: xtmp
         integer :: j,pid
-        real*8 :: hh,gam0,bet0,r56
+        real*8 :: hh,gam0,bet0,r56,truncate_at
         integer*8 :: iseed
 
         call starttime_Timer(t0)
@@ -2185,13 +2185,19 @@
 
             ! z distribution     
             !-----------------------
-            !! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
-            !xz = (2*xtmp(5)-1.0d0)*sigz*sqrt(3.0d0)
-            !this%Pts1(5,i) = xmu5 + xz
+            ! longitudinal uniform, Lbunch/2=sigz*sqrt(3)
+            !xz = (2*xtmp(5)-1.0d0)*sqrt(3.0d0)
+            !this%Pts1(5,i) = xmu5 +sigz*xz
  
             ! z, gaussian distribution
-            xz = sig5*sqrt(-2.0d0*log(xtmp(5))) *cos(twopi*xtmp(6))
-            this%Pts1(5,i) = xmu5 + xz
+            ! truncate at truncate_at*sigz position
+            truncate_at = 10.0d0
+            xz = sqrt(-2.0d0*log(xtmp(5))) *cos(twopi*xtmp(6))
+            do while (abs(xz) .gt. truncate_at) 
+                   call random_number(xtmp)
+                   xz = sqrt(-2.0d0*log(xtmp(5))) *cos(twopi*xtmp(6))
+            end do            
+            this%Pts1(5,i) = xmu5 + xz*sig5
 
             ! dgam distribution
             !------------------
@@ -2199,6 +2205,7 @@
             call random_number(xx)
             this%Pts1(6,i) = xmu6 +sig6*sqrt(-2.0*log(xtmp(5)))* &
                              sin(twopi*xtmp(6)) 
+
         enddo
         
         this%Nptlocal = avgpts
