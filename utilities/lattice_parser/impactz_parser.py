@@ -356,6 +356,82 @@ class impactz_parser(lattice_parser):
         self.lattice['GAP']['FREQ']  = 324e6
         self.lattice['GAP']['PHASE'] = 0.0     #deg in sin func  
         self.lattice['GAP']['PIPE_RADIUS'] = 0.0
+
+        # 101 DTL element 
+        self.lattice['DTL']['L'] = 0.0
+        self.lattice['DTL']['STEPS'] = 0
+        self.lattice['DTL']['MAPS'] = 0
+        self.lattice['DTL']['SCALE'] = 1.0
+        self.lattice['DTL']['FREQ']  = 324e6
+        self.lattice['DTL']['PHASE'] = 0.0     #driven phase, deg in sin  
+        self.lattice['DTL']['ID']  = 100
+        self.lattice['DTL']['PIPE_RADIUS'] = 0.0        
+        self.lattice['DTL']['LQ1'] = 0.0        
+        self.lattice['DTL']['GRAD1'] = 0.0        
+        self.lattice['DTL']['LQ2'] = 0.0        
+        self.lattice['DTL']['GRAD2'] = 0.0        
+        self.lattice['DTL']['DX_Q'] = 0.0
+        self.lattice['DTL']['DY_Q'] = 0.0
+        self.lattice['DTL']['ROTATE_X_Q'] = 0.0
+        self.lattice['DTL']['ROTATE_Y_Q'] = 0.0
+        self.lattice['DTL']['ROTATE_Z_Q'] = 0.0
+        self.lattice['DTL']['DX_RF'] = 0.0
+        self.lattice['DTL']['DY_RF'] = 0.0
+        self.lattice['DTL']['ROTATE_X_RF'] = 0.0
+        self.lattice['DTL']['ROTATE_Y_RF'] = 0.0
+        self.lattice['DTL']['ROTATE_Z_RF'] = 0.0
+
+        # ideal DTL element, will be replaced with (q1,d1,gap,d2,q2) 
+        self.lattice['DTLCEL']['L'] = 0.0
+        self.lattice['DTLCEL']['STEPS'] = 0
+        self.lattice['DTLCEL']['MAPS'] = 0
+        self.lattice['DTLCEL']['VOLT'] = 0.0
+        self.lattice['DTLCEL']['FREQ']  = 324e6
+        self.lattice['DTLCEL']['PHASE'] = 0.0     #driven phase, deg in sin  
+        self.lattice['DTLCEL']['PIPE_RADIUS'] = 0.0        
+        self.lattice['DTLCEL']['LQ1'] = 0.0        
+        self.lattice['DTLCEL']['GRAD1'] = 0.0        
+        self.lattice['DTLCEL']['LQ2'] = 0.0        
+        self.lattice['DTLCEL']['GRAD2'] = 0.0        
+        self.lattice['DTLCEL']['GC'] = 0.0        
+        self.lattice['DTLCEL']['DX_Q'] = 0.0
+        self.lattice['DTLCEL']['DY_Q'] = 0.0
+        self.lattice['DTLCEL']['ROTATE_X_Q'] = 0.0
+        self.lattice['DTLCEL']['ROTATE_Y_Q'] = 0.0
+        self.lattice['DTLCEL']['ROTATE_Z_Q'] = 0.0
+
+        # 104 SC element 
+        self.lattice['SC']['L'] = 0.0
+        self.lattice['SC']['STEPS'] = 0
+        self.lattice['SC']['MAPS'] = 0
+        self.lattice['SC']['SCALE'] = 1.0
+        self.lattice['SC']['FREQ']  = 324e6
+        self.lattice['SC']['PHASE'] = 0.0     #driven phase, deg in sin  
+        self.lattice['SC']['ID']  = 100
+        self.lattice['SC']['PIPE_RADIUS'] = 0.0        
+        self.lattice['SC']['DX'] = 0.0
+        self.lattice['SC']['DY'] = 0.0
+        self.lattice['SC']['ROTATE_X'] = 0.0
+        self.lattice['SC']['ROTATE_Y'] = 0.0
+        self.lattice['SC']['ROTATE_Z'] = 0.0
+
+        # 110 for user defined element: FIELDMAP
+        self.lattice['FIELDMAP']['L'] = 0.0
+        self.lattice['FIELDMAP']['STEPS'] = 0
+        self.lattice['FIELDMAP']['MAPS'] = 0
+        self.lattice['FIELDMAP']['SCALE'] = 1.0
+        self.lattice['FIELDMAP']['FREQ']  = 324e6
+        self.lattice['FIELDMAP']['PHASE'] = 0.0     #driven phase, deg in sin  
+        self.lattice['FIELDMAP']['ID']  = 100
+        self.lattice['FIELDMAP']['XRADIUS'] = 0.0        
+        self.lattice['FIELDMAP']['YRADIUS'] = 0.0        
+        self.lattice['FIELDMAP']['DX'] = 0.0
+        self.lattice['FIELDMAP']['DY'] = 0.0
+        self.lattice['FIELDMAP']['ROTATE_X'] = 0.0
+        self.lattice['FIELDMAP']['ROTATE_Y'] = 0.0
+        self.lattice['FIELDMAP']['ROTATE_Z'] = 0.0
+        self.lattice['FIELDMAP']['DATATYPE'] = 1
+        self.lattice['FIELDMAP']['COORDINATE'] = 2
         
         # shift the centroid of beam to the axis origin point
         #----------------------------------------------------
@@ -891,6 +967,162 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(str(phase))
                 lte_lines.append('/ \n')
 
+            elif elem['TYPE'] == 'SC':
+                self._set_steps_maps_radius(elem)
+                phase = float(elem['PHASE']) - 90
+
+                lte_lines.append(elem['L'])
+                lte_lines.append(elem['STEPS'])
+                lte_lines.append(elem['MAPS'])
+                lte_lines.append('104')
+                lte_lines.append(elem['SCALE'])
+                lte_lines.append(elem['FREQ'])
+                lte_lines.append( str(phase) )
+                lte_lines.append( elem['ID'] )
+                lte_lines.append(elem['PIPE_RADIUS'] )
+                lte_lines.append(elem['DX'])
+                lte_lines.append(elem['DY'])
+                lte_lines.append(elem['ROTATE_X'])
+                lte_lines.append(elem['ROTATE_Y'])
+                lte_lines.append(elem['ROTATE_Z'])
+                lte_lines.append('/ \n')
+
+            elif elem['TYPE'] == 'DTL':
+                self._set_steps_maps_radius(elem)
+                phase = float(elem['PHASE']) - 90
+
+                lte_lines.append(elem['L'])
+                lte_lines.append(elem['STEPS'])
+                lte_lines.append(elem['MAPS'])
+                lte_lines.append('101')
+                lte_lines.append(elem['SCALE'])
+                lte_lines.append(elem['FREQ'])
+                lte_lines.append( str(phase) )
+                lte_lines.append( elem['ID'] )
+                lte_lines.append(elem['PIPE_RADIUS'] )
+              
+                lte_lines.append( elem['LQ1'] )
+                lte_lines.append( elem['GRAD1'] )
+                lte_lines.append( elem['LQ2'] )
+                lte_lines.append( elem['GRAD2'] )
+
+                lte_lines.append(elem['DX_Q'])
+                lte_lines.append(elem['DY_Q'])
+                lte_lines.append(elem['ROTATE_X_Q'])
+                lte_lines.append(elem['ROTATE_Y_Q'])
+                lte_lines.append(elem['ROTATE_Z_Q'])
+                lte_lines.append(elem['DX_RF'])
+                lte_lines.append(elem['DY_RF'])
+                lte_lines.append(elem['ROTATE_X_RF'])
+                lte_lines.append(elem['ROTATE_Y_RF'])
+                lte_lines.append(elem['ROTATE_Z_RF'])
+                lte_lines.append('/ \n')
+
+            elif elem['TYPE'] == 'DTLCEL':
+                self._set_steps_maps_radius(elem)
+                phase = float(elem['PHASE']) - 90
+
+                L=float(elem['L'])
+                Lq1=float(elem['LQ1'])
+                Lq2=float(elem['LQ2'])
+                gc =float(elem['GC'])
+
+                d1 = 0.5*L-gc-Lq1
+                d2 = 0.5*L+gc-Lq2
+                
+                # q1
+                #----------- 
+                steps = math.ceil(Lq1/L*float(elem['STEPS']))
+                maps  = math.ceil(Lq1/L*float(elem['MAPS']))
+                
+                lte_lines.append(elem['LQ1'])
+                lte_lines.append(str(steps))
+                lte_lines.append(str(maps))
+                lte_lines.append('1')
+                lte_lines.append(elem['GRAD1'])
+                lte_lines.append('-16' )  # using grad, and is nonlinear map
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append(elem['DX_Q'])
+                lte_lines.append(elem['DY_Q'])
+                lte_lines.append(elem['ROTATE_X_Q'])
+                lte_lines.append(elem['ROTATE_Y_Q'])
+                lte_lines.append(elem['ROTATE_Z_Q'])
+                lte_lines.append('/ \n')
+
+                # d1, using nonlinear drift
+                #--------------------------
+                steps = math.ceil(d1/L*float(elem['STEPS']))
+                maps  = math.ceil(d1/L*float(elem['MAPS']))
+
+                lte_lines.append( str(d1) )
+                lte_lines.append( str(steps) )
+                lte_lines.append( str(maps) )
+                lte_lines.append('0')
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append('/ \n')
+
+                # gap
+                #-----------
+                lte_lines.append('0 0 0 -43')
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append(elem['VOLT'])
+                lte_lines.append(elem['FREQ'])
+                lte_lines.append(str(phase))
+                lte_lines.append('/ \n') 
+
+                # d2, using nonlinear drift
+                #--------------------------
+                steps = math.ceil(d2/L*float(elem['STEPS']))
+                maps  = math.ceil(d2/L*float(elem['MAPS']))
+
+                lte_lines.append( str(d2) )
+                lte_lines.append( str(steps) )
+                lte_lines.append( str(maps) )
+                lte_lines.append('0')
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append('/ \n')
+
+                # q2
+                #----------- 
+                steps = math.ceil(Lq2/L*float(elem['STEPS']))
+                maps  = math.ceil(Lq2/L*float(elem['MAPS']))
+                
+                lte_lines.append(elem['LQ2'])
+                lte_lines.append(str(steps))
+                lte_lines.append(str(maps))
+                lte_lines.append('1')
+                lte_lines.append(elem['GRAD2'])
+                lte_lines.append('-16' )  # using grad, and is nonlinear map
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append(elem['DX_Q'])
+                lte_lines.append(elem['DY_Q'])
+                lte_lines.append(elem['ROTATE_X_Q'])
+                lte_lines.append(elem['ROTATE_Y_Q'])
+                lte_lines.append(elem['ROTATE_Z_Q'])
+                lte_lines.append('/ \n')
+
+            elif elem['TYPE'] == 'FIELDMAP':
+                self._set_steps_maps_radius(elem)
+                phase = float(elem['PHASE']) - 90
+
+                lte_lines.append(elem['L'])
+                lte_lines.append(elem['STEPS'])
+                lte_lines.append(elem['MAPS'])
+                lte_lines.append('110')
+                lte_lines.append(elem['SCALE'])
+                lte_lines.append(elem['FREQ'])
+                lte_lines.append( str(phase) )
+                lte_lines.append( elem['ID'] )
+                lte_lines.append(elem['XRADIUS'] )
+                lte_lines.append(elem['YRADIUS'] )
+                lte_lines.append(elem['DX'])
+                lte_lines.append(elem['DY'])
+                lte_lines.append(elem['ROTATE_X'])
+                lte_lines.append(elem['ROTATE_Y'])
+                lte_lines.append(elem['ROTATE_Z'])
+                lte_lines.append(elem['DATATYPE'])
+                lte_lines.append(elem['COORDINATE'])
+                lte_lines.append('/ \n')
        
         lte_lines = ' '.join(lte_lines)
         return lte_lines
@@ -1051,7 +1283,8 @@ class impactz_parser(lattice_parser):
             elem['STEPS'] = str(math.ceil(steps*length))
         
         # in case element length is 0.0, steps cannot be 0
-        if length==0.0:
+        # if control.steps=0, then elem['STEPS']='1'
+        if length==0.0 or steps==0.0:
             elem['STEPS'] = '1'
 
         if elem['MAPS']=='0':
@@ -1066,8 +1299,8 @@ if __name__=='__main__':
         
     # usage examples
     # =====================
-    file_name = 'rcs.impz'   
-    line_name = 'RCS'
+    file_name = 'csns_linac.impz'   
+    line_name = 'line'
     
     # example-1
     # ---------

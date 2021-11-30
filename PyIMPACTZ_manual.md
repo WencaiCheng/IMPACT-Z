@@ -1,4 +1,4 @@
-# lte2impactzin
+# serlte2impactzin
 
 # syntax
 
@@ -179,7 +179,7 @@ The values following are all default values.
 | Parameter Name | Units | Type | Default | Description                                                  |
 | -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
 | integrator     |       | int  | 1       | 1 for linear map, i.e. transfer matrix; 2 for nonlinear Lorentz integrator. |
-| steps          |       | int  | 1       | 1 kicks/m.                                                   |
+| steps          |       | int  | 1       | 1 kicks/m. If set to 0, no matter how long is the element, the nseg=1. |
 
 
 
@@ -258,6 +258,57 @@ SimuType = 2 => Ring
 ```
 
 对于 Linac 模拟，`freq_rf_scale` 可设置为 linac 频率，也可以不这么设置，仅仅是作为 scale 而存在的设置值。但对于 Ring 而言，因存在纵向的相位折叠，折叠时是相对于回旋周期而言的，因此 `fs=f0`，fs 应设置为回旋频率。当粒子速度逐圈变化时，`f0`会逐渐高于`fs`，此时，`fs` 不变，`f0`需要每圈重新计算。
+
+
+
+
+
+## steps and maps
+
+IMPACT-Z 中的map 到底有什么作用？
+
+
+
+ref: Ryne_2008_
+
+![image-20211129102033539](pics/image-20211129102033539.png)
+
+Ryne 的意思好像是，step 和 map 是分开的，step 用来算 SC, map用来算 Mext。这样，step 可以小些，map 则可以大些。
+
+
+
+经测试及查看源码，用法如下：
+
+- 如 `steps=10 maps=5`
+
+- 并且 sub-cycle 设置为1，则：
+
+SC 会只算两次，只在如下条件下计算 SC potential:
+
+```fortran
+1033             if((mod(j-1,nsubstep).eq.0).or.(Flagsubstep.ne.1)) then
+1034               print*,"calc space charge."
+1035
+1036               call set_FieldQuant(Potential,Nx,Ny,Nz,Ageom,grid2d,npx,&
+1037                                 npy)
+! j = nstep
+! nsubstep = maps
+! Flagsubstep = (2 0 1 1)第4行中的第三个数，以前都是用的等于0
+```
+
+j=1,2,3 ... 10 
+
+只在 j=1 and j=6 时才计算 SC kick。
+
+
+
+即 steps 用来设置总 steps，而 maps 设置每间隔多少 maps 计算一次 SC kick，如 maps=1，则相当于10次SC kick。因为 SC 乃慢变项，这无疑是无必要的：
+$$
+steps = sckicks \times maps 
+$$
+steps 需设置合理，以保证外场积分收敛，而 sckicks 则保证 space charge 计算收敛。
+
+
 
 
 
@@ -342,6 +393,14 @@ If ORDER=0, i.e. not explicitly set in each ELEMENT, then the transfer map order
 
 
 
+Lattice 部分，有如下参数，会受到 control section 的控制：
+
+steps, maps, order, pipe_radius ...
+
+
+
+
+
 
 
 ### DRIFT
@@ -351,8 +410,8 @@ A drift space implemented as a linear matrix, or exactly drift map, see Wolski's
 | Parameter Name | Units | Type   | Default | Description                                                  |
 | -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
 | L              | m     | double | 0.0     | length of drift                                              |
-| steps          |       | int    | 0       | 1 step means a half-drift + a space-charge kick + a half-drift |
-| map_steps      |       | int    | 0       | each half-drift involves computing a map for that half-element, computed by numerical integration with 1 map_steps |
+| steps          |       | int    | 0       | how many segments  per meter                                 |
+| maps      |       | int    | 0       | each half-drift involves computing a map for that half-element, computed by numerical integration with 1 maps |
 | order          |       | int    | 0       | 1 or 2, linear map or nonlinear map                          |
 | pipe_radius    | m     | double | 0.0     | pip radius                                                   |
 
@@ -377,8 +436,8 @@ A quadrupole implemented as a linear matrix or nonlinear map, see Wolski's book 
 | Parameter Name | Units       | Type   | Default | Description                                                  |
 | -------------- | ----------- | ------ | ------- | ------------------------------------------------------------ |
 | L              | m           | double | 0.0     | length                                                       |
-| steps          |             | int    | 0       | how much section is divided into                             |
-| map_steps      |             | int    | 0       | map steps                                                    |
+| steps          |             | int    | 0       | how many segments  per meter                                 |
+| maps      |             | int    | 0       | map steps                                                    |
 | order          |             | int    | 0       | 1 or 2, linear map or nonlinear map; By default is 0, then `order` in control is used. |
 | $K_1$          | $\rm{/m^2}$ | double | 0.0     | quadrupole strength, $K_1=\frac{1}{(B\rho)_0}\frac{\partial B_y}{\partial x}$ |
 | grad           | T/m         | double | 0.0     | gradient $=\frac{\partial B_y}{\partial x}$, if `grad` value is non-zero, then `grad` is used. |
@@ -411,8 +470,8 @@ A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper f
 | Parameter Name | Units        | Type   | Default | Description                                                  |
 | -------------- | ------------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m            | double | 0.0     | arc length                                                   |
-| steps          |              | int    | 0       | how much section is divided into                             |
-| map_steps      |              | int    | 0       | map steps                                                    |
+| steps          |              | int    | 0       | how many segments  per meter                                 |
+| maps      |              | int    | 0       | map steps                                                    |
 | order          |              | int    | 0       | 1 or 2, linear map or nonlinear map                          |
 | angle          | rad          | double | 0.0     | bend angle                                                   |
 | E1             | rad          | double | 0.0     | entrance edge angle                                          |
@@ -464,8 +523,8 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m      | double | 0.0     | length                                                       |
-| steps          |        | int    | 0       | steps                                                        |
-| map_steps      |        | int    | 0       | map steps                                                    |
+| steps          |        | int    | 0       | how many segments  per meter                                 |
+| maps      |        | int    | 0       | map steps                                                    |
 | order          |        | int    | 0       | 1 or 2, linear map or nonlinear map                          |
 | volt           | V      | double | 0.0     | peak voltage                                                 |
 | gradient       | V/m    | double | 0.0     | peak acceleration gradient, ==volt has priority if both volt and gradient are given==. |
@@ -687,11 +746,114 @@ In python level, sin convention is applied.
 
 
 
+### 104 SC
+
+| Parameter Name | Units  | Type   | Default | Description                                                  |
+| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
+| L              | m      | double | 0.0     | length                                                       |
+| steps          |        | int    | 0       | how many segments  per meter                                 |
+| maps      |        | int    | 0       | map steps                                                    |
+| scale    |        | double | 1.0     | field scale factor |
+| ID         |        | int    | 100     | file ID for the external field                               |
+| phase          | degree | double | 0.0     | driven phase,  sin() function is used (same as ELEGANT, different with IMPACT-Z), $E_z=A\cdot \rm{sin}(kz+\phi)$, phase=90 is the crest for acceleration |
+| freq           | Hz     | double | 324e6 | RF frequency                                                 |
+| pipe_radius    | m      | double | 0.0     | pipe radius                                                  |
+| Dx             | m      | double | 0.0     | x misalignment error                                         |
+| Dy             | m      | double | 0.0     | y misalignment error                                         |
+| rotate_x       | rad    | double | 0.0     | rotation error in x direction                                |
+| rotate_y       | rad    | double | 0.0     | rotation error in y direction                                |
+| ratate_z       | rad    | double | 0.0     | rotation error in z direction                                |
 
 
 
+### 110 FIELDMAP
 
 
+
+| Parameter Name | Units  | Type   | Default | Description                                                  |
+| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
+| L              | m      | double | 0.0     | length                                                       |
+| steps          |        | int    | 0       | how many segments  per meter                                 |
+| maps      |        | int    | 0       | map steps                                                    |
+| scale    |        | double | 1.0     |                                                              |
+| ID         |        | int    | 100     | file ID for the external field                               |
+| phase          | degree | double | 0.0     | driven phase,  sin() function is used (same as ELEGANT, different with IMPACT-Z), $E_z=A\cdot \rm{sin}(kz+\phi)$, phase=90 is the crest for acceleration |
+| freq           | Hz     | double | 324e6 | RF frequency                                                 |
+| Xradius        | m      | double | 0.0     | pipe radius                                                  |
+| Yradius        | m      | double | 0.0     | pipe radius                                                  |
+| Dx             | m      | double | 0.0     | x misalignment error                                         |
+| Dy             | m      | double | 0.0     | y misalignment error                                         |
+| rotate_x       | rad    | double | 0.0     | rotation error in x direction                                |
+| rotate_y       | rad    | double | 0.0     | rotation error in y direction                                |
+| ratate_z       | rad    | double | 0.0     | rotation error in z direction                                |
+| datatype       |        | int    | 1       | 1 using discrete data, 2 using both discrete data and analytical function, other using analytical function only |
+| coordinate     |        | int    | 2       | 1 in cylindrical coordinate, 2 in Cartesian                  |
+
+
+
+### 101 DTL
+
+| Parameter Name | Units  | Type   | Default | Description                                                  |
+| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
+| L              | m      | double | 0.0     | length                                                       |
+| steps          |        | int    | 0       | how many segments  per meter                                 |
+| maps           |        | int    | 0       | map steps                                                    |
+| scale          |        | double | 1.0     |                                                              |
+| freq           | Hz     | double | 324e6   | RF frequency                                                 |
+| phase          | degree | double | 0.0     | driven phase,  sin() function is used (same as ELEGANT, different with IMPACT-Z), $E_z=A\cdot \rm{sin}(kz+\phi)$, phase=90 is the crest for acceleration |
+| ID             |        | int    | 100     | file ID for the external field                               |
+| pipe_radius    | m      | double | 0.0     | pipe radius                                                  |
+| Lq1            | m      | double | 0.0     | quad 1 length                                                |
+| grad1          | T/m    | double | 0.0     | quad 1 gradient                                              |
+| Lq2            | m      | double | 0.0     | quad 2 length                                                |
+| grad2          | T/m    | double | 0.0     | quad 2 gradient                                              |
+|                |        |        |         |                                                              |
+| Dx_q           | m      | double | 0.0     | x misalignment error for quad                                |
+| Dy_q           | m      | double | 0.0     | y misalignment error                                         |
+| rotate_x_q     | rad    | double | 0.0     | rotation error in x direction                                |
+| rotate_y_q     | rad    | double | 0.0     | rotation error in y direction                                |
+| ratate_z_q     | rad    | double | 0.0     | rotation error in z direction                                |
+|                |        |        |         |                                                              |
+| Dx_RF          | m      | double | 0.0     | x misalignment error for quad                                |
+| Dy_RF          | m      | double | 0.0     | y misalignment error                                         |
+| rotate_x_RF    | rad    | double | 0.0     | rotation error in x direction                                |
+| rotate_y_RF    | rad    | double | 0.0     | rotation error in y direction                                |
+| ratate_z_RF    | rad    | double | 0.0     | rotation error in z direction                                |
+|                |        |        |         |                                                              |
+
+
+
+### DTLCEL
+
+Ideal DTL model.
+
+| Parameter Name | Units  | Type   | Default | Description                        |
+| -------------- | ------ | ------ | ------- | ---------------------------------- |
+| L              | m      | double | 0.0     | length                             |
+| steps          |        | int    | 0       | how many segments  per meter       |
+| maps           |        | int    | 0       | map steps                          |
+|                |        |        |         |                                    |
+| volt           | V      | double | 0.0     | $E_0TL$, effective gap voltage (V) |
+| freq           | Hz     | double | 324e6   | RF frequency                       |
+| phase          | degree | double | 0.0     | RF phase in sin()                  |
+| pipe_radius    | m      | double | 0.0     | pipe radius                        |
+| Lq1            | m      | double | 0.0     | quad 1 length                      |
+| grad1          | T/m    | double | 0.0     | quad 1 gradient                    |
+| Lq2            | m      | double | 0.0     | quad 2 length                      |
+| grad2          | T/m    | double | 0.0     | quad 2 gradient                    |
+| gc             | m      | double | 0.0     | gap center shift                   |
+|                |        |        |         |                                    |
+| Dx_q           | m      | double | 0.0     | x misalignment error for quad      |
+| Dy_q           | m      | double | 0.0     | y misalignment error               |
+| rotate_x_q     | rad    | double | 0.0     | rotation error in x direction      |
+| rotate_y_q     | rad    | double | 0.0     | rotation error in y direction      |
+| ratate_z_q     | rad    | double | 0.0     | rotation error in z direction      |
+
+error for gap is not supported yet.
+
+
+
+This element will be replaced with (q1, d1, gap, d2, q2) in python level.
 
 
 
