@@ -657,8 +657,11 @@ class impactz_parser(lattice_parser):
             sigzdE = alphaz/sqrt(1+alphaz**2)
             
             # From (deg, MeV) change to (m, eV)
-            sigz  = sigz/180*pi *Scxl*bet0
-            sigdE = sigdE*1e6
+            # phi=wt,dW=Ei-E0 [MeV] =>
+            # z=-bet0 ct, dE=Ei-E0 [eV]
+            sigz   = sigz/180*pi *Scxl*bet0
+            sigdE  = sigdE*1e6
+            sigzdE = -sigzdE  #PAY ATTENTION to the minus sign
 
             self.beam['SIGZ'] = str(sigz)
             self.beam['SIGE'] = str(sigdE)
@@ -669,8 +672,9 @@ class impactz_parser(lattice_parser):
         sigY    = float(self.beam['SIGY'])/Scxl  
         sigPy   = float(self.beam['SIGYP'])*gambet0        
         sigT    = float(self.beam['SIGZ'])/Scxl/bet0   # m2rad
-        sigdgam = float(self.beam['SIGE'])/float(self.beam['MASS']) #eV 2 1 
+        sigPt = float(self.beam['SIGE'])/float(self.beam['MASS']) #eV 2 1 
         # sigxxp, sigyyp, sigzdE, no unit para 
+        sigTPt = sigzdE
         
         control_lines.append( str(sigX) )
         control_lines.append( str(sigPx) )
@@ -683,8 +687,8 @@ class impactz_parser(lattice_parser):
         control_lines.append( '1.0 1.0 0.0 0.0 \n' )
        
         control_lines.append( str(sigT)    )
-        control_lines.append( str(sigdgam) ) 
-        control_lines.append( str(sigzdE)  ) 
+        control_lines.append( str(sigPt) ) 
+        control_lines.append( str(sigTPt)  ) 
         control_lines.append( '1.0 1.0 0.0 0.0 \n' )
         
         # line-11
