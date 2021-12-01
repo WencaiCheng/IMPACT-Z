@@ -1277,18 +1277,23 @@ class impactz_parser(lattice_parser):
         set default maps and steps based on control settings
         '''
         steps = float(self.control['STEPS'])
+        maps  = float(self.control['MAPS'])
         length = float(elem['L'])
         
         if elem['STEPS'] == '0':
             elem['STEPS'] = str(math.ceil(steps*length))
-        
+
+        if elem['MAPS']=='0':
+            elem['MAPS'] = str(math.ceil(maps*length))
+       
         # in case element length is 0.0, steps cannot be 0
         # if control.steps=0, then elem['STEPS']='1'
         if length==0.0 or steps==0.0:
             elem['STEPS'] = '1'
 
-        if elem['MAPS']=='0':
-            elem['MAPS'] = self.control['MAPS']
+        if length==0.0 or maps==0.0:
+            elem['MAPS'] = '1'
+
         if elem['PIPE_RADIUS'] == '0.0' :
             elem['PIPE_RADIUS'] = self.control['PIPE_RADIUS']
 
