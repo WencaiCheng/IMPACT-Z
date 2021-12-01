@@ -520,7 +520,7 @@
         real*8 :: tmpbet,rcpgammai,gam
         real*8, intent(in) :: Lc
         integer, intent(in) :: simutype
-        real*8 :: bet0,f0,fs
+        real*8 :: bet0,f0,fs,radtest
 
         pilc = 2.0*asin(1.0)
         xl = Scxl
@@ -548,10 +548,14 @@
           this%Pts1(3,i) = this%Pts1(3,i0)
           this%Pts1(4,i) = this%Pts1(4,i0)
 
-          !biaobin, only apply phase fold for RING simu 
+          !biaobin, only apply phase fold for RING simu;
+          !for linac, phase outside (-pi,pi), lost 
           !--------------------------------------------
-          if (simutype.eq.2) then
-            !print*,"debug, ring simu."
+          if (simutype.eq.1) then
+            if(abs(this%Pts1(5,i0)).ge.pilc) then
+              ilost = ilost + 1
+            end if
+          elseif (simutype.eq.2) then
             !biaobin, change the phase refer to f0
             this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)
             !phase folding
@@ -569,34 +573,36 @@
           this%Pts1(9,i) = this%Pts1(9,i0)
           tmpx = this%Pts1(1,i0)*xl
           tmpy = this%Pts1(3,i0)*xl
-!          radtest = sqrt(tmpx**2+tmpy**2)
-!          if(radtest.ge.rad) then
-!            ilost = ilost + 1
-!!          else if(abs(this%Pts1(5,i0)).ge.pilc) then
-!!            ilost = ilost + 1
-!!          else
-!          endif
-          if(tmpx.le.(-xrad)) then
-            ilost = ilost + 1
-!            print*,"lostx ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(1,i0),tmpx
-          else if(tmpx.ge.xrad) then
-            ilost = ilost + 1
-!            print*,"lostx ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(1,i0),tmpx
-          else if(tmpy.le.(-yrad)) then
-            ilost = ilost + 1
-!            print*,"losty ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(3,i0),tmpy
-          else if(tmpy.ge.yrad) then
-            ilost = ilost + 1
-!            print*,"losty ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(3,i0),tmpy
-          else if(tmpbet.le.0.0) then
-            ilost = ilost + 1
-!            print*,"lost ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(2,i0),&
-!                      this%Pts1(4,i0),this%Pts1(5,i0),this%Pts1(6,i0) 
-!          else if(abs(this%Pts1(5,i0)).ge.pilc) then
-!            ilost = ilost + 1
-          else
-          endif
 
+          !Following lines are for round pipe
+          !----------------------------------
+          radtest = sqrt(tmpx**2+tmpy**2)
+          if(radtest.ge.rad) then
+            ilost = ilost + 1
+          endif
+        
+          !Following lines are for rectangular pipe
+          !----------------------------------
+          !if(tmpx.le.(-xrad)) then
+          !  ilost = ilost + 1
+          !  !print*,"lostx ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(1,i0),tmpx
+          !else if(tmpx.ge.xrad) then
+          !  ilost = ilost + 1
+          !  !print*,"lostx ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(1,i0),tmpx
+          !else if(tmpy.le.(-yrad)) then
+          !  ilost = ilost + 1
+          !  !print*,"losty ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(3,i0),tmpy
+          !else if(tmpy.ge.yrad) then
+          !  ilost = ilost + 1
+          !endif
+
+          if(tmpbet.le.0.0) then
+            ilost = ilost + 1
+          endif
+ 
+          !print*,"losty ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(3,i0),tmpy
+          ! print*,"lost ",tmpbet,rcpgammai,this%refptcl(6),this%Pts1(2,i0),&
+          !           this%Pts1(4,i0),this%Pts1(5,i0),this%Pts1(6,i0) 
         enddo
 
         this%Nptlocal = this%Nptlocal - ilost
@@ -1270,14 +1276,18 @@
           ilost = 0
           do i0 = 1, this%Nptlocal
             i = i0 - ilost
-            if(abs(this%Pts1(5,i0)).ge.pilc) then
-             !ilost = ilost + 1
-             !goto 100
-            endif
+           
+            if(simutype.eq.1) then
+              !for linac, no phase folding; uncomment Ji's particle loss
+              !mechanism, particle outside (-pi,pi), lost
+              if(abs(this%Pts1(5,i0)).ge.pilc) then
+               ilost = ilost + 1
+               goto 100
+              endif
 
-            !biaobin, the ring length is (-pi,pi), outside particle
-            !should fold into (-pi,pi) based on the f0 
-            if (simutype.eq.2) then
+            else if(simutype.eq.2) then
+              !biaobin, the ring length is (-pi,pi), outside particle
+              !should fold into (-pi,pi) based on the f0 
               this%Pts1(5,i0) = f0/fs*this%Pts1(5,i0)      
 
               ntmp5 = this%Pts1(5,i0)/pilc
@@ -1285,8 +1295,6 @@
               this%Pts1(5,i0) = tmp5 - mod(ntmp5,2)*pilc
 
               this%Pts1(5,i0) = fs/f0*this%Pts1(5,i0)      
-            !-------
-            !for linac, no phase folding
             end if
 
             ! The following steps go from z to t frame.
@@ -6112,9 +6120,9 @@
         gambet = sqrt(gam0**2-1.0d0)
         bet0 = sqrt(1.0d0-1.0d0/gam0**2)
 
-        if (int(simutype) .eq. 1) then
+        if (simutype.eq.1) then
           w0 = ws !linac simulation, harm refers to fs, thus fs should be fRF
-        else if (int(simutype).eq.2) then
+        else if (simutype.eq.2) then
           !biaobin, for ring, harm refers to evo freq
           !evolution freq at entrance 
           w0 = 2*Pi*bet0*Clight/Lc
