@@ -1642,6 +1642,7 @@
         real*8 :: gam0,bet0,pilc
         real*8 :: gam1,bet1
         real*8 :: betbar,gambar,lamda,kxy,kz
+        real*8 :: gami,gambeti,gambet0,gambet1,X6,z
 
         vtmp = vmax/mass
         phi0lc = phi0*asin(1.0)/90
@@ -1662,22 +1663,48 @@
         gambar = (gam0+gam1)/2.0d0
         lamda = 2.0d0*pilc*Scxl/harm
         kxy = -pilc*vtmp*sin(phi0lc)/(betbar**2*gambar**2*lamda) 
-        !kz, results is not right yet
-        !kz = 2.0d0*pilc*vtmp*sin(phi0lc)/(betbar**2*lamda)
+        kz = 2.0d0*pilc*vtmp*sin(phi0lc)/(betbar**2*lamda)
 
         !update particle i 
         do i = 1,innp
           phi = phi0lc + harm*this%Pts1(5,i)
+          !==============
+          !OPTION ONE:
+          !--------------
+          !use linear map, dgambet~dgam/bet
+          !this%Pts1(2,i) = kxy*this%Pts1(1,i)*Scxl+this%Pts1(2,i)
+          !this%Pts1(4,i) = kxy*this%Pts1(3,i)*Scxl+this%Pts1(4,i)
+          !this%Pts1(6,i) = this%Pts1(6,i)*bet1/bet0 +Scxl*kz*bet0*bet1*this%Pts1(5,i)
+
+          !OPTION TWO:
+          !--------------
+          !use nonlinear map
           this%Pts1(2,i) = kxy*this%Pts1(1,i)*Scxl+this%Pts1(2,i)
           this%Pts1(4,i) = kxy*this%Pts1(3,i)*Scxl+this%Pts1(4,i)
-          !this%Pts1(6,i) = this%Pts1(6,i) -kz*this%Pts1(5,i)*Scxl*bet0
-
           this%Pts1(6,i) = this%Pts1(6,i)+vtmp*(cos(phi0lc)-cos(phi))
+
+          !!OPTION THREE:
+          !--------------
+          !!map based on dgambet => dgam, I think this is not right 
+          !this%Pts1(2,i) = kxy*this%Pts1(1,i)*Scxl+this%Pts1(2,i)
+          !this%Pts1(4,i) = kxy*this%Pts1(3,i)*Scxl+this%Pts1(4,i)
+          !
+          !gami = -this%Pts1(6,i)+gam0 
+          !gambeti = sqrt(gami**2-1.0d0)
+          !gambet0 = gam0*bet0
+          !gambet1 = gam1*bet1
+
+          !X6 = gambeti-gambet0
+          !z  = -Scxl*bet0*this%Pts1(5,i)
+          !X6 = kz*z+X6
+          !gambeti = X6+gambet1 
+          !gami = sqrt(gambeti**2+1.0d0)
+          !this%Pts1(6,i) = gam1-gami
+          !==============
 
           !update X5, since X5 actually refers to ti
           this%Pts1(5,i) = this%Pts1(5,i)*bet0/bet1
         enddo 
         end subroutine GAP_BPM
-
 
       end module AccSimulatorclass
