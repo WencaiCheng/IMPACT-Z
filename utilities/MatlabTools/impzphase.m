@@ -141,11 +141,14 @@ classdef impzphase < handle
             subplot(3,3,5)
             obj.plot2d(52)
             subplot(3,3,6)
-            obj.plot2d(56)           
+            obj.plot2d(561)           
             subplot(3,3,7)
             obj.plot2d(53)
             subplot(3,3,8)
-            obj.plot2d(54)            
+            obj.plot2d(54)
+            subplot(3,3,9)
+            obj.plot2d(562)
+            
         end
             
         function setfont(obj)
