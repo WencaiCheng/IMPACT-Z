@@ -133,6 +133,8 @@
           call GaussDist_6D(this,nparam,distparam,grid,gam,bet0)
         else if(flagdist.eq.48) then
           call CircleUniformGaussDist(this,nparam,distparam,grid)
+        else if(flagdist.eq.49) then
+          call ArbProfile_Dist(this,nparam,distparam,grid)
         else
           print*,"Initial distribution not available!!"
           stop
@@ -2519,5 +2521,145 @@
         t_kvdist = t_kvdist + elapsedtime_Timer(t0)
 
         end subroutine CylinderSin_Dist
+
+!Biaobin Li, 20210107
+!arb. current profile distribution
+!read profile file (z, fz, Fz)
+!z (0,1), fz and Fz should be normalized
+        subroutine ArbProfile_Dist(this,nparam,distparam,grid)
+        implicit none
+        include 'mpif.h'
+        type (BeamBunch), intent(inout) :: this
+        integer, intent(in) :: nparam
+        double precision, dimension(nparam) :: distparam
+        type (Pgrid2d), intent(in) :: grid
+        double precision  :: sigx,sigpx,muxpx,xscale,sigy,&
+        sigpy,muypy, yscale,sigz,sigpz,muzpz,zscale,pxscale,pyscale,pzscale
+        double precision :: xmu1,xmu2,xmu3,xmu4,xmu5,xmu6,&
+        zeta1,zeta2,zeta3,zeta4,zeta5,zeta6
+        double precision, dimension(2) :: gs
+        double precision :: sig1,sig2,sig3,sig4,sig5,sig6
+        double precision :: rootx,rooty,rootz
+        integer :: totnp,npy,npx
+        integer :: avgpts,numpts
+        integer :: myid,myidx,myidy,i,ierr
+        double precision :: t0,twopi
+        integer :: nptsob,ilow,ihigh,Nmax,ndim
+        real*8 :: xz,epsilon
+        real*8, dimension(6) :: xtmp
+        integer :: pid
+        real*8 :: Uj,zsq
+        integer :: j,lo,hi,mid
+        integer :: linenum,io
+        real*8, allocatable :: z(:),fz(:),cumFz(:)
+
+        call starttime_Timer(t0)
+
+        !read the profile file
+        open(unit=100, file='zprofile.in')
+
+        !get the line number
+        read(100,*) linenum
+        
+        allocate(z(linenum))
+        allocate(fz(linenum))
+        allocate(cumFz(linenum))
+        
+        do i=1,linenum
+          read(100,*,iostat=io)z(i),fz(i),cumFz(i)
+        enddo
+        close(100)
+
+        sigx = distparam(1)
+        sigpx = distparam(2)
+        muxpx = distparam(3)
+        xscale = distparam(4)
+        pxscale = distparam(5)
+        xmu1 = distparam(6)
+        xmu2 = distparam(7)
+        sigy = distparam(8)
+        sigpy = distparam(9)
+        muypy = distparam(10)
+        yscale = distparam(11)
+        pyscale = distparam(12)
+        xmu3 = distparam(13)
+        xmu4 = distparam(14)
+        sigz = distparam(15)
+        sigpz = distparam(16)
+        muzpz = distparam(17)
+        zscale = distparam(18)
+        pzscale = distparam(19)
+        xmu5 = distparam(20)
+        xmu6 = distparam(21)
+
+        call getsize_Pgrid2d(grid,totnp,npy,npx)
+        call getpost_Pgrid2d(grid,myid,myidy,myidx)
+
+        avgpts = this%Npt/(npx*npy)
+        nptsob = avgpts*npx*npy
+        this%Npt = nptsob
+        !particle index in processor myid is [ilow,ihigh]
+        ilow = myid*avgpts
+        ihigh = (myid+1)*avgpts
+        !print*,"myid= ",myid,"ilow=",ilow,"ihigh=",ihigh,"avgpts=",avgpts
+
+        sig1 = sigx*xscale
+        sig2 = sigpx*pxscale
+        sig3 = sigy*yscale
+        sig4 = sigpy*pyscale
+        sig5 = sigz*zscale
+        sig6 = sigpz*pzscale
+
+        !(aphax,alphay,alphaz)=0 by default
+        rootx=sqrt(1.-muxpx*muxpx)
+        rooty=sqrt(1.-muypy*muypy)
+        rootz=sqrt(1.-muzpz*muzpz)
+
+        ! initial allocate 'avgpts' particles on each processor.
+        allocate(this%Pts1(9,avgpts))
+        twopi = 4*asin(1.0d0)
+        epsilon = 1.0d-18
+        do i=1,avgpts
+            !------------------------------------
+            !transverse gaussian (x,px,y,py,dgam)
+            call random_number(xtmp)
+            xtmp = 2.0d0*xtmp-1.0d0
+            zeta1 = sqrt(2.0d0)*math%iErf(xtmp(1))
+            zeta2 = sqrt(2.0d0)*math%iErf(xtmp(2))
+            zeta3 = sqrt(2.0d0)*math%iErf(xtmp(3))
+            zeta4 = sqrt(2.0d0)*math%iErf(xtmp(4))
+            zeta5 = sqrt(2.0d0)*math%iErf(xtmp(5))
+            zeta6 = sqrt(2.0d0)*math%iErf(xtmp(6))
+
+            this%Pts1(1,i) = xmu1 + sig1*zeta1/rootx
+            this%Pts1(2,i) = xmu2 + sig2*(-muxpx*zeta1/rootx+zeta2)
+            this%Pts1(3,i) = xmu3 + sig3*zeta3/rooty
+            this%Pts1(4,i) = xmu4 + sig4*(-muypy*zeta3/rooty+zeta4)
+            this%Pts1(6,i) = xmu6 + sig6*zeta6/rootz
+        enddo
+       
+        !distribution of z, inverse sampling and then Langerange interp
+        zsq=0.0d0
+        do j=1,avgpts
+          call random_number(xtmp)
+          Uj=xtmp(5)
+          this%Pts1(5,j)= 2.0d0*math%interp(z,cumFz,Uj,linenum)-1.0d0
+          zsq = zsq+this%Pts1(5,j)*this%Pts1(5,j)
+        end do
+        !transform z -> phi
+        this%Pts1(5,:) = xmu5 - sig5/sqrt(zsq/avgpts)*this%Pts1(5,:) 
+
+        this%Nptlocal = avgpts
+        do j = 1, avgpts
+          pid = j + myid*avgpts
+          this%Pts1(7,j) = this%Charge/this%mass
+          this%Pts1(8,j) = this%Current/Scfreq/this%Npt*this%Charge/abs(this%Charge)
+          this%Pts1(9,j) = pid
+        enddo
+
+        t_kvdist = t_kvdist + elapsedtime_Timer(t0)
+
+        end subroutine ArbProfile_Dist
+        
 
       end module Distributionclass
