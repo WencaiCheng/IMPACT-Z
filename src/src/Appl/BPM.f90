@@ -19,7 +19,7 @@
       module BPMclass
         use PhysConstclass
         use Dataclass
-        integer, private, parameter :: Nparam = 10
+        integer, private, parameter :: Nparam = 12
         type BPM
           !Itype < 0
           integer :: Nseg,Mapstp,Itype
@@ -260,13 +260,13 @@
         end subroutine kick_BPM
 
         subroutine kick_matrix(Pts1,innp,m11,m33,m55,m56,m65,m66,T566,&
-                               T655,gam0,mass)
+                               T655,U5666,U6555,gam0,mass)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: innp
         double precision, pointer, dimension(:,:) :: Pts1
         double precision, intent(in) :: m11,m33,m55,m56,m65,m66,T566,&
-                                        T655
+                                        T655,U5666,U6555
         double precision, intent(in) :: gam0,mass
         integer :: i
         real*8 :: gambet0,bet0
@@ -274,6 +274,7 @@
 
         !print*,"m11,m33,m55,m56,m65,m66,T566,T655=", &
         !        m11,m33,m55,m56,m65,m66,T566,T655
+        !print*,"U5666,U6555=",U5666,U6555
         !reference particle
         gambet0=sqrt(gam0**2-1.0d0)
         bet0=gambet0/gam0
@@ -285,8 +286,8 @@
           !matrix kick
           Pts1(1,i)    = m11*Pts1(1,i)
           Pts1(3,i)    = m33*Pts1(3,i)
-          z1    = m55*z0 +m56*delta0 +T566*delta0**2
-          delta1= m65*z0 +m66*delta0 +T655*z0**2
+          z1    = m55*z0 +m56*delta0 +T566*delta0**2 +U5666*delta0**3
+          delta1= m65*z0 +m66*delta0 +T655*z0**2 + U6555*z0**3
 
           !transform back to IMPACT-Z coordinate
           Pts1(5,i) = -z1/bet0/Scxl

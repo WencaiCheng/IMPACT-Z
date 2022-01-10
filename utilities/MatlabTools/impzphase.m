@@ -9,35 +9,88 @@ classdef impzphase < handle
         z
         dgam
         delta
+        
+        histz
+        histdgam
+        
+        %slice valuable
+        %--------------
+        sliz
+        slinp
+        sliI
+        slienx
+        slieny
+        slidelta
+        slidE
+        slix0
+        sliy0
+        
+        %for setting the axis range
+        %--------------------------
+        xlim
+        ylim
+        
     end
     methods
-        function obj=impzphase(filename)
-            tmp = importdata(filename,' ',1);
-            obj.headstr = tmp.textdata;
-            obj.data    = tmp.data;
+        function obj=impzphase(filenum,path)
+            % read the phase space
+            %---------------------
+            if nargin==1
+                path='.';
+            end
+            phasefile = [path '/fort.' num2str(filenum)];   %fort.1000 
+            slicefile = [path '/fort.1' num2str(filenum)];  %fort.11000
+                            
+            tmp1 = importdata(phasefile,' ',1);
+            obj.headstr = tmp1.textdata;
+            obj.data    = tmp1.data;
             obj.x       = obj.data(:,1);
             obj.xp      = obj.data(:,2);
             obj.y       = obj.data(:,3);
             obj.yp      = obj.data(:,4);
             obj.z       = obj.data(:,5);
             obj.dgam    = obj.data(:,6);
-            obj.delta   = obj.data(:,7);
+            
+            dim = size(obj.data);
+            if dim(2) == 7
+                obj.delta   = obj.data(:,7);
+            end
+            
+            obj.histz   = obj.gethist(obj.z);
+            obj.histdgam= obj.gethist(obj.dgam);
+            
+            % read the slice enformation
+            %---------------------------
+%             tmp2 = importdata(slicefile);
+%             obj.sliz       = tmp2(:,1);
+%             obj.sliI       = tmp2(:,3);
+%             obj.slienx     = tmp2(:,4);
+%             obj.slieny     = tmp2(:,5);
+%             obj.slidelta   = tmp2(:,6);
+%             obj.slidE      = tmp2(:,7);
+%             obj.slix0      = tmp2(:,8);
+%             obj.sliy0      = tmp2(:,9);  
+            
+            % set default axisrange 
+            obj.xlim = [];
+            obj.ylim = [];
+            
         end           
         
-        function plot2d(obj,option,col2)
-            if nargin<3
-        
+        function plot2d(obj,option,col2)            
+            if nargin==2
+                % if two input paras
                 if option==561
                     % use x,y, convenient for change units
-                    x=obj.z*1e3;
+                    x=obj.z*1e6;
                     y=obj.dgam;  
-                    label1 = 'z (mm)';
+                    label1 = 'z (\mum)';
                     label2 = '\Delta\gamma'; 
                 elseif option==562
                     % use x,y, convenient for change units
-                    x=obj.z*1e3;
+                    x=obj.z*1e6;
                     y=obj.delta;  
-                    label1 = 'z (mm)';
+                    label1 = 'z (\mum)';
                     label2 = '\delta';                    
                 elseif option==51
                     x=obj.z*1e3;
@@ -75,12 +128,13 @@ classdef impzphase < handle
                     label1 = 'y (mm)';
                     label2 = 'y\prime';                                 
                 end
-            else
+            elseif nargin==3
                 x=option;  %option is col1 now
                 y=col2;
                 % label set by outside
                 label1='x';  
                 label2='y';
+%             elseif nargin                  
             end    
                 
             %--------------------
@@ -88,28 +142,43 @@ classdef impzphase < handle
             colormap(gca,'turbo') %jet
             colorbar()
             
+            % change the axis range here
+            %----------------------
+            if isempty(obj.xlim)
+                
+            else
+              h.XLimits=obj.xlim;
+            end
+            
+            if isempty(obj.ylim)
+                
+            else
+                h.YLimits=obj.ylim;
+            end
+            %----------------------            
+            
             % add the hist for two directions   
-            tmp = obj.gethist(h,x,y);
+            tmp = obj.gethist_norm(h,x,y);
             hold on
-            plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m')
+            h2=plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m');
             xlabel(label1);
             ylabel(label2);
             axis([h.XLimits h.YLimits])
             
-            obj.setfont();
+            obj.setfont(h2);
                 
         end
         
         function plothist(obj,z)
                 [cnt, x] = histcounts(z,100);
-                h = plot(x(1,1:end-1),cnt)
+                h = plot(x(1,1:end-1),cnt);
                 xlabel(' ')
                 ylabel('counts')      
                 obj.setfont()
                 set(h,'LineWidth',2)
         end
         
-        function out=gethist(obj,h,z,dgam)
+        function out=gethist_norm(obj,h,z,dgam)
             % get the hist of az(a.z, a.dgam,...)
             [x1, y1] = histcounts(dgam,100);
             y1 = y1(1,1:end-1);
@@ -127,6 +196,15 @@ classdef impzphase < handle
             out.y2 = y2;
             
         end
+        
+        function out=gethist(obj,z)
+            [cnt, x] = histcounts(z,100);
+%             x = x';
+            x = x(1,1:end-1,1);
+            y = cnt; 
+            out = [x' y'];
+        end
+       
         
         function plot33(obj)
             figure
@@ -151,14 +229,78 @@ classdef impzphase < handle
             
         end
             
-        function setfont(obj)
+        %for slice enformation
+        %---------------------
+        function plotsli(obj,option)
+            if strcmp(option,'I')
+                x=obj.sliz*1e6;
+                y=obj.sliI/1e3;
+                label1='z (\mum)';
+                label2='current (kA)';
+            elseif strcmp(option,'enx')
+                x=obj.sliz*1e3;
+                y=obj.slienx*1e6;
+                label1='z (mm)';
+                label2='enx (mm mrad)';
+            elseif strcmp(option,'eny')
+                x=obj.sliz*1e3;
+                y=obj.slieny*1e6;
+                label1='z (mm)';
+                label2='eny (mm mrad)';
+            elseif strcmp(option,'delta')
+                x=obj.sliz*1e3;
+                y=obj.slidelta;
+                label1='z (mm)';
+                label2='\DeltaE/E';
+            elseif strcmp(option,'dE')
+                x=obj.sliz*1e3;
+                y=obj.slidE/1e6;
+                label1='z (mm)';
+                label2='\DeltaE (MeV)';
+            elseif strcmp(option,'x0')
+                x=obj.sliz*1e3;
+                y=obj.slix0*1e3;
+                label1='z (mm)';
+                label2='<x> (mm)';
+            elseif strcmp(option,'y0')
+                x=obj.sliz*1e3;
+                y=obj.sliy0*1e3;
+                label1='z (mm)';
+                label2='<y> (mm)';                
+            else
+                error('Unknown option:%s\n',option);                
+            end
+            
+            h=plot(x,y,'-b')
+            xlabel(label1);
+            ylabel(label2);
+            
+            obj.setfont(h);
+%             axis([obj.xlim obj.ylim])
+
+                                       
+        end
+        
+        % plot settings
+        %-------------------
+        function setfont(obj,h)
             FS=25;
             LW=2;
             
             set(gcf,'color','w');
             set(gca,'FontSize',FS,'LineWidth',LW);
+            set(h,'LineWidth',LW);
+            
+            % set x minortick
+            % set(gca,'xminortick','on')   
+            set(gca,'XMinorTick','on','tickLength',[0.02;0.02])
+
+            % set y minortick
+            % set(gca,'yminortick','on')  
+            set(gca,'YMinorTick','on','tickLength',[0.02;0.02])
         end            
         
+                
     end
 end
 

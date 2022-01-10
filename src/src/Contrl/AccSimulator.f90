@@ -122,7 +122,7 @@
         double precision :: z,xrad,yrad,phsini
         double precision, dimension(3) :: tmpdr 
         double precision, dimension(5) :: tmpcf 
-        double precision, dimension(10) :: tmpbpm 
+        double precision, dimension(12) :: tmpbpm 
         double precision, dimension(9) :: tmpquad
         double precision, dimension(10) :: tmpdipole 
         double precision, dimension(11) :: tmprf
@@ -245,6 +245,8 @@
             tmpbpm(8) = val7(i)
             tmpbpm(9) = val8(i)
             tmpbpm(10) = val9(i)
+            tmpbpm(11) = val10(i)
+            tmpbpm(12) = val11(i)
             call setparam_BPM(beamln0(ibpm),tmpbpm)
             Blnelem(i) = assign_BeamLineElem(beamln0(ibpm))
             if(bitype(i).eq.-7) nfileout=bmpstp(i)
@@ -542,7 +544,7 @@
         double precision, allocatable, dimension(:,:,:) :: chgdens
         integer :: nmod,k,ii,jj
         !double precision :: sumtest, sumtest2, sumtest3
-        double precision, dimension(10) :: drange
+        double precision, dimension(12) :: drange
         double precision, dimension(3) :: al0,ga0,epson0
         double precision :: realSamplePeriod,tg,tv,gam,piperad2
         integer :: nsubstep,integerSamplePeriod,Flagbctmp
@@ -895,9 +897,11 @@
             !drange(8): m66
             !drange(9): T566
             !drange(10):T655
+            !drange(11):U5666
+            !drange(12):U6555
             call kick_matrix(Bpts%Pts1,Nplocal,drange(3),drange(4),&
             drange(5),drange(6),drange(7),drange(8),drange(9),&
-            drange(10),-Bpts%refptcl(6),Bpts%Mass)
+            drange(10),drange(11),drange(12),-Bpts%refptcl(6),Bpts%Mass)
 
           else if(bitype.eq.-40)then
             call getparam_BeamLineElem(Blnelem(i),drange)

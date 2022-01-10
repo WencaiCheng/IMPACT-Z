@@ -372,9 +372,16 @@ notes:
 - If emit_x or emit_nx not equal to 0, then use twiss parameters for (x, px, y, py) distribution, otherwise, use sig values
 
 - distribution_type, if equal to 19, read-in beam distribution, coordinate definition is ???
+
 - mismatch, off-set not added yet
 
+  
 
+### 49分布
+
+distribution_type = 49
+
+zprofile.in 文件 (z,fz,Fz)，其中 $z\in[0,1],~Fz\in[0,1]$，给定密度分布曲线。ImpactZ 会根据Fz 生成该形状分布。如抑制CSR的分布类型。
 
 
 
@@ -500,17 +507,19 @@ Elegant fint is set 0.5 as default value.
 
 Kick particles use given transfer matrix. Currently only support (m11,m33,m55,m56,m65).
 
-| Parameter Name | Units | Type   | Default | Description                                                  |
-| -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
-| PIPE_RADIUS    |       | double | 0.0     | un-used                                                      |
-| R11            |       | double | 1.0     | for x direction shrink                                       |
-| R33            |       | double | 1.0     | for y direction shrink.                                      |
-| R55            |       | double | 1.0     | for z direction shrink                                       |
-| R56            |       | double | 0.0     | momentum compaction factor, because we used z>0 for beam head, so positive m56 results bunch length compression in four dipole chicane. |
-| R65            |       | double | 0.0     | for energy chirp, R65<0 for chicane compression, R65>0 for de-chirp. |
-| R66            |       | double | 1.0     |                                                              |
-| T566           |       | double | 0.0     |                                                              |
-| T655           |       | double | 0.0     | i.e. $\delta=az+bz^2$,  $T_{655}=b$                          |
+| Parameter Name | Units            | Type   | Default | Description                                                  |
+| -------------- | ---------------- | ------ | ------- | ------------------------------------------------------------ |
+| PIPE_RADIUS    |                  | double | 0.0     | un-used                                                      |
+| R11            |                  | double | 1.0     | for x direction shrink                                       |
+| R33            |                  | double | 1.0     | for y direction shrink.                                      |
+| R55            |                  | double | 1.0     | for z direction shrink                                       |
+| R56            |                  | double | 0.0     | momentum compaction factor, because we used z>0 for beam head, so positive m56 results bunch length compression in four dipole chicane. |
+| R65            |                  | double | 0.0     | for energy chirp, R65<0 for chicane compression, R65>0 for de-chirp. |
+| R66            |                  | double | 1.0     |                                                              |
+| T566           |                  | double | 0.0     |                                                              |
+| T655           |                  | double | 0.0     | i.e. $\delta=az+bz^2$,  $T_{655}=b$                          |
+| U5666          | m                | double | 0.0     |                                                              |
+| U6555          | $\mathrm m^{-3}$ | double | 0.0     |                                                              |
 
 
 
@@ -1132,3 +1141,32 @@ add structure wakefield (given in rfdata41.in file) for 103 cavity, and only tur
 
 
 
+
+
+# Matlab module
+
+usage:
+
+```
+a = impzphase('fort.1006');
+
+%%
+figure
+x = a.z*1e6;
+y = a.dgam;
+
+y = y+a.z*3000*100;
+
+a.plot2d(56,x,y)
+xlabel('z (um)')
+ylabel('dgam')
+
+%% 
+figure
+a.plot2d(56)
+
+```
+
+gives the following plots:
+
+![image-20211223020905891](pics/image-20211223020905891.png)

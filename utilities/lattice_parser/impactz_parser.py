@@ -335,6 +335,8 @@ class impactz_parser(lattice_parser):
         self.lattice['EMATRIX']['R66'] = 1.0
         self.lattice['EMATRIX']['T566'] = 0.0
         self.lattice['EMATRIX']['T655'] = 0.0
+        self.lattice['EMATRIX']['U5666'] = 0.0
+        self.lattice['EMATRIX']['U6555'] = 0.0
 
         # watch
         #-------------
@@ -803,6 +805,8 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(elem['R66'])
                 lte_lines.append(elem['T566'])
                 lte_lines.append(elem['T655'])
+                lte_lines.append(elem['U5666'])
+                lte_lines.append(elem['U6555'])
                 lte_lines.append('/ \n')
 
             elif elem['TYPE'] == 'SHIFTCENTER':

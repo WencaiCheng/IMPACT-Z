@@ -14,3 +14,5 @@ ImpactZexe
 .settings
 ImpactZ.in
 utilities/**/*.pyc
+
+utilities/MatlabTools/**/*.asv
