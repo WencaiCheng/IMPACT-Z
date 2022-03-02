@@ -1,6 +1,85 @@
-# serlte2impactzin
+# chap1 功能需求
 
-# syntax
+- [x] 赋值功能
+
+- [x]  default order in control section should control all settings in lattice, lower priority than ORDER in each element.
+
+- [x]  total_charge=0, turn off space charge.
+
+- [x]  add a charge=1.0/-1.0 parameter. 
+
+- [x] how to keep charge and current when space charge is off.
+
+- [x]  rpn expression in lattice section is not supported yet.
+
+- [ ] elegant2impactz.py
+
+   read in elegant .lte type lattice, convert it to ImpactZ.in.
+
+- [ ] 2022-03-02, manual 中的 Fortran level 可能有误，是以前很久的版本，规整到了当前版本的manual中。未查验。
+
+- [ ] muzpz 不能用作二次弯曲项，代码中删除该部分代码。该功能可用 EMATRIX 替代。
+
+
+
+# Chap2 代码框架及习惯
+
+## Code Structure
+
+- lattice_parser
+- impactz_parser : lattice_parser
+  - get_lattice_section
+  - get_beam_section
+  - get_control_section
+- genimpactzin
+
+
+
+### lattice_parser
+
+programing notes
+
+- `N*FODO` case, how to expand it ?
+
+  ```python
+  #like, expand line=['4*FODO','BC1'] to ['FODO','FODO','FODO','FODO','BC1']
+  
+  line=['4*FODO','BC1']
+  
+  tmpline = []
+  for item in line:
+      if re.match(r'^\d+\*',item):    # 4*FODO case
+          tmp = item.split('*')
+          tmpline.extend( int(tmp[0]) * [tmp[1]])
+  
+      elif re.match(r'^[a-zA-Z]+\*',item):  # FODO*4 case
+          tmp = item.split('*')
+          tmpline.extend( int( tmp[1]) * [tmp[0]] )
+          print('ATTENTION: If in Elegant, you should use N*FODO, not FODO*N in .lte file.')
+  
+      else:
+          tmpline.append(item)
+  line = tmpline
+  ```
+
+
+
+解析字符串型输入文件。
+
+### impactz_parser
+
+Right now, only add those parameters I used mostly and understood well. ==DO NOT add the parameters I have not tested yet.==
+
+
+
+Code design methods:
+
+-  If not in dict keys list, then set default values
+-  not case sensitive, use upper to match element or parameters name
+
+
+
+## 使用语法
 
 - `!` starts comments, comments following `!` are ignored.
 
@@ -60,66 +139,66 @@
   &end
   ```
 
-  
-
-# code structure
-
-- lattice_parser
-- impactz_parser : lattice_parser
-  - get_lattice_section
-  - get_beam_section
-  - get_control_section
-
-- genimpactz
 
 
 
-# lattice_parser
+## 坐标定义
 
-programing notes
+### IMPACT-Z 坐标
 
-- `N*FODO` case, how to expand it ?
+此为代码内部的坐标定义。代码中常见的一个参数：
+$$
+Scxl = c/w
+$$
 
-  ```python
-  #like, expand line=['4*FODO','BC1'] to ['FODO','FODO','FODO','FODO','BC1']
-  
-  line=['4*FODO','BC1']
-  
-  tmpline = []
-  for item in line:
-      if re.match(r'^\d+\*',item):    # 4*FODO case
-          tmp = item.split('*')
-          tmpline.extend( int(tmp[0]) * [tmp[1]])
-  
-      elif re.match(r'^[a-zA-Z]+\*',item):  # FODO*4 case
-          tmp = item.split('*')
-          tmpline.extend( int( tmp[1]) * [tmp[0]] )
-          print('ATTENTION: If in Elegant, you should use N*FODO, not FODO*N in .lte file.')
-  
-      else:
-          tmpline.append(item)
-  line = tmpline
-  ```
+
+The coordinate definition in ImpactZ source code:
+$$
+\begin{array}{ll}
+X=x \omega / c, & P_{X}=\gamma \beta_{x}, \\
+Y=y \omega / c, & P_{Y}=\gamma \beta_{y}, \\
+T=\omega t, & P_{t}=-\left(\gamma-\gamma_{0}\right),
+\end{array}
+\label{impactz_cor}
+$$
+where $w$​ is the scaling frequency $\omega=2\pi f_{scale}$​. In code, $Scxl=c/\omega$​. 
 
 
 
+### ELEGANT坐标
+
+WATCH 元件输出
+$$
+\begin{array}{ll}
+x=x, & x\prime = {\gamma \beta_{x}}/{\gamma\beta_z},  \\
+y=y, & y\prime = \gamma \beta_{y} / \gamma\beta_z,  \\
+t=t, & p=\gamma\beta,
+\end{array}
+\label{elegant_cor}
+$$
+式中 $(x\prime,y\prime)$ 的定义根据来源于 ELEGANT 的转换脚本，如 elegant2astra 等。
+
+常用关系式：
+
+$$
+\begin{array}{l}
+&\gamma\beta_z = (\gamma\beta)/\sqrt{x\prime^2+y\prime^2+1}, \\
+&\gamma = \sqrt{(\gamma\beta)^2+1},
+\end{array}
+$$
+$\gamma_0$ 需由统计平均值给出。
 
 
-# impactz_parser
 
-Right now, only add those parameters I used mostly and understood well. ==DO NOT add the parameters I have not tested yet.==
+# Chap3 输入文件
 
-
-
-Code design methods:
-
--  If not in dict keys list, then set default values
--  not case sensitive, use upper to match element or parameters name
--  priority, if sentence
+先介绍 lte.impz 输入文件中的三部分。
 
 
 
-## control section
+## Control Section
+
+### 参数列表
 
 The values following are all default values.
 
@@ -159,6 +238,8 @@ The values following are all default values.
 	                 !if Np<1e5, sample_out=Np
 	slice_bin=128;   !slice bin for watch element
 	
+	integrator=1; 
+	
 &end
 ```
 
@@ -183,13 +264,7 @@ The values following are all default values.
 
 
 
-
-
-
-
-
-
-### 新增一行
+### space charge 控制
 
 ImpactZ.in 中新增加了一行：
 
@@ -197,7 +272,7 @@ ImpactZ.in 中新增加了一行：
 
 
 
-1. space charge control:
+space charge control:
 
 - tsc=0, lsc=0: Flagsc=0
 - tsc=0, lsc=1: Flagsc=1
@@ -209,28 +284,39 @@ No need to set current being 0 for space charge OFF.
 
 
 
-==To do==
+### 环多圈模拟
 
-- [x] If space charge OFF, but wakefield ON ?
+控制 Ring or Linac simulation，In python level:
+
+| Parameter Name | Units | Type | Default | Description                                                  |
+| -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
+| RingSimu       |       | int  | 0       | By default, Linac simulation is applied. If RingSimu=1, then Ring simulation is applied. Mainly influence is at: phase folding, RF cavity frequency if based on |
+
+In fortran level:
+
+```
+ SimuType = 1 => Linac 
+ SimuType = 2 => Ring
+```
+
+对于 Linac 模拟，`freq_rf_scale` 可设置为 linac 频率，也可以不这么设置，仅仅是作为 scale 而存在的设置值。但对于 Ring 而言，因存在纵向的相位折叠，折叠时是相对于回旋周期而言的，因此 `fs=f0`，fs 应设置为回旋频率。当粒子速度逐圈变化时，`f0`会逐渐高于`fs`，此时，`fs` 不变，`f0`需要每圈重新计算。
+
+| Parameter Name | Units | Type | Default | Description   |
+| -------------- | ----- | ---- | ------- | ------------- |
+| turn           |       | int  | 1       | Tracking 圈数 |
+
+`turn`，即 Ring 的模拟圈数。`turn>1` 则认为是 ring simulation，不要利用该参数来重复 linac 的模拟次数。如果想像FODO 一样，$num \times FODO$ 来复制 lattice，应该在 lattice section 中使用 lattice 重复的特性。
 
 
 
-2. turn_number
-
-   Ring 的模拟圈数。`turn>1` 则认为是 ring simulation，不要利用该参数来重复 linac 的模拟次数。如果想像FODO 一样，$num \times FODO$ 来复制 lattice，应该在 lattice section 中使用 lattice 重复的特性。
-
-​        
-
-​       对于Linac 模拟，不要设置 `turn_number>1`，不然会引发错误。   
+对于Linac 模拟，不要设置 `turn_number>1`，不然会引发错误。   
 
    
 
-3. outfq
+`n_turn_out`，每多少圈 `watch` 元件才会生效。如`turn=5001`, `outfq=100`. Lattice 设置如下：
 
-每多少圈 `watch` 元件有效。如`turn=5001`, `outfq=100`. Lattice 设置如下：
-
-```
-w0: watch, filename_ID=1000, sample_freq=1, slice_bin=20, slice_information=0, coordinate_convention="NORMAL"
+```bash
+w0: watch, filename_ID=1000
 line: line=(w0,cav0,RCS)
 ```
 
@@ -242,28 +328,7 @@ turn 之所以设置 5001，是为了输出第5000圈之后的分布，所以故
 
 
 
-4. Ring or Linac simulation
-
-In python level:
-
-| Parameter Name | Units | Type | Default | Description                                                  |
-| -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
-| RingSimu       |       | int  | 0       | By default, ==Linac simulation is applied==. If RingSimu=1, then Ring simulation is applied. Mainly influence is at: phase folding, RF cavity frequency if based on $f_0$. |
-
-In fortran level:
-
-```
-SimuType = 1 => Linac 
-SimuType = 2 => Ring
-```
-
-对于 Linac 模拟，`freq_rf_scale` 可设置为 linac 频率，也可以不这么设置，仅仅是作为 scale 而存在的设置值。但对于 Ring 而言，因存在纵向的相位折叠，折叠时是相对于回旋周期而言的，因此 `fs=f0`，fs 应设置为回旋频率。当粒子速度逐圈变化时，`f0`会逐渐高于`fs`，此时，`fs` 不变，`f0`需要每圈重新计算。
-
-
-
-
-
-## steps and maps
+###  steps and maps
 
 IMPACT-Z 中的map 到底有什么作用？
 
@@ -310,9 +375,25 @@ steps 需设置合理，以保证外场积分收敛，而 sckicks 则保证 spac
 
 
 
+2022-03-02 comments:
+
+==此处存疑，上面的结论可能有误。仍然设置 maps=1，只设置较大的 steps 来保证收敛。==
 
 
-## beam parameters
+
+## Beam Section
+
+### code notes
+
+notes:
+
+- Use EMATRIX to introduce energy chirp.
+- If emit_x or emit_nx not equal to 0, then use twiss parameters for (x, px, y, py) distribution, otherwise, use sig values
+- mismatch, off-set not added yet
+
+
+
+### 参数列表
 
 The listed values are default values if un-defined in input file.
 
@@ -365,48 +446,77 @@ The listed values are default values if un-defined in input file.
 
 
 
-notes:
+### 束流分布
 
-- Use EMATRIX to introduce energy chirp.
+当想要生成 $\sigma_{xx\prime}\neq 0$的分布类型时，使用 `Twiss`参数。不要用 RMS 值。因此上面的表格中，我故意将`sigxxp`去掉了。
 
-- If emit_x or emit_nx not equal to 0, then use twiss parameters for (x, px, y, py) distribution, otherwise, use sig values
+当想要生成带 energy chirp 的分布时，请结合 `EMATRIX`元件一起使用。
 
-- distribution_type, if equal to 19, read-in beam distribution, coordinate definition is ???
 
-- mismatch, off-set not added yet
 
+#### Fortran level
+
+输入参数定义修改回了 IMPACT-Z-V2.0 版本：
+$$
+\sigma_X~~\sigma_{P_X}~~\sigma_{XP_X} \\
+\sigma_Y~~\sigma_{P_Y}~~\sigma_{YP_Y} \\
+\sigma_T~~\sigma_{\Delta\gamma}~~\sigma_{T\Delta\gamma}
+$$
+where $P_X=\gamma\beta_x,~\Delta\gamma=\gamma-\gamma_0$, $\gamma_0$ is reference particle relative energy. 以方便零发射度束流分布的生成。
+
+
+
+我自己添加了 45,46,47,48,49 等多种类型分布。
+
+#### 45 分布
+
+ cylinder uniform distribution based on pseudorandom number, gaussian distribution of momentum
+
+#### 46分布
+
+cylinder uniform distribution with sinusoidal density modulation, based on halton sequence, gaussian distribution of momentum.
+
+- alphaxyz=0, which means alpha value settings in 8th-10th lines are ignored, and also: mismatch=1 and offset=0
+- offsetPhase and offsetEnergy are used as (eta,lambda), eta is density modulation depth, lambda is wavelength (m)
+- no gaussian end distribution added yet
+
+#### 49 类型分布
+
+`distribution_type = 49`, `zprofile.in` 文件 (z,fz,Fz)，其中 $z\in[0,1],~Fz\in[0,1]$，给定密度分布曲线。ImpactZ 会根据Fz 生成该形状分布。如抑制CSR的分布类型。
+
+`zprofile.in`只是给定形状，纵向长度等信息在 twiss 参数或者 sigma 参数中给出。
+
+
+
+## Lattice Section
+
+### code notes
+
+元件很多参数均有默认值。元件内部有些参数设置与 control 部分是重复的，如：`steps,maps,order,pipe_radius` 等参数：
+
+- 如果元件缺省设置，即为默认值0，则会采用 control 中设置值
+- 如果元件内设置值非默认值(非零)，则元件内设置值具有更高优先级。
+
+使用时，记住：
+
+- 如果想设置全局值，则在 control 中设置。比如：
+
+  ```bash
+  steps=0;
+  maps=0;
+  order=1;
+  pipe_radius=20e-3;
   
+  csr=1;
+  zwake=1;
+  trwake=0;
+  ```
 
-### 49分布
-
-distribution_type = 49
-
-zprofile.in 文件 (z,fz,Fz)，其中 $z\in[0,1],~Fz\in[0,1]$，给定密度分布曲线。ImpactZ 会根据Fz 生成该形状分布。如抑制CSR的分布类型。
-
-
-
-## lattice elements
-
-```
-&lattice
-D1: drift, L=1.0
-B1: Bend, angle=1.0
-&end
-```
+- 如果只想设置某几个元件的具有特有的值，比如 dipole 中孔径要更小。则再在 dipole 中单独设置。
 
 
 
-If ORDER=0, i.e. not explicitly set in each ELEMENT, then the transfer map order is determined by DEFAULT_ORDER in control section.
-
-
-
-Lattice 部分，有如下参数，会受到 control section 的控制：
-
-steps, maps, order, pipe_radius ...
-
-
-
-
+下面的内容将逐一介绍所有加速器元件的定义方式。
 
 
 
@@ -428,11 +538,12 @@ For space charge simulations, one should increase the steps number where beam si
 
 In fortran/ImpactZ.in level:
 
-```
-ID = -1, linear map
+- ID<0, linear map, ID=-1
+- otherwise, real map, ID left ungiven use real map.
 
-ID =0 or >0, nonlinear map.
-```
+usage:ID=-1
+
+10 1 1 0 1.0 -1 /
 
 
 
@@ -459,14 +570,23 @@ A quadrupole implemented as a linear matrix or nonlinear map, see Wolski's book 
 
 In ImpactZ.in, 不再保持与墙老师的 manual 兼容，ID>0 用来读rfdata 文件代号ID。
 
-```
+```bash
 ID = -5, -15: (linear map, K1) and (nonlinear map, K1)
 ID = -6, -16: (linear map, grad) and (nonlinear map, grad)
 ```
 
 
 
+Fortran level:
 
+- (-10,0),        linear map, recommend using ID=-5
+- less than -10,  nonlinear map, recommend using ID=-15
+
+usage:
+
+quad length=0.3, steps=1, map steps=1, K1=-4, ID=-5, radius=0.014 
+
+0.30 1 1 1 -4 -5 0.014 0 0 0 0 0 /
 
 
 
@@ -483,7 +603,7 @@ A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper f
 | angle          | rad          | double | 0.0     | bend angle                                                   |
 | E1             | rad          | double | 0.0     | entrance edge angle                                          |
 | E2             | rad          | double | 0.0     | exit edge angle                                              |
-| $K_1$          | $1\rm{/m^2}$ | double | 0.0     | quadrupole strength, $K_1=\frac{1}{(B\rho)_0}\frac{\partial B_y}{\partial x}$, not added yet in V2.1 version. |
+| $K_1$          | $1\rm{/m^2}$ | double | 0.0     | quadrupole strength, $K_1=\frac{1}{(B\rho)_0}\frac{\partial B_y}{\partial x}$, ==not added yet in V2.1 version.== |
 | PIPE_RADIUS    | m            | double | 0.0     | half gap between poles                                       |
 | h1             | 1/m          | double | 0.0     | entrance pole-face curvature                                 |
 | h2             | 1/m          | double | 0.0     | exit pole-face curvature                                     |
@@ -503,9 +623,22 @@ Elegant fint is set 0.5 as default value.
 
 
 
+Fortran level:
+
+- (0,50),         linear map, ID=25
+- (50,100),       linear map + csr, ID=75
+- (100,200),      nonlinear map, recommend using ID=150
+- \>200,          nonlinear map + CSR, recommend using ID=250
+
+usage: ID=25
+
+0.200000 1 1 4 1.105843492438955e-01 0 25 1.0 0.000000000000000e+00 1.105843492438955e-01 0 0 0 /
+
+
+
 ### EMATRIX
 
-Kick particles use given transfer matrix. Currently only support (m11,m33,m55,m56,m65).
+在Fortran code 中为无长度元件，即负数元件。Kick particles use given transfer matrix. 
 
 | Parameter Name | Units            | Type   | Default | Description                                                  |
 | -------------- | ---------------- | ------ | ------- | ------------------------------------------------------------ |
@@ -521,7 +654,10 @@ Kick particles use given transfer matrix. Currently only support (m11,m33,m55,m5
 | U5666          | m                | double | 0.0     |                                                              |
 | U6555          | $\mathrm m^{-3}$ | double | 0.0     |                                                              |
 
+主要用于：
 
+- 对束流引入一、二、三阶 能量调制，如线性能量chirp。
+- 当作 thin chicane。
 
 
 
@@ -551,7 +687,9 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | wakefile_ID    |        | int    | None    | If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
 | ac_mode        |        | int    | 0       | for RCS AC mode, if equal 1, then rfdata_ac.in should be given. And NONLINEAR map will be called, order=1 will be overwritten. |
 
-rfdata_ac.in::q:
+
+
+增加了对 RCS AC 模式的模拟支持，`rfdata_ac.in`:
 
 ```
 line_number harmonic number
@@ -570,6 +708,23 @@ In IMPACT-Z source code:
 ​		ac_mode=1, end focus, ID=-0.55
 
 ​        ac_mode=1, NO end focus, ID=-0.65  
+
+
+
+In Fortran level:
+
+when ID<0, the 103 element use simple sinusoidal RF cavity model. Parameters following 103 is different from manual.
+
+- -0.5,           linear map
+- -1.0,           nonlinear map for middle drift and end focus, drift using individual particle informations.
+
+usage:ID=-0.5 
+
+acceleration gradient=5.97474936319844610989e+06 V/m, frequency=1.3e9 Hz, phase=-30 degree, ID=-0.5 use linear map
+
+1.0 1 1 103     5.97474936319844610989e+06     1.3e+09    -30 -0.5 1.0 /
+
+
 
 
 
@@ -596,7 +751,54 @@ line: line=(wake1,d1,wake2)
 
 
 
+Fortran level:
+
+this element should be used in pair, turn on in previous of 103 cavity element, and turn off after 103 cavity.
+
+- ID=-1, turn OFF
+- ID=(0,10), only Lwake, ID=5
+- ID=(10,20), only Twake, ID=15
+- ID\>20, Lwake + Twake, ID=25
+
+usage: ID=15, ID=-1
+
+add structure wakefield (given in rfdata41.in file) for 103 cavity, and only turn ON Twake
+
+0 0 1 -41 1.0 41 15 /
+
+1.0 1 1 103     5.97474936319844610989e+06     1.3e+09    -30 -0.5 1.0 /
+
+0 0 1 -41 1.0 41 -1 / 
+
+
+
+源代码中，尾场文件 rfdata41.in 数据格式为：
+
+Data.f90/read1wk_Data
+
+```fortran
+ 46         ! discrete wake function, z, longitudinal, x and y wake function
+ 47         double precision,dimension(Ndataini) :: zdatwk,edatwk,epdatwk,eppdatwk
+```
+
+which include 4 column data.
+
+```fortran
+601             read(14,*,end=77)tmp1,tmp2,tmp3,tmp4
+602             n = n + 1
+603             zdatwk(n) = tmp1
+604             edatwk(n) = tmp2
+605             epdatwk(n) = tmp3
+606             eppdatwk(n) = tmp4
+```
+
+待定：给四列数据好像会报错？
+
+
+
 ### WATCH
+
+将 `-2` 和 `-8`元件合并成了一个元件。
 
 ```bash
 w0: watch, filename_ID=1000
@@ -619,7 +821,26 @@ Output particle distribution and beam slice information into fort.N and fort.(N+
 
 If  coordinate_convention='normal', output phase space is $(x,\gamma\beta_x,y,\gamma\beta_y,t,\gamma)$, where $x,y,t$ are in .  For coordinate_convention='IMPACT-Z', output phase space is $(xw/c,\gamma\beta_x,yw/c,\gamma\beta_y,wt,-(\gamma-\gamma_0))$,  where $w$ is $w=2\pi f$, $f$ is the scaling frequency.
 
-If filename_ID = 1001, then the output file would be fort.1001 and fort.6001. fort.6001 refers to ImpactZ -8 element output file (+5000), which outputs slice information. The columns in this file are as following:
+
+
+对 `normal`相空间输出，在输出文件中增加了==每列的数据含义说明==：
+
+```fortran
+1918            write(nfile,102)"x(m)","gambetx/gambet0","y(m)",&
+1919                   "gambety/gambet0","z=-bet0*c*t(m)","dgam=gam-gam0","dgam/gambet0"
+1920            do i = 1, this%Nptlocal,abs(samplePeriod)
+1921             write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i)/gambet, &
+1922                   this%Pts1(3,i)*Scxl,this%Pts1(4,i)/gambet, &
+1923                   -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i),-this%Pts1(6,i)/gambet/bet0
+```
+
+注意：为了便于 Matlab 数据后处理，增加了 $\delta$ 数据列的输出。
+
+
+
+切片信息的输出：
+
+If filename_ID = 1001, then the output file would be fort.1001 and fort.11001. fort.11001 refers to ImpactZ `-8` element output file (+10000), which outputs slice information. The columns in this file are as following:
 
 | Column number | Units | Description                                |
 | ------------- | ----- | ------------------------------------------ |
@@ -635,13 +856,6 @@ If filename_ID = 1001, then the output file would be fort.1001 and fort.6001. fo
 | 10            |       | x-direction mismatch factor ???            |
 | 11            |       | y-direction mismatch factor ???            |
 
-==To do:==
-
-Use `coordinate_convention` to output different coordinate:
-
-- (x, gambetx/gambet0, y, gambety/gambet0, z, delta)
-- (x, gambetx, y, gambety, z, dgam)
-
 
 
 ### SHIFTCENTER
@@ -652,7 +866,7 @@ Shift the beam center to the origin point for 6-direction coordinates.
 elem1: shiftcenter, L=0;
 ```
 
-In order to keep the format consistence with other elements (for re expression),  `L=0` must be added.
+`L=0`必须有，不然 `lattice_parser`会有问题。
 
 
 
@@ -662,11 +876,41 @@ The original `0 0 0 -1`  only shift transverse coordinates, now 6D shift.
 
 
 
+Linac 设计中，当考虑尾场时，需要对 `z,dgam`均移动到中心。当前代码中仅对 `z,dgam`均移动(代码中可对6D均移动)。
+
+
+
+- [ ] 待查验：
+
+ImpactZ 中似乎还有另一个只移动纵向的元件`-19`元件。代码位置在元件循环的开始几行，应该是墙老师临时加的：
+
+```fortran
+ 705           !instant rotate "tmplump" radian w.r.s s-axis
+ 706           if(bitype.eq.-18) then
+ 707             call getparam_BeamLineElem(Blnelem(i),3,tmplump)
+ 708             call srot_BPM(Bpts%Pts1,Nplocal,tmplump)
+ 709           endif
+ 710           !shift longitudinal phase space
+ 711           if(bitype.eq.-19) then
+ 712             call shiftlong_BPM(Bpts%Pts1,bitype,Nplocal,Np,Bpts%refptcl(5),&
+ 713                                Bpts%refptcl(6))
+ 714           endif
+ 715           !instant heating from IBS
+ 716           if(bitype.eq.-20) then
+ 717             call getparam_BeamLineElem(Blnelem(i),3,b0)
+ 718             call getparam_BeamLineElem(Blnelem(i),4,tmp1)
+ 719             qmass = abs(Bpts%Charge)/Bpts%Mass
+ 720             call engheater_BPM(Bpts%Pts1,Nplocal,b0,qmass)
+ 721           endif
+```
+
+
+
 ### RingRF
 
-BPM type element, zero length. Thin cavity model applied in Ring simulation, both DC and AC model.
+为新增元件。BPM type element, zero length. Thin cavity model applied in Ring simulation, both DC and AC model.
 
-In ImpactZ.in file, -42 element is added:
+In ImpactZ.in file, `-42` element is added:
 
 ```bash 
 0 0 0 -42 radius(m) volt(eV) harmNum phase(degree) flag
@@ -719,7 +963,16 @@ col 4: phase (degree), sin function, auto changed to cos in math.f90
 
 ### GAP
 
-BPM type element, zero length. GAP model for low energy beam.
+| Parameter Name | Units  | Type   | Default | Description                                                  |
+| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
+| volt           | V      | double | 0.0     | peak voltage                                                 |
+| phase          | degree | double | 0.0     | driven phase,  sin() function is used (same as ELEGANT, different with IMPACT-Z), $E_z=A\cdot \rm{sin}(kz+\phi)$, phase=90 is the crest for acceleration。Automatic change to cos func when generate Impactz.in |
+| freq           | Hz     | double | 324e6   | RF frequency                                                 |
+| pipe_radius    | m      | double | 0.0     | pip radius, not used yet                                     |
+
+
+
+为了构建 `DTL`模型而新增的元件。BPM type element, zero length. GAP model for low energy beam.
 
 In ImpactZ.in file, -43 element is added:
 
@@ -742,20 +995,15 @@ In python level, sin convention is applied.
 
 
 
-| Parameter Name | Units  | Type   | Default | Description                                                  |
-| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
-| volt           | V      | double | 0.0     | peak voltage                                                 |
-| phase          | degree | double | 0.0     | driven phase,  sin() function is used (same as ELEGANT, different with IMPACT-Z), $E_z=A\cdot \rm{sin}(kz+\phi)$, phase=90 is the crest for acceleration。Automatic change to cos func when generate Impactz.in |
-| freq           | Hz     | double | 324e6   | RF frequency                                                 |
-| pipe_radius    | m      | double | 0.0     | pip radius, not used yet                                     |
-
-
+notes:
 
  <img src="pics/image-20211123100427234.png" alt="image-20211123100427234" style="zoom:67%;" />
 
 
 
-### 104 SC
+### SC
+
+即`104`超导元件。
 
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
@@ -775,9 +1023,9 @@ In python level, sin convention is applied.
 
 
 
-### 110 FIELDMAP
+### FIELDMAP
 
-
+即`110` 元件，给定场分布。用 `Lorentz`积分来推动粒子。
 
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
@@ -800,7 +1048,9 @@ In python level, sin convention is applied.
 
 
 
-### 101 DTL
+### DTL
+
+`101` 元件。
 
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
@@ -834,7 +1084,7 @@ In python level, sin convention is applied.
 
 ### DTLCEL
 
-Ideal DTL model.
+新增的理想 DTL-CELL 模型。根据设置值，在Python层展开为：`(q1, d1, gap, d2, q2)`。
 
 | Parameter Name | Units  | Type   | Default | Description                        |
 | -------------- | ------ | ------ | ------- | ---------------------------------- |
@@ -862,19 +1112,17 @@ error for gap is not supported yet.
 
 
 
-This element will be replaced with (q1, d1, gap, d2, q2) in python level.
+# chap4 数据后处理
 
+## RMS 尺寸
 
-
-# data process
-
-## fort.24 & fort.25
-
-Add 4 additional columns data output:
+fort.24 & fort.25 files, 4 additional columns data output were added:
 
 | 8     | 9      | 10   | 11    | 12   |
 | ----- | ------ | ---- | ----- | ---- |
 | betax | gammax | etax | etaxp | turn |
+
+
 
 ## fort.18
 
@@ -886,144 +1134,135 @@ Add 4 additional columns data output:
 
 
 
-## -8 元件
+## Matlab模块
 
-增加 对于 dE 的统计直方图
+usage:
 
+```
+ a = impzphase('fort.1006');
+ 
+ %%
+ figure
+ x = a.z*1e6;
+ y = a.dgam;
+ 
+ y = y+a.z*3000*100;
+ 
+ a.plot2d(56,x,y)
+ xlabel('z (um)')
+ ylabel('dgam')
+ 
+ %% 
+ figure
+ a.plot2d(56)
+ 
+```
 
+gives the following plots:
 
+![image-20211223020905891](file:///Users/biaobin/gitlab_subj/IMPACT-Z/pics/image-20211223020905891.png?lastModify=1646226104)
 
 
 
+## debug时输出分布
 
+在 Fortran代码中输出分布:
 
+`call phase_Output(3002,Bpts,1)`, see Accsimulator.f90.
 
+which will generate fort.3002 dis file, Bpts is particle pointer, 1 is sample freq, if negative, (x,xp,y,yp,z,dgam,delta) output.
 
 
-# to do
 
-- [ ] sc off, wake on
-- [ ] AC模式下，文件只读取一次
-- [ ] 
+考虑到每个元件还会被切片，因此逐切片输出：
 
+Accsimulator.f90
 
+```fortran
+do tmpj=1,bnseg
+  call phase_Output(500+tmpj,Bpts,-1)
+end do
+```
 
-- default order in control section should control all settings in lattice, lower priority than ORDER in each element.
-- ~~total_charge=0, turn off space charge~~.
-- ~~add a charge=1.0/-1.0 parameter.~~
-- how to keep charge and current when space charge is off.
-- rpn expression in lattice section is not supported yet.
-- ~~comment "!" is not supported in beam and control section.~~
-- 增加对 MARK 元件的支持，增加一个 class 支持 elegant 元件的直接转换
 
 
+# chap5 使用笔记
 
-- 赋值功能
+## 粒子个数需一致
 
-  ![image-20210310143358408](../../../../IHEPBox/documents/Typora/pics/image-20210310143358408-9188819.png)
+对于 19 分布而言，particle.in 中第一行为粒子个数，假设 Np=1e5。然而设置 ImpactZ.in 中时，粒子个数错误输入为了 Np=1e4 (注意在ImpactZ.in 中只能写成整数形式 10000)。代码中的总粒子数目是以 ImpactZ.in 为准的。Output.f90 中的 fort.24 输出时：
 
-  已添加。
+​                                                    总粒子数用的 this%Npt=1e4，
 
+但是，统计计算粒子信息时，却又确确实实统计了每个核上的粒子数目，假设并行运行了 4 个核，则每个核上的粒子数：
 
+​												this%Nptlocal = 1e5/4=2.5e4。
 
-- [ ] elegant2impactz.py
+==在作均值处理时，用到了  this%Npt，从而就会给出错误的 rms 值==
 
-  read in elegant .lte type lattice, convert it to ImpactZ.in.
 
-  convention:
 
-  - lte file is not case sensitive, both  `drift` and `DRIFT` are supported.
+现已在源码中增加了相应的 warning 和 stop 语句。
 
 
 
-# 2. Fortran level
+## 尾场文件不能过长
 
-use ID flag to control elements behavior
+wakefield file 不能过长，5000行数据为最大(Data.f90)。kband-file 有3e4 行之多，超过了数组长度，会报如下错误：
 
-use ID flag to choose linear or nonlinear map, to control collective effects behavior.
+```
+bug: value requires 3018290224 bytes, which is more than max-value-size.
+```
 
-## quad
+![image-20210227033247406](pics/image-20210227033247406.png)
 
-- (-10,0),        linear map, recommend using ID=-5
-- less than -10,  nonlinear map, recommend using ID=-15
+如 rfdata41.in 行数超过 5000 行，如为 3e4 行，将超行读取。（这里很是奇怪，照理应该仍然只能读 5000 行的数据，但是实际上却读取了 3e4 行），最后在 deallocate 时出错。
 
-<br/>usage:
 
-quad length=0.3, steps=1, map steps=1, K1=-4, ID=-5, radius=0.014 
 
-0.30 1 1 1 -4 -5 0.014 0 0 0 0 0 /
+## DTL 场文件
 
-## dipole
+根据纵向场分布(z, Ez)，算出傅立叶系数。
 
-- (0,50),         linear map, ID=25
-- (50,100),       linear map + csr, ID=75
-- (100,200),      nonlinear map, recommend using ID=150
-- \>200,          nonlinear map + CSR, recommend using ID=250
+Rfcoef.f90
 
-<br/>usage: ID=25
+```bash
+gfortran -o rfcoef Rfcoef.f90
 
-0.200000 1 1 4 1.105843492438955e-01 0 25 1.0 0.000000000000000e+00 1.105843492438955e-01 0 0 0 /
+# in case rfdata.in has 100 lines
+./rfcoef 
 
-## drift
+# then change the input para coef number from 90-100,
+# check the rfdata.out with rfdata.in
+plot 'rfdata.in' u 1:2 w l
+rep 'rfdata.out' u 1:2 w l
+# the figure should overlap each other exactly.
+```
 
-add an addition parameter for ID flag.
 
-- ID<0, linear map, ID=-1
-- otherwise, real map, ID left ungiven use real map.
 
-<br/>usage:ID=-1
+程序会生成所需的 `rfdatax`，即傅立叶变换系数。`rfdata.out` 有四列，其他二列含义，暂不明。
 
-10 1 1 0 1.0 -1 /
+横向场可以根据纵向场算出来。(The off-axis field will be reconstructed based these coefficients and axis symmetry assumption.)
 
-## 103 cavity
 
-when ID<0, the 103 element use simple sinusoidal RF cavity model. Parameters following 103 is different from manual.
 
-- -0.5,           linear map
-- -1.0,           nonlinear map for middle drift and end focus, drift using individual particle informations.
+Example1 是 DTL 模拟的例子。
 
-<br/>usage:ID=-0.5 
 
-acceleration gradient=5.97474936319844610989e+06 V/m, frequency=1.3e9 Hz, phase=-30 degree, ID=-0.5 use linear map
 
-1.0 1 1 103     5.97474936319844610989e+06     1.3e+09    -30 -0.5 1.0 /
+## 超导场文件
 
-## space charge 
+- 用 104 元件，为纵向1D场文件
+- 110 元件，则为6D场文件
 
-current in 11th line of ImpactZ.in file:
 
-- current=0, off 
-- current .ne. 0, on
 
-## -41 element, read-in RF cavity structure wakefield
+# 其他
 
-this element should be used in pair, turn on in previous of 103 cavity element, and turn off after 103 cavity.
+## 并行版本的编译
 
-- ID=-1, turn OFF
-- ID=(0,10), only Lwake, ID=5
-- ID=(10,20), only Twake, ID=15
-- ID\>20, Lwake + Twake, ID=25
-
-<br/>usage: ID=15, ID=-1
-
-add structure wakefield (given in rfdata41.in file) for 103 cavity, and only turn ON Twake
-
-0 0 1 -41 1.0 41 15 /
-
-1.0 1 1 103     5.97474936319844610989e+06     1.3e+09    -30 -0.5 1.0 /
-
-0 0 1 -41 1.0 41 -1 / 
-
-# add new distribution type
-
-- type 45, cylinder uniform distribution based on pseudorandom number, gaussian distribution of momentum.
-
-- type 46, cylinder uniform distribution with sinusoidal density modulation, based on halton sequence, gaussian distribution of momentum.
-  - alphaxyz=0, which means alpha value settings in 8th-10th lines are ignored, and also: mismatch=1 and offset=0
-  - offsetPhase and offsetEnergy are used as (eta,lambda), eta is density modulation depth, lambda is wavelength (m)
-  - no gaussian end distribution added yet
-
-# how to compile IMPACT-Z to parallel version
+单进程版本，实际上是通过重新写了一个 `mpistub.f90`文件，将所有的并行接口函数重命名为普通函数。
 
 - comment out the line "use mpistub" in Contrl/Input.f90, DataStruct/Data.f90,
   DataStruct/Pgrid.f90, DataStruct/PhysConst.f90, and Func/Timer.f90.
@@ -1033,10 +1272,20 @@ add structure wakefield (given in rfdata41.in file) for 103 cavity, and only tur
 
 
 
-# Debug
+我写了两个脚本用来快速切换这两个版本： `sing2paracore` 和 `para2singcore`。代码见`utilities`。
+
+
 
 ## 回溯问题
 
+回溯表达式为：
+$$
+\begin{align}
+& x_1 = x_0-\beta_xct \notag \\
+& y_1 = y_0-\beta_y ct \notag\\
+& z_1 = -\beta_z ct 
+\end{align}
+$$
 对于RCS 长束团而言，横向的一级回溯需要 comment 掉：
 
 ==注意：只改动了 open3D 的SC 算法，对于其他SC边界条件，没有修改。==
@@ -1141,32 +1390,3 @@ add structure wakefield (given in rfdata41.in file) for 103 cavity, and only tur
 
 
 
-
-
-# Matlab module
-
-usage:
-
-```
-a = impzphase('fort.1006');
-
-%%
-figure
-x = a.z*1e6;
-y = a.dgam;
-
-y = y+a.z*3000*100;
-
-a.plot2d(56,x,y)
-xlabel('z (um)')
-ylabel('dgam')
-
-%% 
-figure
-a.plot2d(56)
-
-```
-
-gives the following plots:
-
-![image-20211223020905891](pics/image-20211223020905891.png)
