@@ -201,8 +201,12 @@ classdef impzphase < handle
             [cnt, x] = histcounts(z,100);
 %             x = x';
             x = x(1,1:end-1,1);
+            dx = x(2)-x(1);
             y = cnt; 
-            out = [x' y'];
+%             out = [x' y'];
+            out.x = x;
+            out.y = y;
+            out.dx = dx;
         end
        
         

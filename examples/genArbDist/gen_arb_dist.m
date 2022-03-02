@@ -43,20 +43,9 @@ z0 = (z0+1)/2;  %move to (0,1)
 % fz = exp(-z0.^2/2);
 % z0 = (z0+5)/2;
 
-
-%%% normalize the fz
-% over 2 to resize (0,1) to (-1,1)
-fz = fz/trapz(z0,fz)/2;  
-
-% figure
-% plot(z0,fz)
-
-%% get the rms z value
-z1 = 2*z0-1;   %move to (-1,1) xrange
-sigz1 = sqrt( trapz(z1,z1.^2.*fz) );
-
+%%%
 figure
-plot(z1,fz)
+plot(z0,fz)
 
 %% CDF function
 Fz = cumtrapz(z0,fz);
@@ -74,8 +63,10 @@ fprintf(fileid,'  %d \n',N1);
 fprintf(fileid,'%15.7e %15.7e %15.7e \n',Mfile');
 fclose(fileid);
 
-
-%% halton sequence setting
+%% =======================
+% particles generation
+%=========================
+% halton sequence setting
 p = haltonset(1,'Skip',1000,'Leap',100);
 p = scramble(p,'RR2');
 X0 = net(p,Np);
@@ -86,8 +77,24 @@ for j=1:Np
     samples(j)=2*interp(z0,Fz,U,N1)-1;
 end
 
+% get the rms z value
+% --------------------------------
+% normalize the fz
+% over 2 to resize (0,1) to (-1,1)
+fz = fz/trapz(z0,fz)/2;  
+
+figure
+plot(z0,fz)
+
+z1 = 2*z0-1;   %move to (-1,1) xrange
+sigz1 = sqrt( trapz(z1,z1.^2.*fz) );
+
+figure
+plot(z1,fz)
+
+% rescale to the RMS values setted in the code
 z = sigz/sigz1*samples;
-% z = samples;
+
 %% figure
 figure()
 h = histogram(z,256);
