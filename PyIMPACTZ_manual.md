@@ -1255,6 +1255,81 @@ bug: value requires 3018290224 bytes, which is more than max-value-size.
 
 
 
+## Phase Scan
+
+对于外部场文件定义的RF加速腔，物理设计时给的是相对相位，需要通过traking的能量增益曲线找到加速峰值相位，从而根据相对相位得到绝对相位。`phaseOptZ.py` 即做的该项工作。下面介绍该脚本的使用方法：
+
+- lte.impz  文件中，粒子数目少一些，不然运行非常慢
+- 利用 `genimpactzin` 生成 `ImpactZ.in`=，删除`!`开头的所有注释行
+- 修改 `phaseOptZ.py` 中的 lattice 起始和终止行数。其他参数不用修改
+- `python2 phaseOptZ.py` 运行即可扫相
+
+
+
+使用注意：
+
+- 代码中很多的参数都有减一，是因为 Python 的数组索引是从0开始的。
+
+- `ImpactZ.in` 文件中需要把注释行都删掉
+
+- 粒子数少一些，100即可。暂不知单粒子可否。
+
+- 需要把 `phaseOptZ.py`拷贝到当前工作目录。
+
+- 针对 beam & control 部分的修改，都要在ImpactZ.in中完成，确实不太方便。==如果想要修改 steps，又需要重新扫相。== 对ImpactZ.in 修改重复运行，可否改成对 lte.impz 修改？
+
+  
+
+该脚本可继续改进，以后有时间再来改吧：
+
+- 无需删除comment 行
+- 无需拷贝python脚本文件
+- 自动检测lattice 行数。如此便无任何输入，直接调用即可
+- 运行后删除中间生成文件
+- 对ImpactZ.in 修改，可否改成对 lte.impz 修改？
+
+
+
+```python
+# starting and ending row location of lattice in ImpactZ.in
+# start reading ImpactZ.in at row
+# ==============================
+# change it with your own lattice
+row_start = 13-1
+#row_end = 15-1
+row_end = 1075-1
+# ==============================
+# restarting function switch row location
+row_restart = 4-1
+# reference frequency row location
+row_rffreq = 11-1
+#------------------------------------------------------
+
+# phase angle scan specifications
+angle_in = 0
+angle_end = 360
+delv = 20
+
+# column indices to read input file ImpactZ.in
+# 3: element type id; 5: freq; 6: ang
+# for 104 and 110 element, the same
+col_el = 4-1
+col_freq = 6-1
+col_ang = 7-1
+
+# column indices to read output file fort.18
+# 4: kinectic energy in fort.18 is col 4
+col_eng = 4  #MeV, tmpphase+fort.18 line, 1 num inserted in the code
+
+# fractional precision of phase angle to be determined
+tol = 0.0001
+
+# max number of iterations in Brent's Method before quitting
+it_max = 20
+
+#-----------------------------------------------------
+```
+
 
 
 
