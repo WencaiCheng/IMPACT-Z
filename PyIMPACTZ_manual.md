@@ -1220,41 +1220,42 @@ bug: value requires 3018290224 bytes, which is more than max-value-size.
 
 
 
-## DTL 场文件
+## 外部场文件
 
-根据纵向场分布(z, Ez)，算出傅立叶系数。
+若使用外部场文件，对应于1D 场文件(z,Ez) 和 6D 场文件(Ex,Ey,Ez,Bx,By,Bz) 两种情况。1D 场文件，需要先将其作傅立叶变换。步骤如下：
 
-Rfcoef.f90
+- 编译`utilities`中的 `Rfcoef.f90`
 
-```bash
-gfortran -o rfcoef Rfcoef.f90
+  `gfortran -o rfcoef Rfcoef.f90`
 
-# in case rfdata.in has 100 lines
-./rfcoef 
+- 将1D场文件重命名为 `rfdata.in`，然后：
 
-# then change the input para coef number from 90-100,
-# check the rfdata.out with rfdata.in
-plot 'rfdata.in' u 1:2 w l
-rep 'rfdata.out' u 1:2 w l
-# the figure should overlap each other exactly.
-```
+  ```bash
+  # in case rfdata.in has 100 lines
+  ./rfcoef 
+  
+   >> Emax is:    18814860.000000000
+   >> How many Fourier coeficients you want?
+   
+   # type 100, or change the input para coef number from 90-100
+  ```
+
+  程序会生成`rfdata.out` & `rfdatax` 两个文件。用`gnuplot`与原文件比较：
+
+  ```bash
+  # check the rfdata.out with rfdata.in
+  plot 'rfdata.in' u 1:2 w l
+  rep 'rfdata.out' u 1:2 w l
+  # the two RF curves should overlap each other exactly.
+  ```
 
 
 
-程序会生成所需的 `rfdatax`，即傅立叶变换系数。`rfdata.out` 有四列，其他二列含义，暂不明。
-
-横向场可以根据纵向场算出来。(The off-axis field will be reconstructed based these coefficients and axis symmetry assumption.)
+6D 场文件的定义和点的顺序见 manual 和 活页笔记本，或 csns_linac/transform_field.
 
 
 
-Example1 是 DTL 模拟的例子。
 
-
-
-## 超导场文件
-
-- 用 104 元件，为纵向1D场文件
-- 110 元件，则为6D场文件
 
 
 
