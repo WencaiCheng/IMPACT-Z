@@ -22,8 +22,8 @@
 
 CC = gfortran
 LINK = gfortran
-FFLAGS = -O3
-#FFLAGS = -g
+#FFLAGS = -O3
+FFLAGS = -g
 
 #**************************************************************************
 # List of .o files that EXENAME depends on.  Edit as appropriate for MP.
@@ -49,7 +49,7 @@ OBJS2 = mpistub.o \
 #**************************************************************************
 # Change this line if you don't like 'a.out'.
 
-EXEOLD = ImpactZexe
+EXEOLD = ImpactZ.exe
 
 #************************************************************************
 # disable predefined suffixes and define your own set of allowed suffixes
