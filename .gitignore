@@ -16,3 +16,4 @@ ImpactZ.in
 utilities/**/*.pyc
 
 utilities/MatlabTools/**/*.asv
+._*
