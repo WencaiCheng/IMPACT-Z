@@ -1028,7 +1028,7 @@
               call geomerrL_BeamBunch(Bpts,Blnelem(i)) 
           end if
           !/bend using Transport transfer map
-          if(bitype.eq.4) then
+          if(bitype.eq.4 .or. bitype.eq.5) then
               call getparam_BeamLineElem(Blnelem(i),dparam)
               !transfter to the Transport coordinate (except the 5th coordinate 
               !is -v dt instead of v dt) and apply front edge transfer map
@@ -1068,17 +1068,19 @@
               ! ID=(50,100),  linearMap+ON-CSR
               ! ID=(100,200), nonlinearMap+OFF-CSR
               ! ID > 200,     nonlinearMap+ON-CSR
-              if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
-                call Fpol_Dipole_linearmap(hd0,hF,tanphiF,tanphiFb,hd1,&
-                                 psi1,Bpts%Pts1,angF,Nplocal,gamma0,qm0)
-              elseif(dparam(4).gt.100.0d0) then
-                call Fpol_Dipole_nonlinearmap(hd0,hF,tanphiF,tanphiFb,hd1,&
-                                 psi1,Bpts%Pts1,angF,Nplocal,gamma0,qm0)
-              else
-                ! in case ID is given <0
-                print*,"wrong ID flag given for dipole element!"
-                stop
-              endif 
+              if (bitype.eq.4) then  !for bitype=5, skip the map
+                if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
+                  call Fpol_Dipole_linearmap(hd0,hF,tanphiF,tanphiFb,hd1,&
+                                   psi1,Bpts%Pts1,angF,Nplocal,gamma0,qm0)
+                elseif(dparam(4).gt.100.0d0) then
+                  call Fpol_Dipole_nonlinearmap(hd0,hF,tanphiF,tanphiFb,hd1,&
+                                   psi1,Bpts%Pts1,angF,Nplocal,gamma0,qm0)
+                else
+                  ! in case ID is given <0
+                  print*,"wrong ID flag given for dipole element!"
+                  stop
+                endif 
+              endif
               angz = 0.0
           endif
 !-------------------------------------------------------------------
@@ -1088,7 +1090,7 @@
           do j = 1, bnseg
 !-------------------------------------------------------------------
 ! use linear map or nonlinear Lorentz integrator to advance particles.
-            if(bitype.ne.4) then
+            if(bitype.ne.4 .and. bitype.ne.5) then
               ! spatial drift.
               !linear map integrator
               if(Flagmap.eq.1) then
@@ -1100,19 +1102,23 @@
                 call map1_BeamBunch(Bpts,z,tau2)
               endif
             else
-              if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
-                call Sector_Dipole_linearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
-                                   Nplocal,qm0)
-              elseif(dparam(4).gt.100.0d0) then
-                call Sector_Dipole_nonlinearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
-                                   Nplocal,qm0)
-              else
-                !in case ID<0
-                print*,"wrong ID flag given for dipole element!"
-                stop
+              if(bitype.eq.4) then
+                if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
+                  call Sector_Dipole_linearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
+                                     Nplocal,qm0)
+                elseif(dparam(4).gt.100.0d0) then
+                  call Sector_Dipole_nonlinearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
+                                     Nplocal,qm0)
+                else
+                  !in case ID<0
+                  print*,"wrong ID flag given for dipole element!"
+                  stop
+                endif
               endif
+              !for bitype=5, only CSR kick.
               z = z + tau1
               angz = angz + tau1*hd0
+
             endif
 
 !-------------------------------------------------------------------
@@ -1141,7 +1147,7 @@
                                    Lc,simutype)
               call chgupdate_BeamBunch(Bpts,nchrg,nptlist0,qmcclist0)
               flagcsr = 0
-              if(bitype.eq.4) then
+              if(bitype.eq.4 .or. bitype.eq.5) then
                 !if(dparam(4).gt.200) then
                 !  flagcsr = 1
                 !endif
@@ -1156,7 +1162,6 @@
                     flagcsr = 0
                     !print*,"CSR for Dipole is OFF."
                 endif
-
               endif
 
               !fix the global range for sub-cycle of space charge potential.
@@ -1403,7 +1408,7 @@
                 !densz(1) = densz(1)*2
                 !densz(Nz) = densz(Nz)*2
 
-                if(bitype.eq.4) then
+                if(bitype.eq.4 .or. bitype.eq.5) then
                       zwkmin = range(5)/(-Bpts%refptcl(6)) + (z-zbleng)
                       bendlen = blength !inside the bend
                 else
@@ -1448,37 +1453,38 @@
             if(Flagmap.eq.1) then
             ! kick particles in velocity space.
               if((flagwake.eq.1) .or. (flagcsr.eq.1)) then
-                !biaobin, if Potential%FieldQ = 0.0d0, i.e. potential
-                !from space charge is set to 0, space charge is OFF.  
+                !biaobin,2022-03,Potential%FieldQ: space charge potential
+                !exwake,eywake,ezwake: wake from CSR or RF wake
                 !Potential%FieldQ = 0.0d0 !test wakefield
                 call kick1wake_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,exwake,eywake,&
                    ezwake,Nz,npx,npy,Flagsc)
               else
-                !biaobin, 21-09-01
-                !for drift, quad elements, no wake and csr, comes here
-                !If want to consider Lwake only, SC OFF, Field=0 should 
-                !also set here
-                !Potential%FieldQ = 0.0d0 !test wakefield
+                !biaobin,2022-03,No RF wake and CSR, 
+                !only space charge kick
                 call map2_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
                    Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,Flagsc)
               endif
-              if(bitype.ne.4) then
+              !biaobin,2022-03,dipole element or others, the other half 
+              !seg after collective-effect kick
+              if(bitype.ne.4 .and. bitype.ne.5) then
                 call map1_BeamBunch(Bpts,Blnelem(i),z,tau1,bitype,&
                                     bnseg,j,ihlf,Lc,simutype)
               else
-                !print*,"before sec2: ",z,angz
-              if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
-                call Sector_Dipole_linearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
-                                   Nplocal,qm0)
-              elseif(dparam(4).gt.100.0d0) then
-                call Sector_Dipole_nonlinearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
-                                   Nplocal,qm0)
-              else
-                !in case ID<0
-                print*,"wrong ID flag given for dipole element!"
-                stop
-              endif
+                if(bitype.eq.4) then
+                  !print*,"before sec2: ",z,angz
+                  if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
+                    call Sector_Dipole_linearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
+                                       Nplocal,qm0)
+                  elseif(dparam(4).gt.100.0d0) then
+                    call Sector_Dipole_nonlinearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
+                                       Nplocal,qm0)
+                  else
+                    !in case ID<0
+                    print*,"wrong ID flag given for dipole element!"
+                    stop
+                  endif
+                endif
                 z = z + tau1
                 angz = angz + tau1*hd0
                 !print*,"after sec2: ",z,angz
@@ -1492,20 +1498,23 @@
                 call map2_BeamBunch(Bpts,Blnelem(i),z,tau2,Nxlocal,Nylocal,&
                            Nzlocal,Potential%FieldQ,Ageom,grid2d,Flagbc,Flagerr)
               endif
-              if(bitype.ne.4) then
+              if(bitype.ne.4 .and. bitype.ne.5) then
                 call map1_BeamBunch(Bpts,z,tau2)
               else
-              if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
-                call Sector_Dipole_linearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
-                                   Nplocal,qm0)
-              elseif(dparam(4).gt.100.0d0) then
-                call Sector_Dipole_nonlinearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
-                                   Nplocal,qm0)
-              else
-                !in case ID<0
-                print*,"wrong ID flag given for dipole element!"
-                stop
-              endif
+                !biaobin,2022-03, for type=4/5
+                if(bitype.eq.4) then
+                  if(dparam(4).gt.0.0d0 .and. dparam(4).lt.100.0d0 ) then
+                    call Sector_Dipole_linearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
+                                       Nplocal,qm0)
+                  elseif(dparam(4).gt.100.0d0) then
+                    call Sector_Dipole_nonlinearmap(tau1,beta0,hd0,hd1,Bpts%Pts1,&
+                                       Nplocal,qm0)
+                  else
+                    !in case ID<0
+                    print*,"wrong ID flag given for dipole element!"
+                    stop
+                  endif
+                endif
                 z = z + tau1
                 angz = angz + tau1*hd0
               endif

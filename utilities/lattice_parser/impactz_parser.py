@@ -290,6 +290,16 @@ class impactz_parser(lattice_parser):
         self.lattice['BEND']['ROTATE_Z'] = 0.0
         self.lattice['BEND']['CSR'] = 0
 
+        # CSR-KICK
+        #-------------
+        self.lattice['CSRKICK']['L'] = 0.0
+        self.lattice['CSRKICK']['STEPS'] = 0
+        self.lattice['CSRKICK']['MAPS'] = 0
+        self.lattice['CSRKICK']['ORDER'] = 0
+        self.lattice['CSRKICK']['ANGLE'] = 0.0
+        self.lattice['CSRKICK']['PIPE_RADIUS'] = 0.0 #half gap
+        self.lattice['CSRKICK']['CSR'] = 0
+
         # RFCW 
         #-------------
         self.lattice['RFCW']['L'] = 0.0
@@ -799,6 +809,21 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(elem['ROTATE_Z'])
                 lte_lines.append('/ \n')
 
+            elif elem['TYPE'] == 'CSRKICK':
+                map_flag = self._get_bendmap_flag(elem)
+                self._set_steps_maps_radius(elem)
+
+                lte_lines.append(elem['L'])
+                lte_lines.append(elem['STEPS'])
+                lte_lines.append(elem['MAPS'])
+                lte_lines.append('5')
+                lte_lines.append(elem['ANGLE'])
+                lte_lines.append('0') 
+                lte_lines.append( map_flag )
+                lte_lines.append(elem['PIPE_RADIUS'])
+                lte_lines.append('0 0 0 0 0 0 0 0 0 0') 
+                lte_lines.append('/ \n')
+
             elif elem['TYPE'] == 'EMATRIX':
                 #pipe_radius currently not used
                 if elem['PIPE_RADIUS'] == '0.0' :
@@ -1298,6 +1323,9 @@ class impactz_parser(lattice_parser):
     def _set_steps_maps_radius(self, elem :dict):
         '''
         set default maps and steps based on control settings
+        control steps is nseg/m
+        element steps is nseg
+        element steps and maps has higher priority.
         '''
         steps = float(self.control['STEPS'])
         maps  = float(self.control['MAPS'])
@@ -1305,9 +1333,13 @@ class impactz_parser(lattice_parser):
         
         if elem['STEPS'] == '0':
             elem['STEPS'] = str(math.ceil(steps*length))
+        else:
+            steps = float(elem['STEPS'])
 
         if elem['MAPS']=='0':
             elem['MAPS'] = str(math.ceil(maps*length))
+        else:
+            maps = elem['MAPS']
        
         # in case element length is 0.0, steps cannot be 0
         # if control.steps=0, then elem['STEPS']='1'

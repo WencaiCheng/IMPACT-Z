@@ -527,7 +527,7 @@ A drift space implemented as a linear matrix, or exactly drift map, see Wolski's
 | Parameter Name | Units | Type   | Default | Description                                                  |
 | -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
 | L              | m     | double | 0.0     | length of drift                                              |
-| steps          |       | int    | 0       | how many segments  per meter                                 |
+| steps          |       | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps      |       | int    | 0       | each half-drift involves computing a map for that half-element, computed by numerical integration with 1 maps |
 | order          |       | int    | 0       | 1 or 2, linear map or nonlinear map                          |
 | pipe_radius    | m     | double | 0.0     | pip radius                                                   |
@@ -554,7 +554,7 @@ A quadrupole implemented as a linear matrix or nonlinear map, see Wolski's book 
 | Parameter Name | Units       | Type   | Default | Description                                                  |
 | -------------- | ----------- | ------ | ------- | ------------------------------------------------------------ |
 | L              | m           | double | 0.0     | length                                                       |
-| steps          |             | int    | 0       | how many segments  per meter                                 |
+| steps          |             | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps      |             | int    | 0       | map steps                                                    |
 | order          |             | int    | 0       | 1 or 2, linear map or nonlinear map; By default is 0, then `order` in control is used. |
 | $K_1$          | $\rm{/m^2}$ | double | 0.0     | quadrupole strength, $K_1=\frac{1}{(B\rho)_0}\frac{\partial B_y}{\partial x}$ |
@@ -590,6 +590,27 @@ quad length=0.3, steps=1, map steps=1, K1=-4, ID=-5, radius=0.014
 
 
 
+### CSRKICK
+
+虽然是BEND，但是跳过所有横纵向transfer map，只考虑CSR kick 作用。、
+
+```bash
+!usage:
+csr1: csrkick, L=0.2, angle=0.1, csr=1, steps=5
+```
+
+
+
+| Parameter Name | Units | Type   | Default | Description                                                  |
+| -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
+| L              | m     | double | 0.0     | arc length                                                   |
+| angle          | rad   | double | 0.0     | bend angle                                                   |
+| steps          |       | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
+| maps           |       | int    | 0       | map steps                                                    |
+| CSR            |       | int    | 0       | 0/1, whether to include 1D-CSR effects or not.               |
+| PIPE_RADIUS    | m     | double | 0.0     | half gap between poles                                       |
+
+
 ### BEND
 
 A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper for more information.
@@ -597,7 +618,7 @@ A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper f
 | Parameter Name | Units        | Type   | Default | Description                                                  |
 | -------------- | ------------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m            | double | 0.0     | arc length                                                   |
-| steps          |              | int    | 0       | how many segments  per meter                                 |
+| steps          |              | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps      |              | int    | 0       | map steps                                                    |
 | order          |              | int    | 0       | 1 or 2, linear map or nonlinear map                          |
 | angle          | rad          | double | 0.0     | bend angle                                                   |
@@ -668,7 +689,7 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m      | double | 0.0     | length                                                       |
-| steps          |        | int    | 0       | how many segments  per meter                                 |
+| steps          |        | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps      |        | int    | 0       | map steps                                                    |
 | order          |        | int    | 0       | 1 or 2, linear map or nonlinear map                          |
 | volt           | V      | double | 0.0     | peak voltage                                                 |
@@ -684,11 +705,7 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | ratate_z       | rad    | double | 0.0     | rotation error in z direction                                |
 | zwake          |        | int    | 0       | 0/1, if zero, longitudinal wake is turned off                |
 | trwake         |        | int    | 0       | 0/1, if zero, transverse wakes are turned off                |
-| wakefile_ID    |        | int    | None      | If None, Analytical wake model will be used in IMPACT-Z. If WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
-|                |        |        |           |                                                              |
-| a | m | double | 6.6e-3 | aperture for wakefield, default is C-BAND parameter |
-| g | m | double | 14.995e-3 | cell gap length, default is C-BAND parmater |
-| cell_len | m | double | 17.495e-3 | cell length, default is C-BAND parameter |
+| wakefile_ID    |        | int    | None    | If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
 | ac_mode        |        | int    | 0       | for RCS AC mode, if equal 1, then rfdata_ac.in should be given. And NONLINEAR map will be called, order=1 will be overwritten. |
 
 
@@ -736,8 +753,6 @@ acceleration gradient=5.97474936319844610989e+06 V/m, frequency=1.3e9 Hz, phase=
 
 This is for test the wakefield, where we put the drift between the wake ON and OFF elements.
 
-For `rfdata41.in` read-in file:
-
 ```bash
 !usage:
 wake1: wakeon,  wakefile_ID=41
@@ -747,32 +762,13 @@ d1: drfit, L=100
 line: line=(wake1,d1,wake2)
 ```
 
-For analytical C-band RF structure wake：
-
-```bash
-wake1: wakeon,  a=6.6e-3
-wake2: wakeoff, a=6.6e-3
-d1: drfit, L=100
-
-line: line=(wake1,d1,wake2)
-```
-
-代码中，`a=6.6e-3`必须添加，因为目前的 impactz_parser.py 无法处理如下的语句：
-
-```bash
-wake1: wakeon;
-```
 
 
-
-| Parameter Name | Units | Type   | Default   | Description                                                  |
-| -------------- | ----- | ------ | --------- | ------------------------------------------------------------ |
-| zwake          |       | int    | 0         | 0/1, if zero, longitudinal wake is turned off                |
-| trwake         |       | int    | 0         | 0/1, if zero, transverse wakes are turned off                |
-| wakefile_ID    |       | int    | None      | If None, analytical wake model is used. If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
-| a              | m     | double | 6.6e-3    | aperture for wakefield, default is C-BAND parameter          |
-| g              | m     | double | 14.995e-3 | cell gap length, default is C-BAND parmater                  |
-| cell_len       | m     | double | 17.495e-3 | cell length, default is C-BAND parameter                     |
+| Parameter Name | Units | Type | Default | Description                                                  |
+| -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
+| zwake          |       | int  | 0       | 0/1, if zero, longitudinal wake is turned off                |
+| trwake         |       | int  | 0       | 0/1, if zero, transverse wakes are turned off                |
+| wakefile_ID    |       | int  | None    | If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
 
 
 
@@ -1033,7 +1029,7 @@ notes:
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m      | double | 0.0     | length                                                       |
-| steps          |        | int    | 0       | how many segments  per meter                                 |
+| steps          |        | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps      |        | int    | 0       | map steps                                                    |
 | scale    |        | double | 1.0     | field scale factor |
 | ID         |        | int    | 100     | file ID for the external field                               |
@@ -1055,7 +1051,7 @@ notes:
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m      | double | 0.0     | length                                                       |
-| steps          |        | int    | 0       | how many segments  per meter                                 |
+| steps          |        | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps      |        | int    | 0       | map steps                                                    |
 | scale    |        | double | 1.0     |                                                              |
 | ID         |        | int    | 100     | file ID for the external field                               |
@@ -1080,7 +1076,7 @@ notes:
 | Parameter Name | Units  | Type   | Default | Description                                                  |
 | -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
 | L              | m      | double | 0.0     | length                                                       |
-| steps          |        | int    | 0       | how many segments  per meter                                 |
+| steps          |        | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
 | maps           |        | int    | 0       | map steps                                                    |
 | scale          |        | double | 1.0     |                                                              |
 | freq           | Hz     | double | 324e6   | RF frequency                                                 |
@@ -1111,27 +1107,27 @@ notes:
 
 新增的理想 DTL-CELL 模型。根据设置值，在Python层展开为：`(q1, d1, gap, d2, q2)`。
 
-| Parameter Name | Units  | Type   | Default | Description                        |
-| -------------- | ------ | ------ | ------- | ---------------------------------- |
-| L              | m      | double | 0.0     | length                             |
-| steps          |        | int    | 0       | how many segments  per meter       |
-| maps           |        | int    | 0       | map steps                          |
-|                |        |        |         |                                    |
-| volt           | V      | double | 0.0     | $E_0TL$, effective gap voltage (V) |
-| freq           | Hz     | double | 324e6   | RF frequency                       |
-| phase          | degree | double | 0.0     | RF phase in sin()                  |
-| pipe_radius    | m      | double | 0.0     | pipe radius                        |
-| Lq1            | m      | double | 0.0     | quad 1 length                      |
-| grad1          | T/m    | double | 0.0     | quad 1 gradient                    |
-| Lq2            | m      | double | 0.0     | quad 2 length                      |
-| grad2          | T/m    | double | 0.0     | quad 2 gradient                    |
-| gc             | m      | double | 0.0     | gap center shift                   |
-|                |        |        |         |                                    |
-| Dx_q           | m      | double | 0.0     | x misalignment error for quad      |
-| Dy_q           | m      | double | 0.0     | y misalignment error               |
-| rotate_x_q     | rad    | double | 0.0     | rotation error in x direction      |
-| rotate_y_q     | rad    | double | 0.0     | rotation error in y direction      |
-| ratate_z_q     | rad    | double | 0.0     | rotation error in z direction      |
+| Parameter Name | Units  | Type   | Default | Description                                                  |
+| -------------- | ------ | ------ | ------- | ------------------------------------------------------------ |
+| L              | m      | double | 0.0     | length                                                       |
+| steps          |        | int    | 0       | how many segments  for the element. DIFFERENT from steps in control section, not nseg/m. |
+| maps           |        | int    | 0       | map steps                                                    |
+|                |        |        |         |                                                              |
+| volt           | V      | double | 0.0     | $E_0TL$, effective gap voltage (V)                           |
+| freq           | Hz     | double | 324e6   | RF frequency                                                 |
+| phase          | degree | double | 0.0     | RF phase in sin()                                            |
+| pipe_radius    | m      | double | 0.0     | pipe radius                                                  |
+| Lq1            | m      | double | 0.0     | quad 1 length                                                |
+| grad1          | T/m    | double | 0.0     | quad 1 gradient                                              |
+| Lq2            | m      | double | 0.0     | quad 2 length                                                |
+| grad2          | T/m    | double | 0.0     | quad 2 gradient                                              |
+| gc             | m      | double | 0.0     | gap center shift                                             |
+|                |        |        |         |                                                              |
+| Dx_q           | m      | double | 0.0     | x misalignment error for quad                                |
+| Dy_q           | m      | double | 0.0     | y misalignment error                                         |
+| rotate_x_q     | rad    | double | 0.0     | rotation error in x direction                                |
+| rotate_y_q     | rad    | double | 0.0     | rotation error in y direction                                |
+| ratate_z_q     | rad    | double | 0.0     | rotation error in z direction                                |
 
 error for gap is not supported yet.
 
