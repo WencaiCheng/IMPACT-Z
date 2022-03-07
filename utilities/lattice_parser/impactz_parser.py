@@ -310,6 +310,9 @@ class impactz_parser(lattice_parser):
         self.lattice['RFCW']['ZWAKE'] = 0
         self.lattice['RFCW']['TRWAKE'] = 0
         self.lattice['RFCW']['WAKEFILE_ID'] = None
+        self.lattice['RFCW']['A'] = 6.6e-3
+        self.lattice['RFCW']['G'] = 14.995e-3
+        self.lattice['RFCW']['CELL_LEN'] = 17.495e-3
         self.lattice['RFCW']['AC_MODE'] = 0
 
         # WAKEON
@@ -317,12 +320,18 @@ class impactz_parser(lattice_parser):
         self.lattice['WAKEON']['WAKEFILE_ID'] = None
         self.lattice['WAKEON']['ZWAKE'] = 0
         self.lattice['WAKEON']['TRWAKE'] = 0
+        self.lattice['WAKEON']['A'] = 6.6e-3
+        self.lattice['WAKEON']['G'] = 14.995e-3
+        self.lattice['WAKEON']['CELL_LEN'] = 17.495e-3
 
         # WAKEOFF
         # -----------
         self.lattice['WAKEOFF']['WAKEFILE_ID'] = None
         self.lattice['WAKEOFF']['ZWAKE'] = 0
         self.lattice['WAKEOFF']['TRWAKE'] = 0
+        self.lattice['WAKEOFF']['A'] = 6.6e-3
+        self.lattice['WAKEOFF']['G'] = 14.995e-3
+        self.lattice['WAKEOFF']['CELL_LEN'] = 17.495e-3
 
         # EMATRIX
         #-------------
@@ -817,33 +826,33 @@ class impactz_parser(lattice_parser):
                 wake_flag = self._get_wakefield_flag(elem)
                 # add -41 wakefield element
                 # ------------------------
-                if elem['WAKEFILE_ID']=='None':
+                if wake_flag=='-1':
                     pass
-                elif self._is_number(elem['WAKEFILE_ID']):
-                    # print('Wakefield for cavity',elem['NAME'],'is added.')  
-                    # print('rfdata',elem['WAKEFILE_ID'],'.in should be given in current path.')                   
-                    lte_lines.append('0 0 1 -41 1.0')
-                    lte_lines.append(elem['WAKEFILE_ID'])
-                    lte_lines.append(wake_flag)
-                    lte_lines.append('/ \n')
                 else:
-                    print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
-                          'refers to rfdata41.in file.')
-                    sys.exit()
+                    if elem['WAKEFILE_ID']=='None':
+                        lte_lines.append('0 0 1 -41 1.0 -1')
+                        lte_lines.append(wake_flag)
+                        lte_lines.append(elem['A'])
+                        lte_lines.append(elem['G'])
+                        lte_lines.append(elem['CELL_LEN'])  
+                        lte_lines.append('/ \n')
+                   
+                    elif self._is_number(elem['WAKEFILE_ID']):
+                        # print('Wakefield for cavity',elem['NAME'],'is added.')  
+                        # print('rfdata',elem['WAKEFILE_ID'],'.in should be given in current path.')                   
+                        lte_lines.append('0 0 1 -41 1.0')
+                        lte_lines.append(elem['WAKEFILE_ID'])
+                        lte_lines.append(wake_flag)
+                        lte_lines.append('/ \n')
+                    else:
+                        print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
+                              'refers to rfdata41.in file.')
+                        sys.exit()
 
             elif elem['TYPE'] == 'WAKEOFF':
                 # wakefield stops at this element
                 # -------------------------------
-                if elem['WAKEFILE_ID']=='None':
-                    pass
-                elif self._is_number(elem['WAKEFILE_ID']):
-                    lte_lines.append('0 0 1 -41 1.0')
-                    lte_lines.append(elem['WAKEFILE_ID'])
-                    lte_lines.append('-1 / \n')            
-                else:
-                    print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
-                          'refers to rfdata41.in file.')
-                    sys.exit()   
+                lte_lines.append('0 0 1 -41 1.0 -1 -1 / \n')
  
             elif elem['TYPE'] == 'RFCW':
                 map_flag = self._get_rfcwmap_flag(elem)
@@ -856,19 +865,30 @@ class impactz_parser(lattice_parser):
                 
                 # add -41 wakefield element
                 # ------------------------
-                if elem['WAKEFILE_ID']=='None':
+                if wake_flag=='-1':
+                    # wake OFF
                     pass
-                elif self._is_number(elem['WAKEFILE_ID']):
-                    # print('Wakefield for cavity',elem['NAME'],'is added.')  
-                    # print('rfdata',elem['WAKEFILE_ID'],'.in should be given in current path.')                   
-                    lte_lines.append('0 0 1 -41 1.0')
-                    lte_lines.append(elem['WAKEFILE_ID'])
-                    lte_lines.append(wake_flag)
-                    lte_lines.append('/ \n')
                 else:
-                    print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
-                          'refers to rfdata41.in file.')
-                    sys.exit()
+                    if elem['WAKEFILE_ID']=='None':
+                        # analytical wake model
+                        lte_lines.append('0 0 1 -41 1.0 -1')
+                        lte_lines.append(wake_flag)
+                        lte_lines.append(elem['A'])
+                        lte_lines.append(elem['G'])
+                        lte_lines.append(elem['CELL_LEN'])  
+                        lte_lines.append('/ \n')                                          
+                    elif self._is_number(elem['WAKEFILE_ID']):
+                        # read-in wakefile
+                        # print('Wakefield for cavity',elem['NAME'],'is added.')  
+                        # print('rfdata',elem['WAKEFILE_ID'],'.in should be given in current path.')                   
+                        lte_lines.append('0 0 1 -41 1.0')
+                        lte_lines.append(elem['WAKEFILE_ID'])
+                        lte_lines.append(wake_flag)
+                        lte_lines.append('/ \n')
+                    else:
+                        print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
+                              'refers to rfdata41.in file.')
+                        sys.exit()
 
                 self._set_steps_maps_radius(elem)
                 # cavity lines
@@ -886,16 +906,11 @@ class impactz_parser(lattice_parser):
                        
                 # wakefield stops at the exit of cavity
                 # ------------------------
-                if elem['WAKEFILE_ID']=='None':
+                if wake_flag=='-1':
                     pass
-                elif self._is_number(elem['WAKEFILE_ID']):
-                    lte_lines.append('0 0 1 -41 1.0')
-                    lte_lines.append(elem['WAKEFILE_ID'])
-                    lte_lines.append('-1 / \n')            
                 else:
-                    print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
-                          'refers to rfdata41.in file.')
-                    sys.exit()   
+                    # OFF wake after RFCW element
+                    lte_lines.append('0 0 1 -41 1.0 -1 -1 / \n')           
             
             elif elem['TYPE'] == 'WATCH':
                 if elem['COORDINATE_CONVENTION'].upper() == 'NORMAL':

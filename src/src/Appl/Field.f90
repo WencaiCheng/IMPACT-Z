@@ -643,12 +643,13 @@
         end subroutine destruct_FieldQuant
 
 !-------------------------------------------------------------------------
+       !Biaobin,2022-03,Analytical wakefunction
        !longitudinal and transverse wakefield
        subroutine wakefield_FieldQuant(Nz,xwakez,ywakez,recvdensz,exwake,eywake,ezwake,&
-                                       hz,aa,gg,leng)
+                                       hz,aa,gg,leng,flagbtw)
        implicit none
        include 'mpif.h'
-       integer, intent(in) :: Nz
+       integer, intent(in) :: Nz,flagbtw
        double precision, intent(in) :: hz, aa, gg, leng
        double precision, dimension(Nz,2), intent(in) :: recvdensz
        double precision, dimension(Nz), intent(in) :: xwakez,ywakez
@@ -661,6 +662,11 @@
        real*8 :: tmptmp
 
        pilc = 2*asin(1.0)
+       
+       if(flagbtw.eq.4) then !skip longi-wake
+         ezwake = 0.0d0
+         goto 50
+       endif
   
        do kz = 1, Nz
           densz2n(kz,1) = recvdensz(kz,1) 
@@ -683,9 +689,9 @@
        alpha1 = 0.4648
        alpha = 1.-alpha1*sqrt(gg/leng)-(1.-2*alpha1)*(gg/leng)
        !slac wake
-       !zz00 = gg*(aa/(alpha*leng))**2/8 
+       zz00 = gg*(aa/(alpha*leng))**2/8 
        !fermi wake
-       zz00 = 0.41*(aa/leng)**0.8*(gg/leng)**1.6*aa
+       !zz00 = 0.41*(aa/leng)**0.8*(gg/leng)**1.6*aa
        Z0 = 120*pilc
        !greenwake(1,1) = 0.0
        zz = 0.0d0
@@ -729,6 +735,12 @@
          ezwake(kz) = -greenwakeout(kz,1)*hz
        enddo
        
+50     continue
+       if((flagbtw.eq.2) .or. (flagbtw.eq.3)) then !no transverse-wake for standing wave cavity so far
+         exwake = 0.0d0
+         eywake = 0.0d0
+         goto 100
+       endif
 !------------------------------------------------------------------------------
        !calculate the transverse wakefield effects
        do kz = 1, Nz
@@ -750,9 +762,9 @@
        !"Short-range dipole wakefields in accelerating structures for the NLC",
        !K. L. F. Bane, SLAC-PUB-9663, 2003. here, 1.1 is an average as suggested       !on page 11 for cell 45.
        !for LCLS slac
-       !zz00 = 1.1*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
+       zz00 = 1.1*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
        !for Fermi Elettra
-       zz00 = 1.0*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
+       !zz00 = 1.0*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
        coef1 = 4*Z0*Clight*zz00/(pilc*aa*aa*aa*aa)
        !densconst = 0.5e-6
        !offset = 0.001
@@ -833,6 +845,7 @@
          eywake(kz) = greenwakeout(kz,1)*hz
        enddo
 
+100    continue
        end subroutine wakefield_FieldQuant
 
 !-------------------------------------------------------------------------

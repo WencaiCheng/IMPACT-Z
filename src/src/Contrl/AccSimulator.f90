@@ -698,8 +698,7 @@
           tau1 = 0.0d0
           if(bitype.ge.0) tau1 = 0.5d0*blength/bnseg
           tau2 = 2.0d0*tau1
-          if(flagwakeread.eq.0) flagwake = 0
-
+          !print*,"flagwakeread, flagwake=",flagwakeread,flagwake
           !print*,"tau, ",i,tau1,blength,bnseg,bitype,z
 
           !instant rotate "tmplump" radian w.r.s s-axis
@@ -778,7 +777,9 @@
               flagwake = 0
             endif
           else
-            if(flagwakeread.eq.0) flagwake = 0
+            !biaobin,2022-03-07, flagwakeread for ANALYTICAL WAKE or READ-IN WAKE
+            !                    flagwake control OFF or ON
+            !if(flagwakeread.eq.0) flagwake = 0
           endif
 
 !-------------------------------------------------------------------
@@ -938,12 +939,24 @@
                          
 
           !read in discrete wakefield
+          !biaobin,2022-03-07
+          !rfile < 0, analytical wakefunction
+          !rfile > 0, read in wake file
           else if(bitype.eq.-41)then
             call getparam_BeamLineElem(Blnelem(i),2,tmpwk)
             call getparam_BeamLineElem(Blnelem(i),3,rfile)
             if(rfile.gt.0.0d0) then
               ifile = int(rfile + 0.1)
               call read1wk_Data(ifile)
+              flagwakeread=1
+            elseif(rfile .lt. 0.0d0) then
+              flagwakeread=0
+              call getparam_BeamLineElem(Blnelem(i),5,aawk)
+              call getparam_BeamLineElem(Blnelem(i),6,ggwk)
+              call getparam_BeamLineElem(Blnelem(i),7,lengwk)
+            else 
+              print*,"rfile should be lt or gt 0: rfile=",rfile
+              stop
             endif
             call getparam_BeamLineElem(Blnelem(i),4,tmp1)
             !print*,"-41flagbc: ",tmpwk,rfile,tmp1
@@ -954,7 +967,6 @@
               !ID > 20,      Lwake+Twake
             if(tmp1.gt.0.0d0) then !turn on the read-in wakefield.
               flagwake = 1
-              flagwakeread = 1
               if(tmp1<10.0 .and. tmp1>0.0) then !no transverse wakefield
                 flagbtw = 2
               else if(tmp1>10.0 .and. tmp1<20.0) then !no longitudinal wakefiled
@@ -963,7 +975,6 @@
               scwk = tmpwk
             else !turn off
               flagwake = 0
-              flagwakeread = 0
               scwk = 1.0d0
             endif
           !laser heater from simplified sinusoidal model
@@ -1347,8 +1358,9 @@
                   call wakefieldread_FieldQuant(Nz,xwakez,ywakez,recvdensz,exwake,eywake,ezwake,&
                      hzwake,aawk,ggwk,lengwk,flagbtw)
                 else
+                  !biaobin,2022-03-07, analytical model instead
                   call wakefield_FieldQuant(Nz,xwakez,ywakez,recvdensz,exwake,eywake,ezwake,&
-                     hzwake,aawk,ggwk,lengwk)
+                     hzwake,aawk,ggwk,lengwk,flagbtw)
                 endif
                 !print*,"exwake0,eywake0,ezwake0:",sum(exwake),sum(eywake),sum(ezwake)
                 exwake = scwk*exwake
@@ -1364,6 +1376,9 @@
                 denszlc = 0.0
                 densz = 0.0
                 !linear interpolation
+                !biaobin,2022-03,get the density profile along
+                !z-direction; Nz=64 is grid point, bin number=63
+                !hzwake=dz, bin width
                 do ipt = 1, Nplocal
                   iizz = (Bpts%Pts1(5,ipt)-range(5))/hzwake + 1
                   iizz1 = iizz + 1
@@ -1406,6 +1421,11 @@
 
               endif
               !print*,"after csr: ",sum(ezwake)
+              !biaobin, 2022-03, output file
+              !do k=1,Nz
+              !  write(111,100) densz(k),ezwake(k)
+              !enddo
+              !100 format(2(2x,e13.7))
 
               call cvbkforth1st_BeamBunch(Bpts)
               if(totnp.gt.1) then
