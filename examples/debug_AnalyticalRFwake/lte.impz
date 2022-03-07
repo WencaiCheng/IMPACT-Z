@@ -13,7 +13,7 @@ freq_rf_scale = 4.7715e7;
 csr=1;
 lsc=0;
 tsc=0;
-zwake=1;
+zwake=0;
 
 steps=0;
 sample_out=1e4;
@@ -50,6 +50,8 @@ B3: BEND,L=0.2,ANGLE=-0.0435745,E2=-0.0435745
 B4: BEND,L=0.2,ANGLE=0.0435745,E1=0.04363323
 BC1: LINE=(B1,d1,B2,d2,B3,d1,B4)
 
+csr1: CSRKICK, L=0.2, ANGLE=0.0435745,steps=5
+
 !------------------------
 w0: WATCH,FILENAME_ID=1000
 w1: WATCH,FILENAME_ID=1001
@@ -63,7 +65,7 @@ wake3: wakeon,  a=6.6e-3
 wake4: wakeoff, a=6.6e-3
 d2:    drift, L=2
 !Line:  line=(wake3,d2,wake4)
-Line:  line=(cav0,d2)
+Line:  line=(w0,csr1,w1)
 
 &end
 

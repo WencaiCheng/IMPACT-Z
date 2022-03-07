@@ -11,9 +11,10 @@ src/*.mod
 .project
 
 ImpactZexe
+ImpactZ.exe
 .settings
-ImpactZ.in
 utilities/**/*.pyc
 
 utilities/MatlabTools/**/*.asv
 ._*
+*.100?
