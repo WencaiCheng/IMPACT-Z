@@ -1,3 +1,5 @@
+
+
 # chap1 功能需求
 
 - [x] 赋值功能
@@ -705,10 +707,14 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | ratate_z       | rad    | double | 0.0     | rotation error in z direction                                |
 | zwake          |        | int    | 0       | 0/1, if zero, longitudinal wake is turned off                |
 | trwake         |        | int    | 0       | 0/1, if zero, transverse wakes are turned off                |
-| wakefile_ID    |        | int    | None    | If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
+| wakefile_ID    |        | int    | None      | If None, Analytical wake model will be used. If WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
+|                |        |        |           |                                                              |
+| a | m | double | 6.6e-3 | aperture for wakefield, default is C-BAND parameter |
+| g | m | double | 14.995e-3 | cell gap length, default is C-BAND parmater |
+| cell_len | m | double | 17.495e-3 | cell length, default is C-BAND parameter |
 | ac_mode        |        | int    | 0       | for RCS AC mode, if equal 1, then rfdata_ac.in should be given. And NONLINEAR map will be called, order=1 will be overwritten. |
 
-
+如果未提供 rfdata41.in 尾场文件，当考虑尾场效应时，程序会使用代码内部的RF 尾场解析表达式，即SLAC/LCLS型。默认的(a,g,cell_len)为C-band 的参数。
 
 增加了对 RCS AC 模式的模拟支持，`rfdata_ac.in`:
 
@@ -753,6 +759,8 @@ acceleration gradient=5.97474936319844610989e+06 V/m, frequency=1.3e9 Hz, phase=
 
 This is for test the wakefield, where we put the drift between the wake ON and OFF elements.
 
+For `rfdata41.in` read-in file:
+
 ```bash
 !usage:
 wake1: wakeon,  wakefile_ID=41
@@ -762,15 +770,33 @@ d1: drfit, L=100
 line: line=(wake1,d1,wake2)
 ```
 
+For analytical C-band RF structure wake：
+
+````
+!usage:
+wake1: wakeon,  a=6.6e-3
+wake2: wakeoff, a=6.6e-3
+d1: drfit, L=100
+
+line: line=(wake1,d1,wake2)
+````
+
+代码中，`a=6.6e-3`必须添加，因为目前的 impactz_parser.py 无法处理如下的语句：
+
+```bash
+wake1: wakeon;
+```
 
 
-| Parameter Name | Units | Type | Default | Description                                                  |
-| -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
-| zwake          |       | int  | 0       | 0/1, if zero, longitudinal wake is turned off                |
-| trwake         |       | int  | 0       | 0/1, if zero, transverse wakes are turned off                |
-| wakefile_ID    |       | int  | None    | If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
-
-
+参数表：
+| Parameter Name | Units | Type   | Default   | Description                                                  |
+| -------------- | ----- | ------ | --------- | ------------------------------------------------------------ |
+| zwake          |       | int    | 0         | 0/1, if zero, longitudinal wake is turned off                |
+| trwake         |       | int    | 0         | 0/1, if zero, transverse wakes are turned off                |
+| wakefile_ID    |       | int    | None      | If None, analytical wake model is used. If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
+| a              | m     | double | 6.6e-3    | aperture for wakefield, default is C-BAND parameter          |
+| g              | m     | double | 14.995e-3 | cell gap length, default is C-BAND parmater                  |
+| cell_len       | m     | double | 17.495e-3 | cell length, default is C-BAND parameter                     |
 
 Fortran level:
 
