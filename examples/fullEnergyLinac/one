@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#elegant2impactz particle.sdds 75e-12 4.7715e7
+
+./cleanUp
+genimpactzin lte.impz LN123
+
+ImpactZexe ImpactZ.in
+
+#mpirun -np 64 ImpactZexe ImpactZ.in

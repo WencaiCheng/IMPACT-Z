@@ -1,0 +1,107 @@
+ !control section
+!===============
+&control
+  core_num_T=1;
+  core_num_L=1;
+  
+  integrator=2
+
+  meshx= 32;
+  meshy= 32;
+  meshz= 64;
+
+  default_order= 2;
+  kinetic_energy= 3.0258e6;       !kinetic energy [eV]
+
+  freq_rf_scale= 324e6;
+
+  steps=1;    ! 1 kicks/m
+  maps=40;     ! 1 map/half_step
+
+  tsc=0;       !tsc on
+  lsc=0;       !lsc on
+
+  csr=0;      !csr off
+  zwake=0;    !longitudinal wakefield off
+  trwake=0;   !transverse wakefield off
+
+  pipe_radius=18e-3;
+  !pipe_radius=18;
+
+&end
+
+!beam section
+!==============
+&beam
+mass = 939.294e6;
+charge = -1.0;
+
+Np = 50448;
+!total_charge = 1.5432e-10;
+total_charge = 0.0;
+
+emit_nx = 0.26e-6, beta_x = 0.2331,  alpha_x = -1.7726;
+emit_ny = 0.26e-6, beta_y = 0.0738,  alpha_y = 0.6392;
+emit_z  = 0.1316,  beta_z = 416.9547,alpha_z = -0.3662;  
+
+distribution_type = 2;
+
+&end 
+
+&lattice
+
+!======== MEBT section ========
+mebt_d1:  drift, L=85.2550e-3
+mebt_d2:  drift, L=88.2809e-3
+mebt_d3:  drift, L=52.2291e-3
+mebt_d4:  drift, L=140.510e-3
+mebt_d5:  drift, L=182.255e-3
+mebt_d6:  drift, L=208.255e-3
+mebt_d7:  drift, L=48.5380e-3
+mebt_d8:  drift, L=120.712e-3
+mebt_d9:  drift, L=81.2595e-3
+mebt_d10: drift, L=48.6017e-3
+mebt_d11: drift, L=141.908e-3
+mebt_d12: drift, L=250.510e-3
+mebt_d13: drift, L=162.255e-3
+mebt_d14: drift, L=208.255e-3
+mebt_d15: drift, L=90.9697e-3
+mebt_d16: drift, L=49.5403e-3
+mebt_d17: drift, L=140.510e-3
+mebt_d18: drift, L=148.490e-3
+
+mebt_q1:  quad,  L=79.49e-3,  grad=-16.365  
+mebt_q2:  quad,  L=79.49e-3,  grad=25.6471  
+mebt_q3:  quad,  L=79.49e-3,  grad=-17.9374 
+mebt_q4:  quad,  L=79.49e-3,  grad=19.3098  
+mebt_q5:  quad,  L=79.49e-3,  grad=-26.6599 
+mebt_q6:  quad,  L=79.49e-3,  grad=20.933  
+mebt_q7:  quad,  L=79.49e-3,  grad=-19.8372 
+mebt_q8:  quad,  L=79.49e-3,  grad=18.0165  
+mebt_q9:  quad,  L=79.49e-3,  grad=-22.5621 
+mebt_q10: quad,  L=79.49e-3,  grad=19.0599  
+mebt_q11: quad,  L=21.765e-3, grad=-44.6556 
+
+mebt_rf1: gap, freq=324e6, volt=102510, phase=0
+mebt_rf2: gap, freq=324e6, volt=124831, phase=0
+!mebt_rf1: drift, L=0.0
+!mebt_rf2: drift, L=0.0
+
+
+!w1: watch, filename_ID=1000, coordinate_convention='IMPACT-Z'
+!w2: watch, filename_ID=1001, coordinate_convention='IMPACT-Z'
+w1: watch, filename_ID=1000
+w2: watch, filename_ID=1001
+
+!!---------
+!QF: QUAD, L=0.06, grad=1.1817
+!QD: QUAD, L=0.06, grad=-1.1817
+!D1: drift, L=2.2
+!!FODO: Line=(QF,D1,QD,QD,D1,QF)
+!!Line: Line=(5*FODO)
+
+
+line: line=(w1,mebt_d1,mebt_q1,mebt_d2,mebt_d3,mebt_q2,mebt_d4,mebt_q3,mebt_d5,mebt_rf1,mebt_d6,mebt_q4,mebt_d7,mebt_d8,mebt_d9, &
+      mebt_q5,mebt_d10,mebt_d11,mebt_q6,mebt_d12,mebt_q7,mebt_d13,mebt_rf2,mebt_d14,mebt_q8,mebt_d15,mebt_d16,mebt_q9,mebt_d17,mebt_q10,mebt_d18,mebt_q11,w2)
+
+&end

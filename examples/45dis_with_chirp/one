@@ -1,0 +1,5 @@
+#!/bin/bash
+
+genimpactzin tmp.impz ln1
+
+ImpactZexe ImpactZ.in

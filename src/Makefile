@@ -20,26 +20,27 @@
 #**************************************************************************
 # Macros defining the Fortran, C/C++ compiler and linker.
 
-CC = mpif90
-LINK = mpif90
-FFLAGS = -O3
+CC = gfortran
+LINK = gfortran
+#FFLAGS = -O3
+FFLAGS = -g
 
 #**************************************************************************
 # List of .o files that EXENAME depends on.  Edit as appropriate for MP.
 
-OBJS = \
-	DataStruct/NumConst.o DataStruct/PhysConst.o DataStruct/Pgrid.o \
-	DataStruct/Data.o \
-	Func/Timer.o Func/Transpose.o Func/Fldmger.o Func/Ptclmger.o  Func/FFT.o Func/math.o \
-        Appl/BPM.o Appl/CCL.o Appl/CCDTL.o Appl/DTL.o Appl/SC.o \
-	Appl/DriftTube.o Appl/Quadrupole.o Appl/ConstFoc.o Appl/SolRF.o \
-	Appl/Sol.o Appl/Dipole.o Appl/Multipole.o Appl/EMfld.o Appl/TWS.o Appl/BeamLineElem.o \
-	Appl/CompDom.o Appl/Field.o Appl/BeamBunch.o  Appl/Distribution.o \
-	Contrl/Input.o Contrl/Output.o Contrl/AccSimulator.o Contrl/main.o
+OBJS = src/mpistub.o \
+	src/DataStruct/NumConst.o src/DataStruct/PhysConst.o src/DataStruct/Pgrid.o \
+    src/DataStruct/Data.o \
+    src/Func/Timer.o src/Func/Transpose.o src/Func/Fldmger.o src/Func/Ptclmger.o  src/Func/FFT.o src/Func/math.o \
+        src/Appl/BPM.o src/Appl/CCL.o src/Appl/CCDTL.o src/Appl/DTL.o src/Appl/SC.o \
+    src/Appl/DriftTube.o src/Appl/Quadrupole.o src/Appl/ConstFoc.o src/Appl/SolRF.o \
+    src/Appl/Sol.o src/Appl/Dipole.o src/Appl/Multipole.o src/Appl/EMfld.o src/Appl/TWS.o src/Appl/BeamLineElem.o \
+    src/Appl/CompDom.o src/Appl/Field.o src/Appl/BeamBunch.o  src/Appl/Distribution.o \
+    src/Contrl/Input.o src/Contrl/Output.o src/Contrl/AccSimulator.o src/Contrl/main.o
 
-OBJS2 = \
+OBJS2 = mpistub.o \
 	NumConst.o PhysConst.o Pgrid.o Data.o \
-        Timer.o Transpose.o Fldmger.o Ptclmger.o FFT.o math.o \
+    Timer.o Transpose.o Fldmger.o Ptclmger.o FFT.o math.o \
 	BPM.o CCL.o CCDTL.o DTL.o SC.o DriftTube.o Quadrupole.o ConstFoc.o \
 	SolRF.o Sol.o Dipole.o Multipole.o EMfld.o TWS.o BeamLineElem.o CompDom.o Field.o BeamBunch.o Distribution.o \
 	Input.o Output.o AccSimulator.o main.o	
@@ -48,7 +49,7 @@ OBJS2 = \
 #**************************************************************************
 # Change this line if you don't like 'a.out'.
 
-EXEOLD = ImpactZexe
+EXEOLD = ImpactZ.exe
 
 #************************************************************************
 # disable predefined suffixes and define your own set of allowed suffixes
@@ -67,7 +68,7 @@ EXEOLD = ImpactZexe
 #**************************************************************************
 # Rules for building EXENAME from OBJS and OBJS from your source.
 
-$(EXEOLD):  $(OBJS) $(OBJS2) 
+all:  $(OBJS) $(OBJS2) 
 	$(LINK) -o $(EXEOLD) $(OBJS2) 
 
 #************************************************************************
@@ -77,13 +78,13 @@ $(EXEOLD):  $(OBJS) $(OBJS2)
 #Timer.o: Timer.f90
 #	$(CC) -c -O3 Timer.f90
 
-	cp  AccSimulator.o main.o Input.o Output.o Contrl
+	cp  AccSimulator.o main.o Input.o Output.o ./src/Contrl
 	cp  BPM.o CCL.o CCDTL.o DTL.o SC.o DriftTube.o Quadrupole.o \
 	    ConstFoc.o BeamLineElem.o BeamBunch.o Field.o CompDom.o \
-	    Multipole.o Distribution.o SolRF.o Sol.o Dipole.o TWS.o EMfld.o Appl
-	cp  Timer.o Transpose.o Fldmger.o Ptclmger.o FFT.o math.o Func
-	cp  NumConst.o PhysConst.o Data.o Pgrid.o DataStruct 
-#***********************************************************************
+	    Multipole.o Distribution.o SolRF.o Sol.o Dipole.o TWS.o EMfld.o ./src/Appl
+	cp  Timer.o Transpose.o Fldmger.o Ptclmger.o FFT.o math.o ./src/Func
+	cp  NumConst.o PhysConst.o Data.o Pgrid.o ./src/DataStruct
+##***********************************************************************
 clean:
 #	-rm *.o $(EXEOLD) *.mod */*.o
-	-rm *.o *.mod */*.o
+	-rm -f *.o *.mod */*.o ./src/*/*.o

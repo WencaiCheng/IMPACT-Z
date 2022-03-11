@@ -1,0 +1,36 @@
+!control section
+!===============
+&control
+
+kinetic_energy = 100e6
+freq_rf_scale=2.998e8/2/3.14159
+
+&end
+
+!beam section
+!============
+&beam
+
+Np= 1e5
+distribution_type = 49
+total_charge=75e-12
+
+emit_nx = 0.15e-6, beta_x = 7.33, alpha_x=1
+emit_ny = 0.15e-6, beta_y = 1.73, alpha_y=-1
+sigz = 0.2e-3, sigE=2e3
+
+&end
+
+
+!lattice section
+!===============
+&lattice
+QF: QUAD, L=0.06, K1=4.69527
+QD: QUAD, L=0.06, K1=-4.69527
+
+D1: drift, L=2.2
+
+w0: watch, filename_ID=1000
+
+line: Line=(w0)
+&end

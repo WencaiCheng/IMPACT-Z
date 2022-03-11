@@ -2,9 +2,19 @@
 examples/**/fort.*
 src/.cproject
 src/.project
-src/ImpactZexe
 src/tags
 src/*.o
 src/**/*.o
 src/*.mod
 
+.cproject
+.project
+
+ImpactZexe
+ImpactZ.exe
+.settings
+utilities/**/*.pyc
+
+utilities/MatlabTools/**/*.asv
+._*
+*.100?

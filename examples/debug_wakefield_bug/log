@@ -1,0 +1,182 @@
+ Read input data from file - ImpactZ.in:
+ !-----------------------------------------------------------
+ ! IMPACT-Z: Integrated Map and PArticle Tracking Code: Version 2.1
+ ! Copyright of The Regents of the University of California
+ !-----------------------------------------------------------
+ error=            0
+ error=            0
+ error=            0
+ pass generating initial distribution...
+ pass setting up lattice...
+ particle survived:          100
+ enter elment (type code):            1           0
+ zedge:    0.0000000000000000     
+ particle survived:          100
+ j, nstep, z           1           1  0.41638089425398422     
+ enter elment (type code):            2           1
+ zedge:   0.41638089425398422     
+ particle survived:          100
+ j, nstep, z           1           2  0.51638089425398426     
+ enter elment (type code):            3           0
+ zedge:   0.51638089425398426     
+ particle survived:          100
+ j, nstep, z           1           3   1.4788242526401463     
+ enter elment (type code):            4           1
+ zedge:    1.4788242526401463     
+ particle survived:          100
+ j, nstep, z           1           4   1.5788242526401464     
+ enter elment (type code):            5           0
+ zedge:    1.5788242526401464     
+ particle survived:          100
+ j, nstep, z           1           5   2.8417180943386553     
+ enter elment (type code):            6           1
+ zedge:    2.8417180943386553     
+ particle survived:          100
+ j, nstep, z           1           6   2.9417180943386549     
+ enter elment (type code):            7           0
+ zedge:    2.9417180943386549     
+ particle survived:          100
+ j, nstep, z           1           7   3.0022468213924327     
+ enter elment (type code):            8           1
+ zedge:    3.0022468213924327     
+ particle survived:          100
+ j, nstep, z           1           8   3.1022468213924324     
+ enter elment (type code):            9           0
+ zedge:    3.1022468213924324     
+ particle survived:          100
+ j, nstep, z           1           9   3.1522468213924322     
+ enter elment (type code):           10           0
+ zedge:    3.1522468213924322     
+ particle survived:          100
+ j, nstep, z           1          10   3.2022468213924320     
+ enter elment (type code):           11           0
+ zedge:    3.2022468213924320     
+ particle survived:          100
+ j, nstep, z           1          11   3.2522468213924318     
+ enter elment (type code):           12         -41
+ zedge:    3.2522468213924318     
+ enter elment (type code):           13         103
+ zedge:    3.2522468213924318     
+ particle survived:          100
+ j, nstep, z           1          12   5.2522468213924318     
+ enter elment (type code):           14         -41
+ zedge:    5.2522468213924318     
+ enter elment (type code):           15           0
+ zedge:    5.2522468213924318     
+ particle survived:          100
+ j, nstep, z           1          13   5.3022468213924325     
+ enter elment (type code):           16           0
+ zedge:    5.3022468213924325     
+ particle survived:          100
+ j, nstep, z           1          14   5.3522468213924332     
+ enter elment (type code):           17           1
+ zedge:    5.3522468213924332     
+ particle survived:          100
+ j, nstep, z           1          15   5.4122468213924337     
+ enter elment (type code):           18           1
+ zedge:    5.4122468213924337     
+ particle survived:          100
+ j, nstep, z           1          16   5.4722468213924342     
+ enter elment (type code):           19           0
+ zedge:    5.4722468213924342     
+ particle survived:          100
+ j, nstep, z           1          17   5.5222468213924349     
+ enter elment (type code):           20           0
+ zedge:    5.5222468213924349     
+ particle survived:          100
+ j, nstep, z           1          18   5.5722468213924357     
+ enter elment (type code):           21         -41
+ zedge:    5.5722468213924357     
+ enter elment (type code):           22         103
+ zedge:    5.5722468213924357     
+ particle survived:          100
+ j, nstep, z           1          19   7.5722468213924357     
+ enter elment (type code):           23         -41
+ zedge:    7.5722468213924357     
+ enter elment (type code):           24           0
+ zedge:    7.5722468213924357     
+ particle survived:          100
+ j, nstep, z           1          20   7.6222468213924364     
+ enter elment (type code):           25           0
+ zedge:    7.6222468213924364     
+ particle survived:          100
+ j, nstep, z           1          21   7.6722468213924371     
+ enter elment (type code):           26           1
+ zedge:    7.6722468213924371     
+ particle survived:          100
+ j, nstep, z           1          22   7.7322468213924376     
+ enter elment (type code):           27           1
+ zedge:    7.7322468213924376     
+ particle survived:          100
+ j, nstep, z           1          23   7.7922468213924381     
+ enter elment (type code):           28           0
+ zedge:    7.7922468213924381     
+ particle survived:          100
+ j, nstep, z           1          24   7.8422468213924388     
+ enter elment (type code):           29           0
+ zedge:    7.8422468213924388     
+ particle survived:          100
+ j, nstep, z           1          25   7.8922468213924395     
+ enter elment (type code):           30         -41
+ zedge:    7.8922468213924395     
+ enter elment (type code):           31         103
+ zedge:    7.8922468213924395     
+ particle survived:          100
+ j, nstep, z           1          26   9.8922468213924404     
+ enter elment (type code):           32         -41
+ zedge:    9.8922468213924404     
+ enter elment (type code):           33           0
+ zedge:    9.8922468213924404     
+ particle survived:          100
+ j, nstep, z           1          27   9.9422468213924411     
+ enter elment (type code):           34           0
+ zedge:    9.9422468213924411     
+ particle survived:          100
+ j, nstep, z           1          28   9.9922468213924418     
+ enter elment (type code):           35           1
+ zedge:    9.9922468213924418     
+ particle survived:          100
+ j, nstep, z           1          29   10.052246821392441     
+ enter elment (type code):           36           1
+ zedge:    10.052246821392441     
+ particle survived:          100
+ j, nstep, z           1          30   10.112246821392439     
+ enter elment (type code):           37           0
+ zedge:    10.112246821392439     
+ particle survived:          100
+ j, nstep, z           1          31   10.162246821392440     
+ enter elment (type code):           38           0
+ zedge:    10.162246821392440     
+ particle survived:          100
+ j, nstep, z           1          32   10.212246821392441     
+ enter elment (type code):           39         -41
+ zedge:    10.212246821392441     
+ enter elment (type code):           40         103
+ zedge:    10.212246821392441     
+ particle survived:          100
+ j, nstep, z           1          33   12.212246821392441     
+ enter elment (type code):           41         -41
+ zedge:    12.212246821392441     
+ enter elment (type code):           42           0
+ zedge:    12.212246821392441     
+ particle survived:          100
+ j, nstep, z           1          34   12.262246821392441     
+ enter elment (type code):           43           0
+ zedge:    12.262246821392441     
+ particle survived:          100
+ j, nstep, z           1          35   12.312246821392442     
+ enter elment (type code):           44           1
+ zedge:    12.312246821392442     
+ particle survived:          100
+ j, nstep, z           1          36   12.372246821392441     
+ enter elment (type code):           45           1
+ zedge:    12.372246821392441     
+ particle survived:          100
+ j, nstep, z           1          37   12.432246821392440     
+ enter elment (type code):           46           0
+ zedge:    12.432246821392440     
+ particle survived:          100
+ j, nstep, z           1          38   12.482246821392440     
+ enter elment (type code):           47         -41
+ zedge:    12.482246821392440     
+ enter elment (type code):           48         103

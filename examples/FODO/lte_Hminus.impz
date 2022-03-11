@@ -1,0 +1,47 @@
+!control section
+!===============
+&control
+
+kinetic_energy = 3.0258e6
+steps = 1
+
+default_order=2
+freq_rf_scale=324e6
+
+pipe_radius=18e-3
+
+&end
+
+!beam section
+!============
+&beam
+mass = 939.294e6;
+charge=-1.0;
+
+Np= 1e4;
+total_charge = 1.5432e-10;
+
+distribution_type = 2;
+
+emit_nx = 0.26e-6, beta_x = 7.33, alpha_x=0;
+emit_ny = 0.26e-6, beta_y = 1.73, alpha_y=0;
+sigz = 1.0e-3, sigE=2e3
+
+&end
+
+
+!lattice section
+!===============
+&lattice
+!QF: QUAD, L=0.06, K1=4.69527
+!QD: QUAD, L=0.06, K1=-4.69527
+
+QF: QUAD, L=0.06, grad=-1.1817
+QD: QUAD, L=0.06, grad= 1.1817
+
+
+D1: drift, L=2.2
+
+FODO: Line=(QF,D1,QD,QD,D1,QF)
+Line: Line=(5*FODO)
+&end

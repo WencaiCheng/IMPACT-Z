@@ -1,0 +1,11 @@
+#!/bin/bash
+
+./cleanUp
+
+#genimpactzin lte.impz line
+
+#mpirun -np 64 ImpactZexe
+
+ImpactZexe
+
+#/Users/biaobin/gitlab_subj/IMPACT-Z-Ji/src/ImpactZexe

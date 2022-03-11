@@ -1,0 +1,71 @@
+!control section
+!===============
+&control
+core_num_T = 1;
+core_num_L = 1;
+meshx = 64;
+meshy = 64;
+meshz = 64;
+default_order = 1;
+kinetic_energy = 100e6;
+freq_rf_scale = 4.7715e7;
+
+csr=1;
+lsc=0;
+tsc=0;
+zwake=0;
+
+steps=0;
+sample_out=1e4;
+
+&end
+
+!beam section
+!==============
+&beam
+mass = 0.511001e6;
+charge = -1.0;
+
+distribution_type = 2;
+Np = 1e5;
+total_charge = 75e-12;
+
+sigx=7.8308e-5, sigxp=0;
+sigy=7.8308e-5, sigyp=0;
+sigz=0.1e-3,    sigE=0;
+
+&end
+
+!lattice section
+!===============
+&lattice
+
+cav0: RFCW,L=2.011925,VOLT=1e6,PHASE=90,FREQ=5.712e9,end_focus=0
+
+d1: DRIFT,L=2.5
+d2: DRIFT,L=1
+B1: BEND,L=0.2,ANGLE=0.0435745,E2=0.0435745
+B2: BEND,L=0.2,ANGLE=-0.0435745,E1=-0.04363323
+B3: BEND,L=0.2,ANGLE=-0.0435745,E2=-0.0435745
+B4: BEND,L=0.2,ANGLE=0.0435745,E1=0.04363323
+BC1: LINE=(B1,d1,B2,d2,B3,d1,B4)
+
+csr1: CSRKICK, L=0.2, ANGLE=0.0435745,steps=5
+
+!------------------------
+w0: WATCH,FILENAME_ID=1000
+w1: WATCH,FILENAME_ID=1001
+w2: WATCH,FILENAME_ID=1002
+w3: WATCH,FILENAME_ID=1003
+w4: WATCH,FILENAME_ID=1004
+!Line: line=(w0,B1,w1,d1,B2,w2,d2,B3,w3,d1,B4,w4)
+!Line: line=(w0,B1,w1)
+
+wake3: wakeon,  a=6.6e-3
+wake4: wakeoff, a=6.6e-3
+d2:    drift, L=2
+!Line:  line=(wake3,d2,wake4)
+Line:  line=(w0,csr1,w1)
+
+&end
+
