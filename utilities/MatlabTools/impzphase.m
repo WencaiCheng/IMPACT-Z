@@ -12,6 +12,7 @@ classdef impzphase < handle
         
         histz
         histdgam
+        histdelta
         
         %slice valuable
         %--------------
@@ -58,6 +59,7 @@ classdef impzphase < handle
             
             obj.histz   = obj.gethist(obj.z);
             obj.histdgam= obj.gethist(obj.dgam);
+            obj.histdelta= obj.gethist(obj.delta);
             
             % read the slice enformation
             %---------------------------
@@ -198,7 +200,7 @@ classdef impzphase < handle
         end
         
         function out=gethist(obj,z)
-            [cnt, x] = histcounts(z,100);
+            [cnt, x] = histcounts(z,64);
 %             x = x';
             x = x(1,1:end-1,1);
             dx = x(2)-x(1);
