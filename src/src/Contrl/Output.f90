@@ -3313,9 +3313,12 @@
          
         do i = 1, nslice
           zz = zmin + (i-1)*hz 
+          !write(nfile,777)-zz*scxl*bet0,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
+          !        epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl,&
+          !        bmatchx(i),bmatchy(i)
+          !biaobin,2022-03-13, comment some outputs for Infinity columns
           write(nfile,777)-zz*scxl*bet0,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
-                  epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl,&
-                  bmatchx(i),bmatchy(i)
+                  epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl
         enddo
       endif
 
