@@ -3316,9 +3316,10 @@
           !write(nfile,777)-zz*scxl*bet0,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
           !        epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl,&
           !        bmatchx(i),bmatchy(i)
-          !biaobin,2022-03-13, comment some outputs for Infinity columns
+          !biaobin,2022-03-13, comment some outputs for Infinity
+          !columns; add one colum for slice delta
           write(nfile,777)-zz*scxl*bet0,count(i),count(i)/(hz*scxl)*sclcur,epx(i)*scxl,&
-                  epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl
+                  epy(i)*scxl,-gam(i)/gam0,gam2uncor2(i)*pmass,xx(i)*scxl,yy(i)*scxl,gam2uncor2(i)/gam0
         enddo
       endif
 

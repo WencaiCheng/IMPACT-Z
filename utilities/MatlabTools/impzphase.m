@@ -21,10 +21,11 @@ classdef impzphase < handle
         sliI
         slienx
         slieny
-        slidelta
+        slidEoE
         slidE
         slix0
         sliy0
+        slidelta
         
         %for setting the axis range
         %--------------------------
@@ -63,16 +64,16 @@ classdef impzphase < handle
             
             % read the slice enformation
             %---------------------------
-%             tmp2 = importdata(slicefile);
-%             obj.sliz       = tmp2(:,1);
-%             obj.sliI       = tmp2(:,3);
-%             obj.slienx     = tmp2(:,4);
-%             obj.slieny     = tmp2(:,5);
-%             obj.slidelta   = tmp2(:,6);
-%             obj.slidE      = tmp2(:,7);
-%             obj.slix0      = tmp2(:,8);
-%             obj.sliy0      = tmp2(:,9);  
-            
+            tmp2 = importdata(slicefile);
+            obj.sliz       = tmp2(:,1);
+            obj.sliI       = tmp2(:,3);
+            obj.slienx     = tmp2(:,4);
+            obj.slieny     = tmp2(:,5);
+            obj.slidEoE    = tmp2(:,6); %not sure what is it
+            obj.slidE      = tmp2(:,7);
+            obj.slix0      = tmp2(:,8);
+            obj.sliy0      = tmp2(:,9);  
+            obj.slidelta   = tmp2(:,10);  
             % set default axisrange 
             obj.xlim = [];
             obj.ylim = [];
