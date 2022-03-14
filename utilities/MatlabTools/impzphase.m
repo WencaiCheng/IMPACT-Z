@@ -35,10 +35,15 @@ classdef impzphase < handle
     end
     methods
         function obj=impzphase(filenum,path)
+            %usage:
+            % impzphase('1000')
+            % or impzphase('1000','absPath')
             % read the phase space
             %---------------------
+            
+            
             if nargin==1
-                path='.';
+                path='.';                
             end
             phasefile = [path '/fort.' num2str(filenum)];   %fort.1000 
             slicefile = [path '/fort.1' num2str(filenum)];  %fort.11000
@@ -80,7 +85,57 @@ classdef impzphase < handle
             
         end           
         
-        function plot2d(obj,option,col2)            
+        % group plot 
+        % ========================
+        function phaseheatgroup(obj)
+            subplot(3,3,1)
+            obj.phaseheat(12)
+            subplot(3,3,2)
+            obj.phaseheat(34)
+            subplot(3,3,3)
+            obj.phaseheat(13)
+            subplot(3,3,4)
+            obj.phaseheat(51)
+            subplot(3,3,5)
+            obj.phaseheat(52)
+            subplot(3,3,6)
+            obj.phaseheat(561)           
+            subplot(3,3,7)
+            obj.phaseheat(53)
+            subplot(3,3,8)
+            obj.phaseheat(54)
+            subplot(3,3,9)
+            obj.phaseheat(562)
+            set(gcf,'unit','normalized','position',[0,0,1,1]);
+        end
+        
+        function sligroup(obj)
+            subplot(2,3,1)
+            obj.plotsli('I')       
+            
+            subplot(2,3,2)
+            plot(obj.sliz*1e3,obj.slienx*1e6)
+            hold on
+            plot(obj.sliz*1e3,obj.slieny*1e6)
+            legend('enx','eny')
+            xlabel('z (mm)')
+            ylabel('slice norm. emit. (mm mrad)')
+                      
+            subplot(2,3,3)
+            obj.plotsli('delta')           
+            subplot(2,3,4)
+            obj.plotsli('x0')            
+            subplot(2,3,5)
+            obj.plotsli('y0')           
+            subplot(2,3,6)
+            obj.plotsli('dE')    
+            
+            set(gcf,'unit','normalized','position',[0,0,1,1]);
+        end          
+        
+        % single plot
+        % =============================
+        function phaseheat(obj,option,col2)            
             if nargin==2
                 % if two input paras
                 if option==561
@@ -138,42 +193,83 @@ classdef impzphase < handle
                 label1='x';  
                 label2='y';
 %             elseif nargin                  
-            end    
-                
+            end           
             %--------------------
             h =binscatter(x,y,100);
             colormap(gca,'turbo') %jet
             colorbar()
-            
+         
             % change the axis range here
             %----------------------
-            if isempty(obj.xlim)
-                
+            if isempty(obj.xlim)    
             else
               h.XLimits=obj.xlim;
-            end
-            
+            end     
             if isempty(obj.ylim)
-                
             else
                 h.YLimits=obj.ylim;
             end
             %----------------------            
-            
             % add the hist for two directions   
             tmp = obj.gethist_norm(h,x,y);
             hold on
             h2=plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m');
             xlabel(label1);
             ylabel(label2);
-            axis([h.XLimits h.YLimits])
+            axis([h.XLimits h.YLimits])                         
+        end
+        %for slice enformation
+        %---------------------
+        function plotsli(obj,option)
+            if strcmp(option,'I')
+                x=obj.sliz*1e3;
+                y=obj.sliI;
+                label1='z (mm)';
+                label2='current (A)';
+            elseif strcmp(option,'enx')
+                x=obj.sliz*1e3;
+                y=obj.slienx*1e6;
+                label1='z (mm)';
+                label2='slice norm. emit. (mm mrad)';
+            elseif strcmp(option,'eny')
+                x=obj.sliz*1e3;
+                y=obj.slieny*1e6;
+                label1='z (mm)';
+                label2='slice norm. emit. (mm mrad)';
+            elseif strcmp(option,'delta')
+                x=obj.sliz*1e3;
+                y=obj.slidelta;
+                label1='z (mm)';
+                label2='slice \DeltaE/E';
+            elseif strcmp(option,'dE')
+                x=obj.sliz*1e3;
+                y=obj.slidE/1e6;
+                label1='z (mm)';
+                label2='slice \DeltaE (MeV)';
+            elseif strcmp(option,'x0')
+                x=obj.sliz*1e3;
+                y=obj.slix0*1e3;
+                label1='z (mm)';
+                label2='slice <x> (mm)';
+            elseif strcmp(option,'y0')
+                x=obj.sliz*1e3;
+                y=obj.sliy0*1e3;
+                label1='z (mm)';
+                label2='slice <y> (mm)';                
+            else
+                error('Unknown option:%s\n',option);                
+            end
             
-            obj.setfont(h2);
-                
+            h=plot(x,y,'-')
+            xlabel(label1);
+            ylabel(label2);
+            %axis([obj.xlim obj.ylim])                                  
         end
         
-        function plothist(obj,z)
-                [cnt, x] = histcounts(z,100);
+        % others
+        % ===================================
+        function plothist(obj,Xj)
+                [cnt, x] = histcounts(Xj,100);
                 h = plot(x(1,1:end-1),cnt);
                 xlabel(' ')
                 ylabel('counts')      
@@ -202,112 +298,13 @@ classdef impzphase < handle
         
         function out=gethist(obj,z)
             [cnt, x] = histcounts(z,64);
-%             x = x';
             x = x(1,1:end-1,1);
             dx = x(2)-x(1);
             y = cnt; 
-%             out = [x' y'];
             out.x = x;
             out.y = y;
             out.dx = dx;
-        end
-       
-        
-        function plot33(obj)
-            figure
-            subplot(3,3,1)
-            obj.plot2d(12)
-            subplot(3,3,2)
-            obj.plot2d(34)
-            subplot(3,3,3)
-            obj.plot2d(13)
-            subplot(3,3,4)
-            obj.plot2d(51)
-            subplot(3,3,5)
-            obj.plot2d(52)
-            subplot(3,3,6)
-            obj.plot2d(561)           
-            subplot(3,3,7)
-            obj.plot2d(53)
-            subplot(3,3,8)
-            obj.plot2d(54)
-            subplot(3,3,9)
-            obj.plot2d(562)
-            
-        end
-            
-        %for slice enformation
-        %---------------------
-        function plotsli(obj,option)
-            if strcmp(option,'I')
-                x=obj.sliz*1e6;
-                y=obj.sliI/1e3;
-                label1='z (\mum)';
-                label2='current (kA)';
-            elseif strcmp(option,'enx')
-                x=obj.sliz*1e3;
-                y=obj.slienx*1e6;
-                label1='z (mm)';
-                label2='enx (mm mrad)';
-            elseif strcmp(option,'eny')
-                x=obj.sliz*1e3;
-                y=obj.slieny*1e6;
-                label1='z (mm)';
-                label2='eny (mm mrad)';
-            elseif strcmp(option,'delta')
-                x=obj.sliz*1e3;
-                y=obj.slidelta;
-                label1='z (mm)';
-                label2='\DeltaE/E';
-            elseif strcmp(option,'dE')
-                x=obj.sliz*1e3;
-                y=obj.slidE/1e6;
-                label1='z (mm)';
-                label2='\DeltaE (MeV)';
-            elseif strcmp(option,'x0')
-                x=obj.sliz*1e3;
-                y=obj.slix0*1e3;
-                label1='z (mm)';
-                label2='<x> (mm)';
-            elseif strcmp(option,'y0')
-                x=obj.sliz*1e3;
-                y=obj.sliy0*1e3;
-                label1='z (mm)';
-                label2='<y> (mm)';                
-            else
-                error('Unknown option:%s\n',option);                
-            end
-            
-            h=plot(x,y,'-b')
-            xlabel(label1);
-            ylabel(label2);
-            
-            obj.setfont(h);
-%             axis([obj.xlim obj.ylim])
-
-                                       
-        end
-        
-        % plot settings
-        %-------------------
-        function setfont(obj,h)
-            FS=25;
-            LW=2;
-            
-            set(gcf,'color','w');
-            set(gca,'FontSize',FS,'LineWidth',LW);
-            set(h,'LineWidth',LW);
-            
-            % set x minortick
-            % set(gca,'xminortick','on')   
-            set(gca,'XMinorTick','on','tickLength',[0.02;0.02])
-
-            % set y minortick
-            % set(gca,'yminortick','on')  
-            set(gca,'YMinorTick','on','tickLength',[0.02;0.02])
-        end            
-        
-                
+        end          
     end
 end
 
