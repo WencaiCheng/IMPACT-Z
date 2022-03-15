@@ -328,6 +328,8 @@ class impactz_parser(lattice_parser):
         self.lattice['RFCW']['G'] = 14.995e-3
         self.lattice['RFCW']['CELL_LEN'] = 17.495e-3
         self.lattice['RFCW']['AC_MODE'] = 0
+        self.lattice['RFCW']['WAKEOUT'] = 0
+        self.lattice['RFCW']['WAKEFILE'] = 0
 
         # WAKEON
         # -----------
@@ -337,6 +339,8 @@ class impactz_parser(lattice_parser):
         self.lattice['WAKEON']['A'] = 6.6e-3
         self.lattice['WAKEON']['G'] = 14.995e-3
         self.lattice['WAKEON']['CELL_LEN'] = 17.495e-3
+        self.lattice['WAKEON']['WAKEOUT'] = 0
+        self.lattice['WAKEON']['WAKEFILE'] = 0
 
         # WAKEOFF
         # -----------
@@ -346,6 +350,8 @@ class impactz_parser(lattice_parser):
         self.lattice['WAKEOFF']['A'] = 6.6e-3
         self.lattice['WAKEOFF']['G'] = 14.995e-3
         self.lattice['WAKEOFF']['CELL_LEN'] = 17.495e-3
+        self.lattice['WAKEON']['WAKEOUT'] = 0
+        self.lattice['WAKEON']['WAKEFILE'] = 0
 
         # EMATRIX
         #-------------
@@ -490,7 +496,7 @@ class impactz_parser(lattice_parser):
                 elem['TYPE'] = 'QUAD'
 
             # map monitor, hkicker, vkicker, sextupole to drift, temporary    
-            if elem['TYPE'] in ['DRIFT','MONITOR','HKICKER','VKICKER','SEXTUPOLE']:
+            if elem['TYPE'] in ['DRIF','MONITOR','HKICKER','VKICKER','SEXTUPOLE']:
                 elem['TYPE'] = 'DRIFT'
 
             # update the not-yet-setting lattice element parameters with the default 
@@ -868,6 +874,8 @@ class impactz_parser(lattice_parser):
                         lte_lines.append(elem['A'])
                         lte_lines.append(elem['G'])
                         lte_lines.append(elem['CELL_LEN'])  
+                        lte_lines.append(elem['WAKEOUT'])
+                        lte_lines.append(elem['WAKEFILE'])
                         lte_lines.append('/ \n')
                    
                     elif self._is_number(elem['WAKEFILE_ID']):
@@ -876,6 +884,11 @@ class impactz_parser(lattice_parser):
                         lte_lines.append('0 0 1 -41 1.0')
                         lte_lines.append(elem['WAKEFILE_ID'])
                         lte_lines.append(wake_flag)
+                        lte_lines.append(elem['A'])
+                        lte_lines.append(elem['G'])
+                        lte_lines.append(elem['CELL_LEN'])  
+                        lte_lines.append(elem['WAKEOUT'])
+                        lte_lines.append(elem['WAKEFILE'])
                         lte_lines.append('/ \n')
                     else:
                         print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
@@ -885,7 +898,7 @@ class impactz_parser(lattice_parser):
             elif elem['TYPE'] == 'WAKEOFF':
                 # wakefield stops at this element
                 # -------------------------------
-                lte_lines.append('0 0 1 -41 1.0 -1 -1 / \n')
+                lte_lines.append('0 0 1 -41 1.0 -1 -1 0 0 0 0 0 / \n')
  
             elif elem['TYPE'] == 'RFCW':
                 map_flag = self._get_rfcwmap_flag(elem)
@@ -909,6 +922,8 @@ class impactz_parser(lattice_parser):
                         lte_lines.append(elem['A'])
                         lte_lines.append(elem['G'])
                         lte_lines.append(elem['CELL_LEN'])  
+                        lte_lines.append(elem['WAKEOUT'])
+                        lte_lines.append(elem['WAKEFILE'])
                         lte_lines.append('/ \n')                                          
                     elif self._is_number(elem['WAKEFILE_ID']):
                         # read-in wakefile
@@ -917,6 +932,11 @@ class impactz_parser(lattice_parser):
                         lte_lines.append('0 0 1 -41 1.0')
                         lte_lines.append(elem['WAKEFILE_ID'])
                         lte_lines.append(wake_flag)
+                        lte_lines.append(elem['A'])
+                        lte_lines.append(elem['G'])
+                        lte_lines.append(elem['CELL_LEN'])  
+                        lte_lines.append(elem['WAKEOUT'])
+                        lte_lines.append(elem['WAKEFILE'])
                         lte_lines.append('/ \n')
                     else:
                         print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
@@ -943,7 +963,7 @@ class impactz_parser(lattice_parser):
                     pass
                 else:
                     # OFF wake after RFCW element
-                    lte_lines.append('0 0 1 -41 1.0 -1 -1 / \n')           
+                    lte_lines.append('0 0 1 -41 1.0 -1 -1 0 0 0 0 0 / \n')           
             
             elif elem['TYPE'] == 'WATCH':
                 if elem['COORDINATE_CONVENTION'].upper() == 'NORMAL':
@@ -1191,7 +1211,7 @@ class impactz_parser(lattice_parser):
         if elem['ORDER'] == '1':     #linear map
             flag = '-1'
         elif elem['ORDER'] == '2':    #real nonlinear map
-            flag = ''      #keep blank, same as ImpactZ-V-2.1
+            flag = '1'      
         else:
             print('Element',elem['NAME'],':unknown order is given.')
             sys.exit()

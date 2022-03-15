@@ -257,8 +257,6 @@
                  bitype(i),blength(i))
             tmpdr(1) = 0.0
             tmpdr(2) = val1(i)
-            tmpdr(3) = 0.0     !in case ungiven, set default values,
-                               !default is real map 
             tmpdr(3) = val2(i) !additional parameter after drift pip
                                !radius, ID<0, linear map; otherwise real
                                !map
@@ -589,6 +587,7 @@
         real*8, dimension(3) :: vhphi 
         character(len=20) :: filename,formatstr
         integer :: csrfid1,csrfid2
+        integer :: rfwakefid1=0,rfwakefid2=0
         
 !-------------------------------------------------------------------
 ! prepare initial parameters, allocate temporary array.
@@ -690,6 +689,7 @@
               print*,"turn:",ith_turn
           endif
         do i = iend+1, Nblem
+          !print*,"rfwakefid1,rfwakefid2=",rfwakefid1,rfwakefid2
 
           call getparam_BeamLineElem(Blnelem(i),blength,bnseg,bmpstp,&
                                      bitype)
@@ -985,6 +985,12 @@
               flagwake = 0
               scwk = 1.0d0
             endif
+            !biaobin, get the rfwake output file id
+            call getparam_BeamLineElem(Blnelem(i),8,tmp3)
+            call getparam_BeamLineElem(Blnelem(i),9,tmp4)
+            rfwakefid1 = nint(tmp3)
+            rfwakefid2 = nint(tmp4)
+
           !laser heater from simplified sinusoidal model
           else if(bitype.eq.-52)then
             xylc = 0.0d0
@@ -1381,6 +1387,35 @@
                 !exwake = 0.0*exwake
                 !eywake = 0.0*eywake
                 ezwake = scwk*ezwake
+                
+                !biaobin,2022-03,output RF wake 
+                if(myid.eq.0) then
+                  if(rfwakefid2<10.and.rfwakefid2>=0) then
+                    formatstr="(I1,A7)"
+                  elseif(rfwakefid2>=10.and.rfwakefid2<100) then
+                    formatstr="(I2,A7)"
+                  else
+                    print*,"rfwake output file id should be [0,100), &
+                    rfwakefile id=",rfwakefid2
+                    stop
+                  endif
+                  !only output the rfwake at the first step
+                  if(rfwakefid1.eq.1 .and. j==1) then 
+                    write(filename,formatstr) rfwakefid2,".rfwake"
+                    open(2,file=filename)
+                    do k=1,Nz
+                        !times the charge sign, minus for energy loss
+                        write(2,101) &
+                        range(5)/(-Bpts%refptcl(6))+hzwake*(k-1), &
+                        Bpts%Charge/abs(Bpts%Charge)*recvdensz(k,1), &
+                        Bpts%Charge/abs(Bpts%Charge)*exwake(k), &
+                        Bpts%Charge/abs(Bpts%Charge)*eywake(k), &
+                        Bpts%Charge/abs(Bpts%Charge)*ezwake(k)
+                    enddo
+                    101 format(5(2x,e13.7))
+                  endif
+                endif
+
               endif
 
               if(flagcsr.eq.1) then
@@ -1435,38 +1470,41 @@
               !print*,"after csr: ",sum(ezwake)
               !biaobin, 2022-03, output csrwake
               if(myid.eq.0) then
-                  csrfid1=nint(dparam(16))
-                  csrfid2=nint(dparam(17))
-                  if(csrfid1.eq.1) then 
-                      if(csrfid2<10 .and. csrfid2>=0) then
-                          if(j<10) then
-                            formatstr="(I1,A5,I1)"
-                          else 
-                            formatstr="(I1,A5,I2)"
-                          endif
-                      elseif(csrfid2>=10 .and. csrfid2<100) then
-                          if(j<10) then
-                            formatstr="(I2,A5,I1)"
-                          else 
-                            formatstr="(I2,A5,I2)"
-                          endif
-                      else
-                          print*,"csr output file id should in [0,100), &
-                          csrfileid=", csrfid2
-                          stop
-                      endif
-                     
-                      write(filename,formatstr) csrfid2,"_csr.",j
-
-                      open(2,file=filename)
-                      do k=1,Nz
-                          write(2,100) densz(k),ezwake(k)
-                      enddo
-                      close(2)
-                      100 format(2(2x,e13.7))
-                      !biaobin, output the phase space
-                      !call phase_Output(500+j,Bpts,-1)
+                csrfid1=nint(dparam(16))
+                csrfid2=nint(dparam(17))
+                if(csrfid2<10 .and. csrfid2>=0) then
+                  if(j<10) then
+                    formatstr="(I1,A1,I1,A4)"
+                  else 
+                    formatstr="(I1,A1,I2,A4)"
                   endif
+                elseif(csrfid2>=10 .and. csrfid2<100) then
+                  if(j<10) then
+                    formatstr="(I2,A1,I1,A4)"
+                  else 
+                    formatstr="(I2,A1,I2,A4)"
+                  endif
+                else
+                  print*,"csr output file id should in [0,100), &
+                  csrfileid=", csrfid2
+                  stop
+                endif
+ 
+                if(csrfid1.eq.1) then 
+                  write(filename,formatstr) csrfid2,"_",j,".csr"
+
+                  open(2,file=filename)
+                  do k=1,Nz
+                    write(2,100) &
+                    range(5)/(-Bpts%refptcl(6))+hzwake*(k-1), &
+                    Bpts%Charge/abs(Bpts%Charge)*densz(k), &
+                    Bpts%Charge/abs(Bpts%Charge)*ezwake(k)
+                  enddo
+                  close(2)
+                  100 format(3(2x,e13.7))
+                  !biaobin, output the phase space
+                  !call phase_Output(500+j,Bpts,-1)
+                endif
               endif
               
               endif

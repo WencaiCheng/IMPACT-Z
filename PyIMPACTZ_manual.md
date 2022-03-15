@@ -612,8 +612,7 @@ csr1: csrkick, L=0.2, angle=0.1, csr=1, steps=5
 | CSR            |       | int    | 0       | 0/1, whether to include 1D-CSR effects or not.               |
 | PIPE_RADIUS    | m     | double | 0.0     | half gap between poles                                       |
 | csrout         |       | int    | 0       | 0/1, OFF or ON the csr wake at each step.                    |
-| csrfile        |       | int    | 1       | output file will be `1_csr.1, 1_csr.2, ...`. The first colum is density profile, second colum is csrwake. The size depends on Nz, i.e. longi. grid points. |
-
+| csrfile        |       | int    | 1       | output file will be `1_1.csr, 1_2.csr, ...`. The first colum is particle coordinate (m), 2nd col. is density profile, 3rd. colum is csrwake. The size depends on Nz, i.e. longi. grid points. |
 
 ### BEND
 
@@ -640,7 +639,7 @@ A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper f
 | ratate_z       | rad          | double | 0.0     | rotation error in y direction                                |
 | CSR            |              | int    | 0       | 0/1, whether to include 1D-CSR effects or not.   |
 | csrout | | int | 0 | `0/1`, OFF or ON the csr wake at each step. |
-| csrfile | | int | 1 | output file will be `1_csr.1, 1_csr.2, ...`. The first colum is density profile, second colum is csrwake. The size depends on Nz, i.e. longi. grid points. The value should be within [0,100). |
+| csrfile | | int | 1 | output file will be `1_1.csr, 1_2.csr, ...`. The first colum is particle coordinate (m), 2nd col. is density profile, 3rd. colum is csrwake. The size depends on Nz, i.e. longi. grid points. |
 
 
 
@@ -717,6 +716,8 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | g | m | double | 14.995e-3 | cell gap length, default is C-BAND parmater |
 | cell_len | m | double | 17.495e-3 | cell length, default is C-BAND parameter |
 | ac_mode        |        | int    | 0       | for RCS AC mode, if equal 1, then rfdata_ac.in should be given. And NONLINEAR map will be called, order=1 will be overwritten. |
+| wakeout | | int | 0 | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
+| wakefile | | int | 0 | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
 
 如果未提供 rfdata41.in 尾场文件，当考虑尾场效应时，程序会使用代码内部的RF 尾场解析表达式，即SLAC/LCLS型。默认的(a,g,cell_len)为C-band 的参数。
 
@@ -801,6 +802,8 @@ wake1: wakeon;
 | a              | m     | double | 6.6e-3    | aperture for wakefield, default is C-BAND parameter          |
 | g              | m     | double | 14.995e-3 | cell gap length, default is C-BAND parmater                  |
 | cell_len       | m     | double | 17.495e-3 | cell length, default is C-BAND parameter                     |
+| wakeout        |       | int    | 0         | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
+| wakefile       |       | int    | 0         | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
 
 Fortran level:
 
