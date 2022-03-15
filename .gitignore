@@ -10,8 +10,8 @@ src/*.mod
 .cproject
 .project
 
-ImpactZexe
-ImpactZ.exe
+src/ImpactZexe
+src/ImpactZ.exe
 .settings
 utilities/**/*.pyc
 
