@@ -2,11 +2,9 @@
 
 #elegant2impactz particle.sdds 75e-12 4.7715e7
 
-#./cleanUp
+./cleanUp
 genimpactzin lte.impz line
 
-#ImpactZexe ImpactZ.in
+ImpactZ.exe ImpactZ.in
 
-#../../src/ImpactZ.exe ImpactZ.in
-
-mpirun -np 4 ImpactZ.exe ImpactZ.in
+#mpirun -np 4 ImpactZ.exe ImpactZ.in
