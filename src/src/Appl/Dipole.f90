@@ -11,7 +11,7 @@
       module Dipoleclass
         use PhysConstclass
         use Dataclass
-        integer, private, parameter :: Nparam = 15
+        integer, private, parameter :: Nparam = 17
         type Dipole
           !Itype = 4
           integer :: Nseg,Mapstp,Itype
@@ -28,6 +28,8 @@
           !      (13) : rotation error x
           !      (14) : rotation error y
           !      (15) : rotation error z
+          !      (16) : csrfile output at each step or not? 0/1
+          !      (17) : csrfile id, in [0,100)
         end type Dipole
         interface getparam_Dipole
           module procedure getparam1_Dipole,  &

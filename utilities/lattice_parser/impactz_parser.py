@@ -289,6 +289,8 @@ class impactz_parser(lattice_parser):
         self.lattice['BEND']['ROTATE_Y'] = 0.0
         self.lattice['BEND']['ROTATE_Z'] = 0.0
         self.lattice['BEND']['CSR'] = 0
+        self.lattice['BEND']['CSROUT'] = 0
+        self.lattice['BEND']['CSRFILE'] = 1 
 
         # CSR-KICK
         #-------------
@@ -299,6 +301,8 @@ class impactz_parser(lattice_parser):
         self.lattice['CSRKICK']['ANGLE'] = 0.0
         self.lattice['CSRKICK']['PIPE_RADIUS'] = 0.0 #half gap
         self.lattice['CSRKICK']['CSR'] = 0
+        self.lattice['CSRKICK']['CSROUT'] = 0
+        self.lattice['CSRKICK']['CSRFILE'] = 1 
 
         # RFCW 
         #-------------
@@ -807,6 +811,8 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(elem['ROTATE_X'])
                 lte_lines.append(elem['ROTATE_Y'])
                 lte_lines.append(elem['ROTATE_Z'])
+                lte_lines.append(elem['CSROUT'])
+                lte_lines.append(elem['CSRFILE'])
                 lte_lines.append('/ \n')
 
             elif elem['TYPE'] == 'CSRKICK':
@@ -822,6 +828,8 @@ class impactz_parser(lattice_parser):
                 lte_lines.append( map_flag )
                 lte_lines.append(elem['PIPE_RADIUS'])
                 lte_lines.append('0 0 0 0 0 0 0 0 0 0') 
+                lte_lines.append(elem['CSROUT'])
+                lte_lines.append(elem['CSRFILE'])
                 lte_lines.append('/ \n')
 
             elif elem['TYPE'] == 'EMATRIX':

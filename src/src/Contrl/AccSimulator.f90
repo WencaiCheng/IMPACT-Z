@@ -124,7 +124,8 @@
         double precision, dimension(5) :: tmpcf 
         double precision, dimension(12) :: tmpbpm 
         double precision, dimension(9) :: tmpquad
-        double precision, dimension(10) :: tmpdipole 
+        double precision, dimension(17) :: tmpdipole
+        double precision, dimension(10) :: tmpmulpole 
         double precision, dimension(11) :: tmprf
         double precision, dimension(15) :: tmpslrf
         double precision, dimension(14) :: tmp13
@@ -304,30 +305,9 @@
             tmpquad(9) = val8(i)
             call setparam_Sol(beamln9(isl),tmpquad)
             Blnelem(i) = assign_BeamLineElem(beamln9(isl))
-          else if(bitype(i).eq.4) then
+          else if(bitype(i).eq.4 .or. bitype(i).eq.5) then
             idipole = idipole + 1
             call construct_Dipole(beamln10(idipole),bnseg(i),bmpstp(i),&
-            bitype(i),blength(i))
-            tmpslrf(1) = 0.0
-            tmpslrf(2) = val1(i)
-            tmpslrf(3) = val2(i)
-            tmpslrf(4) = val3(i)
-            tmpslrf(5) = val4(i)
-            tmpslrf(6) = val5(i)
-            tmpslrf(7) = val6(i)
-            tmpslrf(8) = val7(i)
-            tmpslrf(9) = val8(i)
-            tmpslrf(10) = val9(i)
-            tmpslrf(11) = val10(i)
-            tmpslrf(12) = val11(i)
-            tmpslrf(13) = val12(i)
-            tmpslrf(14) = val13(i)
-            tmpslrf(15) = val14(i)
-            call setparam_Dipole(beamln10(idipole),tmpslrf)
-            Blnelem(i) = assign_BeamLineElem(beamln10(idipole))
-          else if(bitype(i).eq.5) then
-            imultpole = imultpole + 1
-            call construct_Multipole(beamln12(imultpole),bnseg(i),bmpstp(i),&
             bitype(i),blength(i))
             tmpdipole(1) = 0.0
             tmpdipole(2) = val1(i)
@@ -339,7 +319,33 @@
             tmpdipole(8) = val7(i)
             tmpdipole(9) = val8(i)
             tmpdipole(10) = val9(i)
-            call setparam_Multipole(beamln12(imultpole),tmpdipole)
+            tmpdipole(11) = val10(i)
+            tmpdipole(12) = val11(i)
+            tmpdipole(13) = val12(i)
+            tmpdipole(14) = val13(i)
+            tmpdipole(15) = val14(i)
+            tmpdipole(16) = val15(i)
+            tmpdipole(17) = val16(i)
+
+            call setparam_Dipole(beamln10(idipole),tmpdipole)
+            Blnelem(i) = assign_BeamLineElem(beamln10(idipole))
+          else if(bitype(i).eq.6) then  
+            !bbl, Ji seems move this element to BPM type(minus id).
+            !change it to 6, leave 5 for CSRKICK element
+            imultpole = imultpole + 1
+            call construct_Multipole(beamln12(imultpole),bnseg(i),bmpstp(i),&
+            bitype(i),blength(i))
+            tmpmulpole(1) = 0.0
+            tmpmulpole(2) = val1(i)
+            tmpmulpole(3) = val2(i)
+            tmpmulpole(4) = val3(i)
+            tmpmulpole(5) = val4(i)
+            tmpmulpole(6) = val5(i)
+            tmpmulpole(7) = val6(i)
+            tmpmulpole(8) = val7(i)
+            tmpmulpole(9) = val8(i)
+            tmpmulpole(10) = val9(i)
+            call setparam_Multipole(beamln12(imultpole),tmpmulpole)
             Blnelem(i) = assign_BeamLineElem(beamln12(imultpole))
           else if(bitype(i).eq.101) then
             idtl = idtl + 1
@@ -570,7 +576,7 @@
             angB,tanphiB,tanphiBb,hF,hB,qm0,qmi,psi1,psi2,r0,gamn,gambet,&
             angz,dpi,ang0,hgap,betai,rcpgammai,ssll
         double precision, dimension(6) :: ptarry
-        double precision, dimension(15) :: dparam
+        double precision, dimension(17) :: dparam
         real*8 :: xradmin,xradmax,yradmin,yradmax
         real*8 :: zwkmin,bendlen,zbleng
         real*8 :: tmplump,b0,qmass,qchg,pmass, alphax0,betax0,alphay0,betay0,scwk
@@ -581,6 +587,8 @@
         real*8 :: tmp, t_ref
         integer :: ith_turn 
         real*8, dimension(3) :: vhphi 
+        character(len=20) :: filename,formatstr
+        integer :: csrfid1,csrfid2
         
 !-------------------------------------------------------------------
 ! prepare initial parameters, allocate temporary array.
@@ -1424,13 +1432,44 @@
                 call csrwakeTrIGF_FieldQuant(Nz,r0,zwkmin,hzwake,&
                               bendlen,densz,denszp,denszpp,gam,ezwake)
 
-              endif
               !print*,"after csr: ",sum(ezwake)
-              !biaobin, 2022-03, output file
-              !do k=1,Nz
-              !  write(111,100) densz(k),ezwake(k)
-              !enddo
-              !100 format(2(2x,e13.7))
+              !biaobin, 2022-03, output csrwake
+              if(myid.eq.0) then
+                  csrfid1=nint(dparam(16))
+                  csrfid2=nint(dparam(17))
+                  if(csrfid1.eq.1) then 
+                      if(csrfid2<10 .and. csrfid2>=0) then
+                          if(j<10) then
+                            formatstr="(I1,A5,I1)"
+                          else 
+                            formatstr="(I1,A5,I2)"
+                          endif
+                      elseif(csrfid2>=10 .and. csrfid2<100) then
+                          if(j<10) then
+                            formatstr="(I2,A5,I1)"
+                          else 
+                            formatstr="(I2,A5,I2)"
+                          endif
+                      else
+                          print*,"csr output file id should in [0,100), &
+                          csrfileid=", csrfid2
+                          stop
+                      endif
+                     
+                      write(filename,formatstr) csrfid2,"_csr.",j
+
+                      open(2,file=filename)
+                      do k=1,Nz
+                          write(2,100) densz(k),ezwake(k)
+                      enddo
+                      close(2)
+                      100 format(2(2x,e13.7))
+                      !biaobin, output the phase space
+                      !call phase_Output(500+j,Bpts,-1)
+                  endif
+              endif
+              
+              endif
 
               call cvbkforth1st_BeamBunch(Bpts)
               if(totnp.gt.1) then

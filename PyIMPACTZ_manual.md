@@ -611,6 +611,8 @@ csr1: csrkick, L=0.2, angle=0.1, csr=1, steps=5
 | maps           |       | int    | 0       | map steps                                                    |
 | CSR            |       | int    | 0       | 0/1, whether to include 1D-CSR effects or not.               |
 | PIPE_RADIUS    | m     | double | 0.0     | half gap between poles                                       |
+| csrout         |       | int    | 0       | 0/1, OFF or ON the csr wake at each step.                    |
+| csrfile        |       | int    | 1       | output file will be `1_csr.1, 1_csr.2, ...`. The first colum is density profile, second colum is csrwake. The size depends on Nz, i.e. longi. grid points. |
 
 
 ### BEND
@@ -636,7 +638,9 @@ A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper f
 | rotate_x       | rad          | double | 0.0     | rotation error in x direction                                |
 | rotate_y       | rad          | double | 0.0     | rotation error in y direction                                |
 | ratate_z       | rad          | double | 0.0     | rotation error in y direction                                |
-| CSR            |              | int    | 0       | 0/1, whether to include 1D-CSR effects or not.               |
+| CSR            |              | int    | 0       | 0/1, whether to include 1D-CSR effects or not.   |
+| csrout | | int | 0 | `0/1`, OFF or ON the csr wake at each step. |
+| csrfile | | int | 1 | output file will be `1_csr.1, 1_csr.2, ...`. The first colum is density profile, second colum is csrwake. The size depends on Nz, i.e. longi. grid points. The value should be within [0,100). |
 
 
 
