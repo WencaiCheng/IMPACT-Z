@@ -2013,6 +2013,29 @@
           endif
         endif
 
+        !biaobin, output space charge field
+        open(2,file='zsc.txt')
+        do k=1,innz
+            write(2,105)egx(16,16,k),egy(16,16,k),egz(16,16,k)
+        enddo
+        close(2)
+
+        open(2,file='xsc.txt')
+        do i=1,innx
+          write(2,105)egx(i,16,32),egy(i,16,32),egz(i,16,32)
+        enddo
+        close(2)
+
+        open(2,file='ysc.txt')
+        do j=1,inny
+          write(2,105)egx(16,j,32),egy(16,j,32),egz(16,j,32)
+        enddo
+        close(2)
+ 
+        105 format(3(2x,e13.7))
+
+
+
         !Send the E field to the neibhoring guard grid to do the CIC
         !interpolation.
 !        if(totnp.ne.1) then
@@ -4956,6 +4979,20 @@
 !        if(totnp.ne.1) then
           call boundint4_Fldmger(egx,egy,egz,innx,inny,innz,grid)
 !        endif
+
+        !!biaobin, output space charge field
+        !open(2,file='zsc.txt')
+        !do k=1,innz
+        !    write(2,105)egx(16,16,k),egy(16,16,k),egz(16,16,k)
+        !close(2)
+
+        !open(3,file='xsc.txt')
+        !do i=1,innx
+        !  write(3,105)egx(i,16,32),egy(i,16,32),egz(i,16,32)
+        !enddo
+        !close(3)
+ 
+        !105 format(3(2x,e13.7))
 
         !call MPI_BARRIER(comm2d,ierr)
         !if(myid.eq.16) then
