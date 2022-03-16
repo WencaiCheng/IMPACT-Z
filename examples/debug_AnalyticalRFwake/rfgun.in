@@ -1,0 +1,6 @@
+&newrun
+/
+
+&charge
+nrad=64,nlong_in=64
+/
