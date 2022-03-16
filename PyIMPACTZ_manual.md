@@ -865,13 +865,13 @@ w0: watch, filename_ID=1000, sample_freq = ceil(Np/1e5), slice_bin=128
 
 Output particle distribution and beam slice information into fort.N and fort.(N+1e4) files, where N is the filename_ID. 
 
-| Parameter Name        | Units | Type   | Default | Description                                                  |
-| --------------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
-| filename_ID           |       | int    | 1000    | number larger than 1000 is recommended                       |
-| sample_freq           |       | int    | 0       | If sample_freq=10, every 10 particles output 1 particle. If not set (`sample_freq=0`), `sample_out` in control section will set the `sample_freq` based on the `Np` particle number. |
-| coordinate_convention |       | string | normal  | `IMPACT-Z/IMPACT-T/NORMAL/ASTRA`                             |
-| slice_information     |       | int    | 1       | whether output slice information, i.e. whether add -8 element simultaneously |
-| slice_bin             |       | int    | 0       | bins number for getting histogram slice information. If not set (`slice_bin=0`), `slice_bin` in control section will set the value. |
+| Parameter Name | Units | Type   | Default | Description                                                  |
+| -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
+| filename_ID    |       | int    | 1000    | number larger than 1000 is recommended                       |
+| sample_freq    |       | int    | 0       | If sample_freq=10, every 10 particles output 1 particle. If not set (`sample_freq=0`), `sample_out` in control section will set the `sample_freq` based on the `Np` particle number. |
+| coord_conv     |       | string | normal  | `IMPACT-Z/IMPACT-T/NORMAL/ASTRA`                             |
+| slice_info     |       | int    | 1       | whether output slice information, i.e. whether add -8 element simultaneously |
+| slice_bin      |       | int    | 0       | bins number for getting histogram slice information. If not set (`slice_bin=0`), `slice_bin` in control section will set the value. |
 
 For coordinate_convention='IMPACT-Z', output phase space is $(xw/c,\gamma\beta_x,yw/c,\gamma\beta_y,wt,-(\gamma-\gamma_0))$,  where $w$ is $w=2\pi f$, $f$ is the scaling frequency.
 
