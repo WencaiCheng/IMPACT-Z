@@ -869,13 +869,11 @@ Output particle distribution and beam slice information into fort.N and fort.(N+
 | --------------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
 | filename_ID           |       | int    | 1000    | number larger than 1000 is recommended                       |
 | sample_freq           |       | int    | 0       | If sample_freq=10, every 10 particles output 1 particle. If not set (`sample_freq=0`), `sample_out` in control section will set the `sample_freq` based on the `Np` particle number. |
-| coordinate_convention |       | string | normal  | 'NORMAL' or 'IMPACT-Z'                                       |
+| coordinate_convention |       | string | normal  | `IMPACT-Z/IMPACT-T/NORMAL/ASTRA`                             |
 | slice_information     |       | int    | 1       | whether output slice information, i.e. whether add -8 element simultaneously |
 | slice_bin             |       | int    | 0       | bins number for getting histogram slice information. If not set (`slice_bin=0`), `slice_bin` in control section will set the value. |
 
-If  coordinate_convention='normal', output phase space is $(x,\gamma\beta_x,y,\gamma\beta_y,t,\gamma)$, where $x,y,t$ are in .  For coordinate_convention='IMPACT-Z', output phase space is $(xw/c,\gamma\beta_x,yw/c,\gamma\beta_y,wt,-(\gamma-\gamma_0))$,  where $w$ is $w=2\pi f$, $f$ is the scaling frequency.
-
-
+For coordinate_convention='IMPACT-Z', output phase space is $(xw/c,\gamma\beta_x,yw/c,\gamma\beta_y,wt,-(\gamma-\gamma_0))$,  where $w$ is $w=2\pi f$, $f$ is the scaling frequency.
 
 对 `normal`相空间输出，在输出文件中增加了==每列的数据含义说明==：
 
@@ -889,6 +887,18 @@ If  coordinate_convention='normal', output phase space is $(x,\gamma\beta_x,y,\g
 ```
 
 注意：为了便于 Matlab 数据后处理，增加了 $\delta$ 数据列的输出。
+
+增加了`ASTRA` 类型输出，可用astra 后处理程序查看空间电荷力和分布。
+
+
+
+Fortran level:
+
+```bash
+0 0 1000 -2 phaseopt samplefreq
+```
+
+`phaseopt=0/1/2/3`, stands for `IMPACT-Z/IMPACT-T/NORMAL/ASTRA` distribution respectively.
 
 
 

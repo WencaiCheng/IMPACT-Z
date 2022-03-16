@@ -371,8 +371,8 @@ class impactz_parser(lattice_parser):
         #-------------
         self.lattice['WATCH']['FILENAME_ID'] = 1000
         self.lattice['WATCH']['SAMPLE_FREQ'] = 0
-        self.lattice['WATCH']['COORDINATE_CONVENTION'] = 'NORMAL' #(x,gambetx,y,gambety,t,gam)
-        self.lattice['WATCH']['SLICE_INFORMATION'] = 1  # by default add -8 element simultaneously
+        self.lattice['WATCH']['COORD_CONV'] = 'NORMAL' 
+        self.lattice['WATCH']['SLICE_INFO'] = 1  # by default add -8 element simultaneously
         self.lattice['WATCH']['SLICE_BIN'] = 0
 
         # RingRF BPM element
@@ -966,13 +966,16 @@ class impactz_parser(lattice_parser):
                     lte_lines.append('0 0 1 -41 1.0 -1 -1 0 0 0 0 0 / \n')           
             
             elif elem['TYPE'] == 'WATCH':
-                if elem['COORDINATE_CONVENTION'].upper() == 'NORMAL':
-                    sample_sign = -1
-                    
-                elif elem['COORDINATE_CONVENTION'].upper() == 'IMPACT-Z':
-                    sample_sign = 1                    
+                if elem['COORD_CONV'].upper() == 'IMPACT-Z':
+                    phaseopt = 0
+                elif elem['COORD_CONV'].upper() == 'IMPACT-T':
+                    phaseopt = 1                    
+                elif elem['COORD_CONV'].upper() == 'NORMAL':
+                    phaseopt = 2                    
+                elif elem['COORD_CONV'].upper() == 'ASTRA':
+                    phaseopt = 3                    
                 else:
-                    print('Unknown coordinate convention for -2 element:',elem['COORDINATE_CONVENTION'])
+                    print('Unknown coord_conv for -2 element:',elem['COORD_CONV'])
                     sys.exit()
 
                 # if SAMPLE_FREQ not set in the lattice line, replace with the value in control section
@@ -985,12 +988,10 @@ class impactz_parser(lattice_parser):
                         freq = math.ceil(Np/sample_out)
                         elem['SAMPLE_FREQ'] = str(freq)
                     
-                elem['SAMPLE_FREQ'] = abs(int(elem['SAMPLE_FREQ'])) *sample_sign   
-                elem['SAMPLE_FREQ'] = str(elem['SAMPLE_FREQ'])
-                    
                 lte_lines.append('0 0')
                 lte_lines.append(elem['FILENAME_ID'])
                 lte_lines.append('-2')
+                lte_lines.append(str(phaseopt))
                 lte_lines.append(elem['SAMPLE_FREQ'])
                 lte_lines.append('/ \n')
                 
@@ -998,17 +999,17 @@ class impactz_parser(lattice_parser):
                 if elem['SLICE_BIN']=='0':
                     elem['SLICE_BIN']=self.control['SLICE_BIN']
 
-                if elem['SLICE_INFORMATION'] == '0':
+                if elem['SLICE_INFO'] == '0':
                     pass
                 
-                elif elem['SLICE_INFORMATION'] == '1':
+                elif elem['SLICE_INFO'] == '1':
                     lte_lines.append('0 0')
                     lte_lines.append( str(int(elem['FILENAME_ID']) +10000) )
                     lte_lines.append('-8')
                     lte_lines.append(elem['SLICE_BIN'])
                     lte_lines.append('/ \n')    
                 else:
-                    print('Unknown flag for SLICE_INFORMATION, it should be 0 or 1.')
+                    print('Unknown flag for SLICE_INFO, it should be 0 or 1.')
                     sys.exit()
 
             elif elem['TYPE'] == 'RINGRF':

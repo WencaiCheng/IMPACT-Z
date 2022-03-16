@@ -550,8 +550,8 @@
         !double precision :: sumtest, sumtest2, sumtest3
         double precision, dimension(12) :: drange
         double precision, dimension(3) :: al0,ga0,epson0
-        double precision :: realSamplePeriod,tg,tv,gam,piperad2
-        integer :: nsubstep,integerSamplePeriod,Flagbctmp
+        double precision :: tg,tv,gam,piperad2
+        integer :: nsubstep,integerSamplePeriod,Flagbctmp,phaseopt
         double precision :: zz,vref
         !parameters for stripper modeling
         double precision :: beta0,gamma0,gambetz
@@ -808,9 +808,10 @@
             if (mod(ith_turn-1,outfq)==0 .or. ith_turn.eq.1) then
                 bmpstp = bmpstp+ith_turn-1
                 call getparam_BeamLineElem(Blnelem(i),drange)
-                realSamplePeriod = drange(2)
-                integerSamplePeriod = realSamplePeriod
-                call phase_Output(bmpstp,Bpts,integerSamplePeriod)
+                phaseopt = drange(2)
+                integerSamplePeriod = abs(drange(3))
+                !phaseopt=0/1/2/3 => impactz,impactt,normal,astra type phase space
+                call phase_Output(bmpstp,Bpts,phaseopt,integerSamplePeriod)
             end if
 
           else if(bitype.eq.-3) then

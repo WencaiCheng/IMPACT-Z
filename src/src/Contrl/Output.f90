@@ -1850,28 +1850,28 @@
 
         end subroutine outpoint_Output
 
-        subroutine phase_Output(nfile,this,samplePeriod)
+        subroutine phase_Output(nfile,this,phaseopt,samplePeriod)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: nfile
         type (BeamBunch), intent(in) :: this
-        integer :: samplePeriod
+        integer :: samplePeriod,phaseopt
         integer :: np,my_rank,ierr
         integer status(MPI_STATUS_SIZE)
         integer :: i,j,sixnpt,mnpt
         integer, allocatable, dimension(:) :: nptlist
         double precision, allocatable,dimension(:,:) :: recvbuf
-        double precision :: gam,gambet,bet0
+        double precision :: gam,gambet,bet0,mass
+        double precision :: gami,gambeti,gambetzi,gambetxi,gambetyi
+        character(len=20) :: formatname,filename
 
-        !biaobin,2020-12-12, if flag<0, 
-        !i.e. 0 0 1020 -2 -10 / 
-        ! output phase is:
-        ! x=x, px=gambetx/gambet0
-        ! x=y, py=gambety/gambet0
-        ! z=-c/w*(T-T0)*bet0, dgam=(gam-gam0)/(gam0*bet0^2)
+        !biaobin,2022-03
+        !phaseopt=0/1/2/3
+        !=>IMPACT-Z,IMPACT-T,NORMAL,ASTRA type phase space
         gam = -this%refptcl(6)
         gambet = sqrt(gam**2-1.0d0)
         bet0 = gambet/gam
+        mass=this%Mass
 
         if (samplePeriod .eq. 0) then
            samplePeriod = 1
@@ -1893,61 +1893,154 @@
         nptlist = 9*nptlist
 
         if(my_rank.eq.0) then
-          open(nfile,status='unknown')
-          if(samplePeriod.ge.0) then
-           do i = 1, this%Nptlocal,samplePeriod
-            write(nfile,100)this%Pts1(1,i),this%Pts1(2,i),this%Pts1(3,i),&
+          !IMPACT-Z PHASE SPACE
+          if(phaseopt.eq.0) then
+            open(nfile,status='unknown')
+            do i = 1, this%Nptlocal,samplePeriod
+            write(nfile,102)this%Pts1(1,i),this%Pts1(2,i),this%Pts1(3,i),&
                             this%Pts1(4,i),this%Pts1(5,i),this%Pts1(6,i),&
                             this%Pts1(7,i),this%Pts1(8,i),this%Pts1(9,i)
-           enddo
-           do i = 1, np-1
-            call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
+            enddo
+            do i = 1, np-1
+              call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
                           i,1,MPI_COMM_WORLD,status,ierr) 
         
             do j = 1, nptlist(i)/9,samplePeriod
-              write(nfile,100)recvbuf(1,j),recvbuf(2,j),recvbuf(3,j),&
+              write(nfile,102)recvbuf(1,j),recvbuf(2,j),recvbuf(3,j),&
                               recvbuf(4,j),recvbuf(5,j),recvbuf(6,j),&
                               recvbuf(7,j),recvbuf(8,j),recvbuf(9,j)
             enddo
-           enddo
-          else
-           !if flag<0
-           !write (*,*) 'dumping phase space Impact-T format,&
-           !             z=-c/w*(T-T0)*bet0'
-           !output is (x, xp, z, dgam=gami-gam0)
-           write(nfile,102)"x(m)","gambetx/gambet0","y(m)",&
-                  "gambety/gambet0","z=-bet0*c*t(m)","dgam=gam-gam0","dgam/gambet0"
-           do i = 1, this%Nptlocal,abs(samplePeriod)
-            write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i)/gambet, &
-                  this%Pts1(3,i)*Scxl,this%Pts1(4,i)/gambet, &
-                  -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i),-this%Pts1(6,i)/gambet/bet0
-                 !-this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i)/gambet/bet0
-                 !the following, X5=t
-                 !-this%Pts1(5,i)*Scxl/Clight,-this%Pts1(6,i)
+            enddo
+            close(nfile)
+          endif
+ 
+          !IMPACT-T PHASE SPACE
+          if(phaseopt.eq.1) then
+           open(nfile,status='unknown')
+           !write (*,*) 'dumping phase space Impact-T format'
+           do i = 1, this%Nptlocal,samplePeriod
+            write(nfile,100)this%Pts1(1,i)*Scxl,this%Pts1(2,i), &
+                  this%Pts1(3,i)*Scxl,this%Pts1(4,i), &
+                 -this%Pts1(5,i)*Scxl,-this%Pts1(6,i)-this%refptcl(6)
            enddo
            do i = 1, np-1
             call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
-                          i,1,MPI_COMM_WORLD,status,ierr) 
-        
-            do j = 1, nptlist(i)/9,abs(samplePeriod)
-              write(nfile,101)recvbuf(1,j)*Scxl,recvbuf(2,j)/gambet,&
-                    recvbuf(3,j)*Scxl,recvbuf(4,j)/gambet,&
-                    -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j),-recvbuf(6,j)/gambet/bet0
-                   !-recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j)/gambet/bet0
-                   !the following, X5=t
-                   !-recvbuf(5,j)*Scxl/Clight,-recvbuf(6,j)
+                          i,1,MPI_COMM_WORLD,status,ierr)
+
+            do j = 1, nptlist(i)/9,samplePeriod
+              write(nfile,100)recvbuf(1,j)*Scxl,recvbuf(2,j),&
+                    recvbuf(3,j)*Scxl,recvbuf(4,j),&
+                   -recvbuf(5,j)*Scxl,-recvbuf(6,j)-this%refptcl(6)
             enddo
            enddo
+           close(nfile)
           endif
-          close(nfile)
+          
+          !(x,xp,y,yp,z,dgam,delta) phase space
+          if(phaseopt.eq.2) then
+            open(nfile,status='unknown')
+            !add head string for each col.
+            write(nfile,103)"x(m)","gambetx/gambet0", & 
+                            "y(m)","gambety/gambet0", &
+                            "z=-bet0*c*t(m)","dgam=gam-gam0",&
+                            "dgam/gambet0"
+            do i = 1, this%Nptlocal,samplePeriod
+              write(nfile,101)this%Pts1(1,i)*Scxl,this%Pts1(2,i)/gambet, &
+                              this%Pts1(3,i)*Scxl,this%Pts1(4,i)/gambet, &
+                              -this%Pts1(5,i)*Scxl*bet0,-this%Pts1(6,i), &
+                              -this%Pts1(6,i)/gambet/bet0
+                             !the following, X5=t
+                             !-this%Pts1(5,i)*Scxl/Clight,-this%Pts1(6,i)
+            enddo
+            do i = 1, np-1
+              call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
+                          i,1,MPI_COMM_WORLD,status,ierr) 
+        
+              do j = 1, nptlist(i)/9,samplePeriod
+                write(nfile,101)recvbuf(1,j)*Scxl,recvbuf(2,j)/gambet,&
+                                recvbuf(3,j)*Scxl,recvbuf(4,j)/gambet,&
+                                -recvbuf(5,j)*Scxl*bet0,-recvbuf(6,j),&
+                                -recvbuf(6,j)/gambet/bet0
+                               !the following, X5=t
+                               !-recvbuf(5,j)*Scxl/Clight,-recvbuf(6,j)
+              enddo
+            enddo
+            close(nfile)
+          endif
+          
+          !ASTRA PHASE SPACE
+          if(phaseopt.eq.3) then
+            if(nfile<10) then
+              formatname="(A5,I1,A4)"
+            elseif(nfile<100) then
+              formatname="(A5,I2,A4)"
+            elseif(nfile<1000) then
+              formatname="(A5,I3,A4)"
+            elseif(nfile<10000) then
+              formatname="(A5,I4,A4)"
+            else
+              print*,"ERROR, output file name should less than 10000: &
+                      name=",nfile
+              stop
+            endif
+            !to be same with astra rfgun.0100.001 format, for using
+            !astra visualization tools.
+            write(filename,formatname)"fort.",nfile,".001"
+            open(22,file=filename)
+
+            !reference particle for the 1st line
+            write(22,104) &
+            this%refptcl(1)*Scxl,this%refptcl(3)*Scxl,&
+            -this%refptcl(5)*Scxl*bet0,this%refptcl(2)*mass, &
+            this%refptcl(4)*mass,gambet*mass,this%refptcl(5)*Scxl/Clight*1.0d9,&
+            this%Pts1(8,i)*1.0d9*samplePeriod,1,5  !1 stands for
+                                                   !electron
+
+            do i = 1, this%Nptlocal,samplePeriod
+              gami=-this%Pts1(6,i)+gam
+              gambeti=sqrt(gami**2-1.0d0)
+              gambetxi=this%Pts1(2,i)
+              gambetyi=this%Pts1(4,i)
+              gambetzi=sqrt(gambeti**2-gambetxi**2-gambetyi**2)-gambet
+
+              write(22,104) &
+              this%Pts1(1,i)*Scxl,this%Pts1(3,i)*Scxl,-this%Pts1(5,i)*Scxl*bet0,&
+              this%Pts1(2,i)*mass,this%Pts1(4,i)*mass,gambetzi*mass,&
+              this%Pts1(5,i)*Scxl/Clight*1.0d9,&
+              this%Pts1(8,i)*1.0d9*samplePeriod,1,5
+            enddo
+            do i = 1, np-1
+              call MPI_RECV(recvbuf(1,1),nptlist(i),MPI_DOUBLE_PRECISION,&
+                          i,1,MPI_COMM_WORLD,status,ierr) 
+        
+            do j = 1, nptlist(i)/9,samplePeriod
+              gami=-recvbuf(6,j)+gam
+              gambeti=sqrt(gami**2-1.0d0)
+              gambetxi=recvbuf(2,j)
+              gambetyi=recvbuf(4,j)
+              gambetzi=sqrt(gambeti**2-gambetxi**2-gambetyi**2)-gambet
+
+              write(22,104) &
+              recvbuf(1,j)*Scxl,recvbuf(3,j)*Scxl,-recvbuf(5,j)*Scxl*bet0,&
+              recvbuf(2,j)*mass,recvbuf(4,j)*mass,gambetzi*mass,&
+              recvbuf*Scxl/Clight*1.0d9,&
+              recvbuf(8,j)*1.0d9*samplePeriod,1,5
+
+            enddo
+            enddo
+            close(22)
+          endif
+ 
         else
           call MPI_SEND(this%Pts1(1,1),sixnpt,MPI_DOUBLE_PRECISION,0,1,&
                         MPI_COMM_WORLD,ierr)
         endif
 
-100     format(9(1x,e14.7))
+100     format(6(1x,e14.7))
 101     format(7(1x,e14.7))
-102     format(7(1x,A20))
+102     format(9(1x,e14.7))
+103     format(7(1x,A20))
+104     format((8(1x,e14.7),1x,I1,1x,I1))
 
         deallocate(nptlist)
         deallocate(recvbuf)
