@@ -11,7 +11,7 @@
       module DriftTubeclass
         use PhysConstclass
         use Dataclass
-        integer, private, parameter :: Nparam = 3
+        integer, private, parameter :: Nparam = 5
         type DriftTube
           !Itype = 0
           integer :: Nseg,Mapstp,Itype
@@ -20,6 +20,8 @@
           ! Param(1) : zedge
           !      (2) : radius
           !      (3) : ID control flag
+          !      (4) : scout=0
+          !      (5) : scfile=0
         end type DriftTube
         interface getparam_DriftTube
           module procedure getparam1_DriftTube,  &
