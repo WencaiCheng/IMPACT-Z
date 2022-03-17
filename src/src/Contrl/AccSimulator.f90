@@ -120,7 +120,7 @@
         double precision :: time
         double precision :: t0
         double precision :: z,xrad,yrad,phsini
-        double precision, dimension(3) :: tmpdr 
+        double precision, dimension(5) :: tmpdr 
         double precision, dimension(5) :: tmpcf 
         double precision, dimension(12) :: tmpbpm 
         double precision, dimension(9) :: tmpquad
@@ -260,6 +260,8 @@
             tmpdr(3) = val2(i) !additional parameter after drift pip
                                !radius, ID<0, linear map; otherwise real
                                !map
+            tmpdr(4) = val3(i)
+            tmpdr(5) = val4(i)
             call setparam_DriftTube(beamln1(idr),tmpdr)
             Blnelem(i) = assign_BeamLineElem(beamln1(idr))
           else if(bitype(i).eq.1) then
@@ -586,8 +588,9 @@
         integer :: ith_turn 
         real*8, dimension(3) :: vhphi 
         character(len=20) :: filename,formatstr
-        integer :: csrfid1,csrfid2
-        integer :: rfwakefid1=0,rfwakefid2=0
+        integer :: csrout,csrfile
+        integer :: wakeconvout=0,wakeconvfile=0
+        integer :: scout=0,scfile=0
         
 !-------------------------------------------------------------------
 ! prepare initial parameters, allocate temporary array.
@@ -689,7 +692,7 @@
               print*,"turn:",ith_turn
           endif
         do i = iend+1, Nblem
-          !print*,"rfwakefid1,rfwakefid2=",rfwakefid1,rfwakefid2
+          !print*,"wakeconvout,wakeconvfile=",wakeconvout,wakeconvfile
 
           call getparam_BeamLineElem(Blnelem(i),blength,bnseg,bmpstp,&
                                      bitype)
@@ -708,6 +711,13 @@
           tau2 = 2.0d0*tau1
           !print*,"flagwakeread, flagwake=",flagwakeread,flagwake
           !print*,"tau, ",i,tau1,blength,bnseg,bitype,z
+
+          if(bitype.eq.0) then
+            call getparam_BeamLineElem(Blnelem(i),4,tmp1)
+            call getparam_BeamLineElem(Blnelem(i),5,tmp2)
+            scout = nint(tmp1)
+            scfile= nint(tmp2)
+          endif
 
           !instant rotate "tmplump" radian w.r.s s-axis
           if(bitype.eq.-18) then
@@ -989,8 +999,8 @@
             !biaobin, get the rfwake output file id
             call getparam_BeamLineElem(Blnelem(i),8,tmp3)
             call getparam_BeamLineElem(Blnelem(i),9,tmp4)
-            rfwakefid1 = nint(tmp3)
-            rfwakefid2 = nint(tmp4)
+            wakeconvout = nint(tmp3)
+            wakeconvfile = nint(tmp4)
 
           !laser heater from simplified sinusoidal model
           else if(bitype.eq.-52)then
@@ -1391,18 +1401,18 @@
                 
                 !biaobin,2022-03,output RF wake 
                 if(myid.eq.0) then
-                  if(rfwakefid2<10.and.rfwakefid2>=0) then
+                  if(wakeconvfile<10) then
                     formatstr="(I1,A7)"
-                  elseif(rfwakefid2>=10.and.rfwakefid2<100) then
+                  elseif(wakeconvfile<100) then
                     formatstr="(I2,A7)"
                   else
                     print*,"rfwake output file id should be [0,100), &
-                    rfwakefile id=",rfwakefid2
+                    rfwakefile id=",wakeconvfile
                     stop
                   endif
                   !only output the rfwake at the first step
-                  if(rfwakefid1.eq.1 .and. j==1) then 
-                    write(filename,formatstr) rfwakefid2,".rfwake"
+                  if(wakeconvout.eq.1 .and. j==1) then 
+                    write(filename,formatstr) wakeconvfile,".rfwake"
                     open(2,file=filename)
                     do k=1,Nz
                         !times the charge sign, minus for energy loss
@@ -1471,15 +1481,15 @@
               !print*,"after csr: ",sum(ezwake)
               !biaobin, 2022-03, output csrwake
               if(myid.eq.0) then
-                csrfid1=nint(dparam(16))
-                csrfid2=nint(dparam(17))
-                if(csrfid2<10 .and. csrfid2>=0) then
+                csrout=nint(dparam(16))
+                csrfile=nint(dparam(17))
+                if(csrfile<10) then
                   if(j<10) then
                     formatstr="(I1,A1,I1,A4)"
                   else 
                     formatstr="(I1,A1,I2,A4)"
                   endif
-                elseif(csrfid2>=10 .and. csrfid2<100) then
+                elseif(csrfile<100) then
                   if(j<10) then
                     formatstr="(I2,A1,I1,A4)"
                   else 
@@ -1487,12 +1497,12 @@
                   endif
                 else
                   print*,"csr output file id should in [0,100), &
-                  csrfileid=", csrfid2
+                  csrfileid=", csrfile
                   stop
                 endif
  
-                if(csrfid1.eq.1) then 
-                  write(filename,formatstr) csrfid2,"_",j,".csr"
+                if(csrout.eq.1) then 
+                  write(filename,formatstr) csrfile,"_",j,".csr"
 
                   open(2,file=filename)
                   do k=1,Nz
@@ -1541,7 +1551,8 @@
                 !biaobin,2022-03,No RF wake and CSR, 
                 !only space charge kick
                 call map2_BeamBunch(Bpts,tau2,Nxlocal,Nylocal,Nzlocal,&
-                   Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,Flagsc)
+                   Potential%FieldQ,Ageom,grid2d,Flagbc,Perdlen,Flagsc,&
+                   scout,scfile)
               endif
               !biaobin,2022-03,dipole element or others, the other half 
               !seg after collective-effect kick

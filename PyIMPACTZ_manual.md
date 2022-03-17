@@ -1182,6 +1182,30 @@ error for gap is not supported yet.
 
 
 
+### SCOUT
+
+output the space charge field:
+
+- `ez_j.sc`, ez along z in different x, three col.
+- `ex_j.sc`, ex along x in different z, five col.
+
+| Parameter Name | Units | Type | Default | Description                                              |
+| -------------- | ----- | ---- | ------- | -------------------------------------------------------- |
+| scout          |       | int  | 0       | 0/1, OFF or ON space charge field output.                |
+| scfile         |       | int  | 0       | output file id, by default output is：`ez_0.sc,ex_0.sc`. |
+
+
+
+Fortran level:
+
+Actually it is a very short drift, two additional paras. are added for `scout, scfile`:
+
+```
+1e-6 1 1 0 100 -1 scout scfile /
+```
+
+
+
 # chap4 数据后处理
 
 ## RMS 尺寸

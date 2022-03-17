@@ -470,6 +470,11 @@ class impactz_parser(lattice_parser):
         # match
         self.lattice['SHIFTCENTER']['L'] = 0.0
 
+        # space charge output
+        #--------------------
+        self.lattice['SCOUT']['SCOUT']=0
+        self.lattice['SCOUT']['SCFILE']=0
+
         #turn all lattice elem values to string data type
         for elem in self.lattice.keys():
             for key in self.lattice[elem].keys():
@@ -770,7 +775,7 @@ class impactz_parser(lattice_parser):
                     lte_lines.append('0')
                     lte_lines.append(elem['PIPE_RADIUS'])
                     lte_lines.append(map_flag)
-                    lte_lines.append('/ \n')
+                    lte_lines.append('0 0 / \n')
 
             elif elem['TYPE'] == 'QUAD':
                 map_flag = self._get_quadmap_flag(elem)
@@ -1200,6 +1205,14 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(elem['DATATYPE'])
                 lte_lines.append(elem['COORDINATE'])
                 lte_lines.append('/ \n')
+            elif elem['TYPE'] == 'SCOUT':
+                lte_lines.append('1.0d-6 1 1 0 100 -1')
+                lte_lines.append(elem['SCOUT'])
+                lte_lines.append(elem['SCFILE'])
+                lte_lines.append('/ \n')
+            else:
+                print("NOT AVAILABLE ELEMENT TYPE:",elem['TYPE'])
+                sys.exit()
        
         lte_lines = ' '.join(lte_lines)
         return lte_lines

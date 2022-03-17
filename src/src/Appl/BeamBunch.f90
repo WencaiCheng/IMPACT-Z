@@ -1712,11 +1712,13 @@
         ! interpolated from the grid to particles. (linear map)
         !biaobin, space charge kick is here
         subroutine kick1_BeamBunch(this,tau,innx,inny,innz,temppotent,&
-                              ptsgeom,grid,Flagbc,perdlen,Flagsc)
+                              ptsgeom,grid,Flagbc,perdlen,Flagsc,&
+                              scout,scfile)
         implicit none
         include 'mpif.h'
         type (BeamBunch), intent(inout) :: this
-        integer, intent(in) :: innx, inny, innz, Flagbc, Flagsc
+        integer, intent(in) :: innx, inny, innz, Flagbc, Flagsc, &
+                               scout,scfile
         type (CompDom), intent(in) :: ptsgeom
         double precision, dimension(innx,inny,innz), intent(inout) :: temppotent
         type (Pgrid2d), intent(in) :: grid
@@ -1727,6 +1729,7 @@
         double precision :: t0,chrg
         integer :: totnp,nproccol,nprocrow,myid,myidx,myidy
         integer :: i, j, k, yadd, zadd, innp,ierr
+        character(len=20) :: filename,formatstr
 !        integer :: comm2d,commcol,commrow
 !        double precision :: sumex,sumey,sumez,sumextot,sumeytot,sumeztot,&
 !                            sumpot,sumpotot
@@ -2010,6 +2013,41 @@
               enddo
             enddo
           else
+          endif
+        endif
+
+        !biaobin,2022-03, output space charge field
+        !ez_j.sc, ez along z in different x
+        !ex_j.sc, ex along x in different z
+        if(myid.eq.0) then
+          if(scout.eq.1) then
+            if(scfile<10) then
+              formatstr="(A3,I1,A3)"
+            elseif(scfile<100) then
+              formatstr="(A3,I2,A3)"
+            else
+              print*,"ERROR: scfile should be [0,100)."
+              stop
+            endif
+
+            write(filename,formatstr)"ez_",scfile,".sc" 
+            open(2,file=filename)
+            do k=1,innz
+                write(2,105)egz(innx/2,inny/2,k),&
+                egz(innx*3/4,inny/2,k),egz(innx,inny/2,k)
+            enddo
+            close(2)
+            105 format(3(2x,e13.7))
+
+            write(filename,formatstr)"ex_",scfile,".sc" 
+            open(2,file=filename)
+            do i=1,innx
+                write(2,106)egx(i,inny/2,1),egx(i,inny/2,innz/4),&
+                egx(i,inny/2,innz/2),egx(i,inny/2,innz*3/4), &
+                egx(i,inny/2,innz)
+            enddo
+            close(2)
+            106 format(5(2x,e13.7))
           endif
         endif
 
@@ -4956,6 +4994,20 @@
 !        if(totnp.ne.1) then
           call boundint4_Fldmger(egx,egy,egz,innx,inny,innz,grid)
 !        endif
+
+        !!biaobin, output space charge field
+        !open(2,file='zsc.txt')
+        !do k=1,innz
+        !    write(2,105)egx(16,16,k),egy(16,16,k),egz(16,16,k)
+        !close(2)
+
+        !open(3,file='xsc.txt')
+        !do i=1,innx
+        !  write(3,105)egx(i,16,32),egy(i,16,32),egz(i,16,32)
+        !enddo
+        !close(3)
+ 
+        !105 format(3(2x,e13.7))
 
         !call MPI_BARRIER(comm2d,ierr)
         !if(myid.eq.16) then
