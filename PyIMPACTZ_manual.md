@@ -143,6 +143,26 @@ Code design methods:
 
 
 
+### Mathematical expression
+
+Both rpn expression and normal mathematical expression are supported, as the following case:
+
+```
+ % 0.1 sto LQX1
+ k1 = 0.2
+Q01COL0 : QUAD,  L="LQX1 2 /", K1='k1'
+
+SHINE: line = (Q01COL0, Q01COL0, &
+               Q01COL0)
+```
+
+- `“"` and `‘'` , or no quatation mark are supported in line 3
+- variables are not case sensitive
+
+
+
+
+
 
 ## 坐标定义
 
@@ -924,55 +944,15 @@ If filename_ID = 1001, then the output file would be fort.1001 and fort.11001. f
 
 ### SHIFTCENTER
 
-Shift the beam center to the origin point for 6-direction coordinates.
+| Parameter Name | Units | Type   | Default | Description                                                  |
+| -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
+| phase          |       | string | “zdE”   | (1). option=”zdE”, then shift the beam longitudinally to the bunch centroid so that $<z>=<\Delta E>=0$.<br /><br />(2). option=“xy”, then shift the beam so that $<x>=<y>=0$.<br /><br /> |
+
+usage:
 
 ```
-elem1: shiftcenter, L=0;
+elem1: shiftcenter, option="zdE";
 ```
-
-`L=0`必须有，不然 `lattice_parser`会有问题。
-
-
-
-The original `0 0 0 -1`  only shift transverse coordinates, now 6D shift.
-
-==question:== Then what's `-21` elements used for?
-
-
-
-Linac 设计中，当考虑尾场时，需要对 `z,dgam`均移动到中心。当前代码中仅对 `z,dgam`均移动(代码中可对6D均移动)。
-
-
-
-- [x] 待查验：
-
-ImpactZ 中似乎还有另一个只移动纵向的元件`-19`元件。代码位置在元件循环的开始几行，应该是墙老师临时加的：
-
-```fortran
- 705           !instant rotate "tmplump" radian w.r.s s-axis
- 706           if(bitype.eq.-18) then
- 707             call getparam_BeamLineElem(Blnelem(i),3,tmplump)
- 708             call srot_BPM(Bpts%Pts1,Nplocal,tmplump)
- 709           endif
- 710           !shift longitudinal phase space
- 711           if(bitype.eq.-19) then
- 712             call shiftlong_BPM(Bpts%Pts1,bitype,Nplocal,Np,Bpts%refptcl(5),&
- 713                                Bpts%refptcl(6))
- 714           endif
- 715           !instant heating from IBS
- 716           if(bitype.eq.-20) then
- 717             call getparam_BeamLineElem(Blnelem(i),3,b0)
- 718             call getparam_BeamLineElem(Blnelem(i),4,tmp1)
- 719             qmass = abs(Bpts%Charge)/Bpts%Mass
- 720             call engheater_BPM(Bpts%Pts1,Nplocal,b0,qmass)
- 721           endif
-```
-
-
-
-Comments @2022-03-13:
-
-- [ ] -19元件，确实就是用来移动(z,dgam)到中心的。后面将 -1 元件改回去。
 
 
 
@@ -1203,6 +1183,19 @@ Actually it is a very short drift, two additional paras. are added for `scout, s
 ```
 1e-6 1 1 0 100 -1 scout scfile /
 ```
+
+
+
+### SCATTER
+
+| Parameter Name | Units | Type   | Default | Description                                 |
+| -------------- | ----- | ------ | ------- | ------------------------------------------- |
+| dE             | eV    | double | 0       | dE=1000, then increase energy spread 1e3eV. |
+|                |       |        |         |                                             |
+
+
+
+
 
 
 
