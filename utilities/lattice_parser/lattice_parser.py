@@ -12,6 +12,7 @@ class lattice_parser:
 
         self.fileName = fileName
         self.lineName = lineName.upper()  # in code, upper case convention
+        self.vals = {} #save all rpn variables
            
     def readfile(self):
         f = open(self.fileName,'r')
@@ -50,12 +51,6 @@ class lattice_parser:
         j = 0
         index=[]
         for line in lines:
-            
-            # delete all white space in each line
-            lines[j] = lines[j].replace(' ','')
-            # also \t tab space
-            lines[j] = lines[j].replace('\t','')           
-            
             # get the index of comment and blank lines
             if re.match(r'^!',line):
                 index.append(j)
@@ -89,7 +84,7 @@ class lattice_parser:
         for line in lines:
             # rpn expression expand, change here
             # remove quatation marks in line, '..' and "..."
-            line = line.replace('\'','').replace('\"','')
+            #line = line.replace('\'','').replace('\"','')
     
             # remove rebundant comma
             tmplist = line.split(',')
@@ -150,30 +145,55 @@ class lattice_parser:
         
         lattice = {}
         for line in lines:
-            # there are two types line,
-            # 1. type = element
-            # 2. type = line
+            # there are four types line,
+            # 1. L1_q1: quad, L=0.2
+            # 2. line: line=(L1_q1)
+            # 3. Lq=0.2
+            # 4. % 0.2 sto L1=q 
             
-            if re.match(r'\w+=\(?[\-\+]?\w+[\+\-\*\/]?',line):
+            if re.match(r'(\s*\w+\s*)=(\s*\(?[\-\+]?\w+[\+\-\*\/]?)',line):
                 #mathematical exression sentence, such as: L1=2.1; angle=pi/24
                 line_type = 'MATH_EXPR'
+                
+            elif re.match(r'^\s*%',line):
+                #rpn sto expression
+                line_type = 'MATH_EXPR_RPN_STO'
     
-            elif re.match(r'(\w+):(LINE)=',line,re.IGNORECASE):
+            elif re.match(r'(\s*\w+\s*):(\s*LINE\s*)=',line,re.IGNORECASE):
                 # print(line)
                 line_type = 'LINE'
             
-            elif re.match(r'(\w+):([a-zA-Z]+)(,)', line):
+            elif re.match(r'(\s*\w+\s*):(\s*[a-zA-Z]+\s*)(,)', line):
                 # print(line)
                 line_type = 'ELEMENT'
                 
             else:
                 print('Unrecognized MATH_EXPR, ELEMENT, LINE name: ',line)
                 sys.exit()
-                
+
+            # ============================================================                
             if line_type == 'MATH_EXPR':
                 # use exec to run the expression
-                exec(line.lower())   #use lower() in case pi is used.
-        
+                #exec(line.lower())   #use lower() in case pi is used.
+                
+                # normal mathematical expression
+                line = line.lower()
+                tmp = line.split('=')
+                self.vals.update({tmp[0].replace(' ',''):eval(tmp[1])})
+                
+            
+            if line_type == 'MATH_EXPR_RPN_STO':
+                #like: % 1 2 / sto Lq
+                # delete % firstly
+                line = line.lower()            # variables use lower case
+                line = line.replace('%','')       
+                
+                stack = self.rpn_cal(line)
+                # update self.val
+                self.vals.update({stack[-1]:eval(stack[0])})                
+                #finally, Lq=0.5                   
+                #exec("%s=%s" %(stack[-1],stack[0]))
+                
             if line_type == 'ELEMENT': 
                 # handle with element line    
                 tmp = line.split(',')
@@ -182,15 +202,22 @@ class lattice_parser:
                 elem_name = tmp[0].split(':')[0].upper()  #upper case for element name
                 elem_type = tmp[0].split(':')[1].upper()  #upper case all elem_type
                 
+                # delete white space
+                elem_name = elem_name.replace(' ','')
+                elem_type = elem_type.replace(' ','')
+                
                 elem = dict()           
                 elem['NAME'] = elem_name
                 elem['TYPE'] = elem_type
                 
                 for para in tmp[1:]:
-                    para_name = para.split('=')[0].upper()  #use upper case for all para_name
-                    para_value = para.split('=')[1]
+                    para_name = para.split('=')[0].upper().replace(' ','')  #use upper case for all para_name                                        
+                    para_value = para.split('=')[1].lower()   #variables use lower case
+                                        
+                    # remove " or ' 
+                    para_value = para_value.replace('"','')   #RPN EXPRESSION MUST USE ", NOT '
                     
-                    # check if "2/pi" or "3/4" math expression exists
+                    # check if "angle=2/pi" or "angle=3/4" math expression exists
                     try:
                         eval(para_value.lower())  #lower, in case pi is used.                  
                     except:
@@ -275,6 +302,39 @@ class lattice_parser:
             return True
         except ValueError:
             return False      
+        
+    def rpn_cal(self, rpn_str:str):
+        '''
+        calculate the rpn expression:  
+        case 1:
+        rpn_str='1 3 /'
+        return is [0.333]
+        case 2:
+        rpn_str="% 1 3 / sto abc"
+        return is [0.333, 'sto', 'abc']        
+        '''
+        # ---------------------
+        # replace 'mult' with *
+        # OTHER rpn expressions are not included YET
+        # ---------------------
+        rpn_str = rpn_str.replace(' mult ',' * ')
+        
+        #rpn expression may use variable values in self.vals
+        
+        
+        
+        stack = []
+        for c in rpn_str.split():
+            if c in '+-*/':
+                i2 = stack.pop()
+                i1 = stack.pop()
+                #print(i1,c,i2)
+                #print( eval('%s'*3 % (i1,c,i2)) )
+                stack.append(eval('%s'*3 % (i1,c,i2)))
+            else:
+                stack.append(c)
+        return stack
+
 
 
 if __name__=='__main__':
@@ -282,7 +342,7 @@ if __name__=='__main__':
     # usage examples
     # =====================
     file_name = 'lattice.lte'
-    line_name = 'RCS'
+    line_name = 'SHINE'
 
     lte = lattice_parser(file_name,line_name)
     lines = lte.get_brieflines()
