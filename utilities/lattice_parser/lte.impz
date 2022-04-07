@@ -1,0 +1,72 @@
+!control section
+!===============
+&control
+default_order = 2;
+steps=0;
+
+lsc=1;
+zwake=1;
+csr=1;
+
+tsc=0;
+trwake=0;
+
+core_num_T = 1;
+core_num_L = 1;
+meshx = 32;
+meshy = 32;
+meshz = 64;
+kinetic_energy = 123e6;
+freq_rf_scale = 4.7715e7;
+
+slice_bin=100;
+sample_out=1e5;
+
+&end
+
+!beam section
+!==============
+&beam
+mass = 0.511001e6;
+charge = -1.0;
+
+distribution_type = 19;
+Np = 80099;
+total_charge = 75e-12;
+
+sigx=8.8748e-5, sigxp=0;
+sigy=8.8768e-5, sigyp=0;
+!emit_nx=0.15e-6, beta_x=8, alpha_x=0.0;
+!emit_ny=0.15e-6, beta_y=8, alpha_y=0.0;
+
+sigz=0.38e-3, sigE=2e3;
+
+&end
+
+
+&lattice
+
+% 1 sto lsc_on_off
+%  0.75E-3  sto E0  ! NGLS/APEX gun
+%  -4.410 pi * 180 / sto AB1  ! Bend angle
+%  0.23 sto Lcmq  !cryomodule quadrupole length
+
+
+% 1.63E+07 7   * 8   / 1.037743123846 * 0 mult sto L0volt
+
+
+% 0.1 sto LQX1
+Q01COL0 : QUAD,  L="LQX1 2 /", K1=-2.360280480431
+
+SBPM01COL0 : MONI
+
+% 0.3 sto LCOL
+COLM01COL0 : RCOL, L=LCOL
+
+% 0.1 sto LQX1
+CHV01COL0 : KICK, L="LQX1 2 /"
+
+line: line=(Q01COL0,SBPM01COL0,COLM01COL0,CHV01COL0)
+
+
+&end

@@ -70,6 +70,11 @@ class impactz_parser(lattice_parser):
         
         lines = self.get_brieflines()
         
+        j=0
+        for line in lines:
+           lines[j]=line.replace(' ','') 
+           j=j+1
+           
         # get lattice section
         pattern1 = re.compile(r'^&control$',re.I)  #not case sensitive
         pattern2 = re.compile(r'^&end$',re.I)
@@ -112,7 +117,11 @@ class impactz_parser(lattice_parser):
         '''
         
         lines = self.get_brieflines()
-        
+        j=0
+        for line in lines:
+            lines[j] = line.replace(' ','')
+            j=j+1
+            
         # get lattice section
         pattern1 = re.compile(r'^&beam$',re.I)  #not case sensitive
         pattern2 = re.compile(r'^&end$',re.I)
@@ -487,23 +496,14 @@ class impactz_parser(lattice_parser):
         '''
         trackline = self.get_lattice_section() # get the tracking line
         
+        # MAP ELEGANT LATTICE TO lte.impz
+        trackline = self.elegant2impz_lattice(trackline)
+        
         j = 0
         for elem in trackline:
             # check if the element type is in self.lattice.keys, i.e. whether in
             # dict_keys(['DRIFT', 'QUAD', 'BEND', 'RFCW', 'WATCH'])          
-            
-            # map sbend to bend
-            if elem['TYPE'] in ['SBEND']:
-                elem['TYPE'] = 'BEND'
-
-            # map quadrupole to quad 
-            if elem['TYPE'] in ['QUADRUPOLE']:
-                elem['TYPE'] = 'QUAD'
-
-            # map monitor, hkicker, vkicker, sextupole to drift, temporary    
-            if elem['TYPE'] in ['DRIF','MONITOR','HKICKER','VKICKER','SEXTUPOLE']:
-                elem['TYPE'] = 'DRIFT'
-
+                         
             # update the not-yet-setting lattice element parameters with the default 
             # values.
             if elem['TYPE'] in self.lattice.keys():
@@ -544,7 +544,7 @@ class impactz_parser(lattice_parser):
                 # update with read in values
                 control[key] = control_sec[key]
             else:
-                print('Unknow control item:',key,'=',control_sec[key])    
+                print('Unknown control item:',key,'=',control_sec[key])    
                 sys.exit()
                
         ## turn all values to string data type
@@ -1394,14 +1394,45 @@ class impactz_parser(lattice_parser):
         if elem['PIPE_RADIUS'] == '0.0' :
             elem['PIPE_RADIUS'] = self.control['PIPE_RADIUS']
 
-    def elegant2impactz_map(self):
-        pass
+    def elegant2impz_lattice(self,trackline):
+        '''
+        For elegant lattice, there are different definition or notations for
+        accelerator elements, map these elements to lte.impz CONVENTION
+
+        Returns
+        -------
+        trackline
+
+        '''
+        # map ELEGANT elements
+        j=0  
+        for elem in trackline:
+            # map sbend to bend
+            if elem['TYPE'] in ['SBEND']:
+                elem['TYPE'] = 'BEND'
+
+            # map quadrupole to quad 
+            elif elem['TYPE'] in ['QUADRUPOLE']:
+                elem['TYPE'] = 'QUAD'
+
+            # map monitor, hkicker, vkicker, sextupole to drift, temporary 
+            # length is kept
+            elif elem['TYPE'] in ['DRIF', \
+                                'MONITOR','MONI','MARK', \
+                                'KICK','HKICKER','VKICKER', \
+                                'SEXTUPOLE', \
+                                'RCOL']:
+                elem['TYPE'] = 'DRIFT'
+            
+            trackline[j]['TYPE']=elem['TYPE']
+            j=j+1
+        return trackline
         
 if __name__=='__main__':
         
     # usage examples
     # =====================
-    file_name = 'csns_linac.impz'   
+    file_name = 'lte.impz'   
     line_name = 'line'
     
     # example-1
