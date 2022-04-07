@@ -2,5 +2,7 @@
  k1 = 0.2
 Q01COL0 : QUAD,  L="LQX1 2 /", K1='k1'
 
-SHINE: line = (Q01COL0, Q01COL0, &
-               Q01COL0)
+MONI1 : MONI
+
+line: line = (Q01COL0, Q01COL0, &
+               Q01COL0,MONI1)

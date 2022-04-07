@@ -12,6 +12,8 @@ class lattice_parser:
 
         self.fileName = fileName
         self.lineName = lineName.upper()  # in code, upper case convention
+        
+        self.trackline = []
            
     def readfile(self):
         f = open(self.fileName,'r')
@@ -162,7 +164,7 @@ class lattice_parser:
                 # print(line)
                 line_type = 'LINE'
             
-            elif re.match(r'(\s*\w+\s*):(\s*[a-zA-Z]+\s*)(,)', line):
+            elif re.match(r'(\s*\w+\s*):(\s*[a-zA-Z]+\s*)', line):
                 # print(line)
                 line_type = 'ELEMENT'
                 
@@ -289,6 +291,8 @@ class lattice_parser:
         for item in usedline:
             trackline.append( lattice[item] )
             
+        self.trackline = trackline    
+            
         return trackline
     
     def _expandline(self, line, lines):
@@ -359,13 +363,12 @@ class lattice_parser:
         return stack
 
 
-
 if __name__=='__main__':
 
     # usage examples
     # =====================
     file_name = 'lattice.lte'
-    line_name = 'SHINE'
+    line_name = 'line'
 
     lte = lattice_parser(file_name,line_name)
     lines = lte.get_brieflines()
