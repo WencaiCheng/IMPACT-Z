@@ -804,9 +804,9 @@
 ! print out beam information using BPM 
           if(bitype.eq.-1) then
             !call shift_BPM(Bpts%Pts1,bitype,Nplocal,Np)
-            !biaobin, also shift (T,dgam) to centre, now is 6D shift.
-            !set bitype=-2 by default
-            call shift_BPM(Bpts%Pts1,-2,Nplocal,Np)
+            !bitype=-1, shift so <x>=<y>=0
+            !bitype=-2, shift so 6D in controid
+            call shift_BPM(Bpts%Pts1,-1,Nplocal,Np)
           endif
           
           !for multi-turns tracking, output phase space every ofreq turns
