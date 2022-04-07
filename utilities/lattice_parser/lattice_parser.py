@@ -228,6 +228,8 @@ class lattice_parser:
                     para_value = para_value.replace('"','')   
                     para_value = para_value.replace('\'','')
                     
+                    # be careful of such as: coord_conv="NORMAL", if happened
+                    # normal=0.2 in math expression, then 0.2 will be replaced.
                     try:
                         # normal math expression case: 
                         eval(para_value.lower())  #lower, in case pi is used.                  
@@ -255,7 +257,8 @@ class lattice_parser:
                         para_value = eval(para_value.lower())
                                    
                     # back to str type
-                    elem[para_name] = str(para_value)
+                    # for no-math expression, such as: option="zdE", back to upper
+                    elem[para_name] = str(para_value).upper()
                     
                 lattice[elem_name] = elem   
                 

@@ -66,7 +66,16 @@ COLM01COL0 : RCOL, L=LCOL
 % 0.1 sto LQX1
 CHV01COL0 : KICK, L="LQX1 2 /"
 
-line: line=(Q01COL0,SBPM01COL0,COLM01COL0,CHV01COL0)
+elem1: shiftcenter;
 
+w1: watch, filename_id=1000, coord_conv="normal"
+
+scatter1: scatter, dE=1e3
+
+shift1: shiftcenter, option='zdE'
+
+
+!line: line=(Q01COL0,SBPM01COL0,COLM01COL0,CHV01COL0,elem1,w1)
+line: line=(shift1)
 
 &end

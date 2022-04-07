@@ -477,12 +477,15 @@ class impactz_parser(lattice_parser):
         #----------------------------------------------------
         # shift to center, add L for nothing but for regular expression
         # match
-        self.lattice['SHIFTCENTER']['L'] = 0.0
+        self.lattice['SHIFTCENTER']['OPTION'] = "ZDE"
 
         # space charge output
         #--------------------
         self.lattice['SCOUT']['SCOUT']=0
         self.lattice['SCOUT']['SCFILE']=0
+
+        # scatter elements
+        self.lattice['SCATTER']['DE']=0.0
 
         #turn all lattice elem values to string data type
         for elem in self.lattice.keys():
@@ -863,8 +866,16 @@ class impactz_parser(lattice_parser):
                 lte_lines.append('/ \n')
 
             elif elem['TYPE'] == 'SHIFTCENTER':
-                lte_lines.append('0 0 0 -1')
-                lte_lines.append('/ \n')
+                if elem['OPTION']=='ZDE':
+                    lte_lines.append('0 0 0 -19')
+                    lte_lines.append('/ \n')
+                elif elem['OPTION']=="XY":
+                    lte_lines.append('0 0 0 -1')
+                    lte_lines.append('/ \n')
+                else:
+                    print("ERROR: Not available option for SHIFTCENTER is given:",elem['OPTION'])
+                    sys.exit()
+                   
 
             elif elem['TYPE'] == 'WAKEON':
                 wake_flag = self._get_wakefield_flag(elem)
@@ -1210,6 +1221,11 @@ class impactz_parser(lattice_parser):
                 lte_lines.append(elem['SCOUT'])
                 lte_lines.append(elem['SCFILE'])
                 lte_lines.append('/ \n')
+            elif elem['TYPE'] == 'SCATTER':
+                lte_lines.append('0 0 0 -20 0.014')
+                lte_lines.append(elem['DE'])
+                lte_lines.append('/ \n')
+         
             else:
                 print("NOT AVAILABLE ELEMENT TYPE:",elem['TYPE'])
                 sys.exit()
