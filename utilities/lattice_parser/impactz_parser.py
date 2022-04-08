@@ -477,8 +477,13 @@ class impactz_parser(lattice_parser):
         self.lattice['SCOUT']['SCOUT']=0
         self.lattice['SCOUT']['SCFILE']=0
 
-        # scatter elements
+        # scatter element
+        #-----------------
         self.lattice['SCATTER']['DE']=0.0
+
+        # ROTATE element
+        #---------------
+        self.lattice['ROTATE']['ANGLE']=0.0
 
         #turn all lattice elem values to string data type
         for elem in self.lattice.keys():
@@ -1235,7 +1240,10 @@ class impactz_parser(lattice_parser):
                 lte_lines.append('0 0 0 -20 0.014')
                 lte_lines.append(elem['DE'])
                 lte_lines.append('/ \n')
-         
+            elif elem['TYPE']=='ROTATE':
+                lte_lines.append('0 0 0 -18 0.014')
+                lte_lines.append(elem['ANGLE'])
+                lte_lines.append('/ \n')
             else:
                 print("NOT AVAILABLE ELEMENT TYPE:",elem['TYPE'])
                 sys.exit()

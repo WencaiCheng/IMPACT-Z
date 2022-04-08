@@ -1192,6 +1192,35 @@ Actually it is a very short drift, two additional paras. are added for `scout, s
 
 
 
+### ROTATE
+
+Rotate the beam with respect to the longitudinal axis.
+
+| Parameter Name | Units | Type   | Default | Description                          |
+| -------------- | ----- | ------ | ------- | ------------------------------------ |
+| angle          | rad   | double | 0       | Both (x,y), and (px,py) are rotated. |
+
+
+
+This element refers to `-18` element, the souce code is:
+
+```fortran
+do i = 1, innp
+    tmpx = Pts1(1,i)*cos(phi)+Pts1(3,i)*sin(phi)
+    tmpy = -Pts1(1,i)*sin(phi)+Pts1(3,i)*cos(phi)
+    tmppx = Pts1(2,i)*cos(phi)+Pts1(4,i)*sin(phi)
+    tmppy = -Pts1(2,i)*sin(phi)+Pts1(4,i)*cos(phi)
+    Pts1(1,i) = tmpx
+    Pts1(2,i) = tmppx
+    Pts1(3,i) = tmpy
+    Pts1(4,i) = tmppy
+enddo
+```
+
+
+
+For bend plan is in Y-direction, rotate the beam $angle=\pi/2$ before entering the dipole, at the exit rotated the beam back as $angle=-\pi/2$.
+
 
 
 
