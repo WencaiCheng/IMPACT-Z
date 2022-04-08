@@ -738,6 +738,7 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | ac_mode        |        | int    | 0       | for RCS AC mode, if equal 1, then rfdata_ac.in should be given. And NONLINEAR map will be called, order=1 will be overwritten. |
 | wakeout | | int | 0 | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
 | wakefile | | int | 0 | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
+| factor | | double | 1.0 | Factor to multiply the wakefield in rfdata41.in. ONLY for user given wakefile, NOT for analytical model. |
 
 如果未提供 rfdata41.in 尾场文件，当考虑尾场效应时，程序会使用代码内部的RF 尾场解析表达式，即SLAC/LCLS型。默认的(a,g,cell_len)为C-band 的参数。
 
@@ -821,6 +822,7 @@ line: line=(wake1,d1,wake2)
 | wakeout        |       | int    | 0          | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
 | wakefile       |       | int    | 0          | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
 | waketype       |       | string | “SLAC32PI” | (1). waketype=“SLAC32PI”, i.e. normal $2\pi/3$ mode SLAC type cavity<br />(2).  waketype=“TESLA13G”, i.e. TESLA 1.3GHz superconducting cavity wake<br />(3). waketype=“TESLA39G”, i.e. TESLA 3.9GHz superconducting cavity wake.<br />When `wakefile_ID=none` , analytical wake function in the code is applied. When `wakefile_ID` is used, user given wakefile is appllied. |
+| factor         |       | double | 1.0        | Factor to multiply the wakefield in rfdata41.in. ONLY for user given wakefile, NOT for analytical model. |
 
 Fortran level:
 
@@ -843,27 +845,15 @@ add structure wakefield (given in rfdata41.in file) for 103 cavity, and only tur
 
 
 
-源代码中，尾场文件 rfdata41.in 数据格式为：
+The wakefile format is:
 
-Data.f90/read1wk_Data
-
-```fortran
- 46         ! discrete wake function, z, longitudinal, x and y wake function
- 47         double precision,dimension(Ndataini) :: zdatwk,edatwk,epdatwk,eppdatwk
+```
+z[m]  wz[V/m/C]  wx[V/m^2/C]  wy[V/m^2/C]
 ```
 
-which include 4 column data.
+The total line number in `rfdata41.in` should not be larger than 5000.
 
-```fortran
-601             read(14,*,end=77)tmp1,tmp2,tmp3,tmp4
-602             n = n + 1
-603             zdatwk(n) = tmp1
-604             edatwk(n) = tmp2
-605             epdatwk(n) = tmp3
-606             eppdatwk(n) = tmp4
-```
 
-待定：给四列数据好像会报错？
 
 
 

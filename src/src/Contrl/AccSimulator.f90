@@ -546,7 +546,7 @@
         double precision, dimension(6) :: lcrange, range, ptrange,ptref
         double precision, dimension(3) :: msize
         double precision :: hy,hz,ymin,zmin,piperad,zedge
-        double precision :: tmp1,tmp2,tmp3,tmp4,rfile
+        double precision :: tmp1,tmp2,tmp3,tmp4,rfile,factor
         double precision, allocatable, dimension(:,:,:) :: chgdens
         integer :: nmod,k,ii,jj
         !double precision :: sumtest, sumtest2, sumtest3
@@ -957,7 +957,6 @@
             !drange(2) is pipe radius, not used yet
             call GAP_BPM(Bpts,Nplocal,drange(3),drange(4),drange(5),&
                             Bpts%Mass)
-                         
 
           !read in discrete wakefield
           !biaobin,2022-03-07
@@ -967,9 +966,10 @@
             call getparam_BeamLineElem(Blnelem(i),2,tmpwk)
             call getparam_BeamLineElem(Blnelem(i),3,rfile)
             if(rfile.gt.0.0d0) then
-              ifile = int(rfile + 0.1)
-              call read1wk_Data(ifile)
               flagwakeread=1
+              ifile = int(rfile + 0.1)
+              call getparam_BeamLineElem(Blnelem(i),10,factor)
+              call read1wk_Data(ifile,factor)
             elseif(rfile .lt. 0.0d0) then
               flagwakeread=0
               call getparam_BeamLineElem(Blnelem(i),5,aawk)
@@ -1000,7 +1000,7 @@
               !ID = (0,10),  Lwake
               !ID = (10,20), Twake
               !ID > 20,      Lwake+Twake
-            if(tmp1.gt.0.0d0) then !turn on the read-in wakefield.
+            if(tmp1.gt.0.0d0) then !turn on the wakefield.
               flagwake = 1
               if(tmp1<10.0 .and. tmp1>0.0) then !no transverse wakefield
                 flagbtw = 2

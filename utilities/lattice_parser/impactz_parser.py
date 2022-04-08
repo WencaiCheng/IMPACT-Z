@@ -340,6 +340,7 @@ class impactz_parser(lattice_parser):
         self.lattice['RFCW']['WAKEOUT'] = 0
         self.lattice['RFCW']['WAKEFILE'] = 0
         self.lattice['RFCW']['WAKETYPE'] = 'SLAC32PI'
+        self.lattice['RFCW']['FACTOR'] = 1.0
 
         # WAKEON
         # -----------
@@ -352,6 +353,7 @@ class impactz_parser(lattice_parser):
         self.lattice['WAKEON']['WAKEOUT'] = 0
         self.lattice['WAKEON']['WAKEFILE'] = 0
         self.lattice['WAKEON']['WAKETYPE'] = 'SLAC32PI'
+        self.lattice['WAKEON']['FACTOR'] = 1.0
 
         # WAKEOFF
         # -----------
@@ -882,6 +884,7 @@ class impactz_parser(lattice_parser):
                     pass
                 else:
                     if elem['WAKEFILE_ID']=='None':
+                        # analytical wake 
                         if elem['WAKETYPE']=='SLAC32PI':
                             lte_lines.append('0 0 1 -41 1.0 -1')
                         elif elem['WAKETYPE']=='TESLA13G':
@@ -898,11 +901,11 @@ class impactz_parser(lattice_parser):
                         lte_lines.append(elem['CELL_LEN'])  
                         lte_lines.append(elem['WAKEOUT'])
                         lte_lines.append(elem['WAKEFILE'])
+                        lte_lines.append(elem['FACTOR'])
                         lte_lines.append('/ \n')
                    
                     elif self._is_number(elem['WAKEFILE_ID']):
-                        # print('Wakefield for cavity',elem['NAME'],'is added.')  
-                        # print('rfdata',elem['WAKEFILE_ID'],'.in should be given in current path.')                   
+                        # user defined wakefile
                         lte_lines.append('0 0 1 -41 1.0')
                         lte_lines.append(elem['WAKEFILE_ID'])
                         lte_lines.append(wake_flag)
@@ -911,6 +914,7 @@ class impactz_parser(lattice_parser):
                         lte_lines.append(elem['CELL_LEN'])  
                         lte_lines.append(elem['WAKEOUT'])
                         lte_lines.append(elem['WAKEFILE'])
+                        lte_lines.append(elem['FACTOR'])
                         lte_lines.append('/ \n')
                     else:
                         print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \
@@ -955,6 +959,7 @@ class impactz_parser(lattice_parser):
                         lte_lines.append(elem['CELL_LEN'])  
                         lte_lines.append(elem['WAKEOUT'])
                         lte_lines.append(elem['WAKEFILE'])
+                        lte_lines.append(elem['FACTOR'])
                         lte_lines.append('/ \n')                                          
                     elif self._is_number(elem['WAKEFILE_ID']):
                         # read-in wakefile
@@ -968,6 +973,7 @@ class impactz_parser(lattice_parser):
                         lte_lines.append(elem['CELL_LEN'])  
                         lte_lines.append(elem['WAKEOUT'])
                         lte_lines.append(elem['WAKEFILE'])
+                        lte_lines.append(elem['FACTOR'])
                         lte_lines.append('/ \n')
                     else:
                         print('ERROR: WAKEFILE_ID should be a int number, refer to wakefield file, like WAKEFILE_ID=41,' \

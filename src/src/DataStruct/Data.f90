@@ -554,10 +554,11 @@
         !read in the discrete wake field data in z, x, y.
         !distribution along axis zdat from files "rfdatax or rfdataxx 
         !or rfdataxxx".
-        subroutine read1wk_Data(ifile)
+        subroutine read1wk_Data(ifile,factor)
         implicit none
         include 'mpif.h'
         integer, intent(in) :: ifile
+        double precision, intent(in) :: factor
         integer :: myrank,ierr,i,ii,jj,kk,ll,n
         double precision :: tmp1,tmp2,tmp3,tmp4,zdat1
         character*10 name1
@@ -600,17 +601,17 @@
 50        continue
             read(14,*,end=77)tmp1,tmp2,tmp3,tmp4
             n = n + 1
-            zdatwk(n) = tmp1
-            edatwk(n) = tmp2
-            epdatwk(n) = tmp3
-            eppdatwk(n) = tmp4
+            zdatwk(n)   = tmp1         !z [m]
+            edatwk(n)   = factor*tmp2  !wz [V/m/C]
+            epdatwk(n)  = factor*tmp3  !wx [V/m^2/C]
+            eppdatwk(n) = factor*tmp4  !wy [V/m^2/C]
           goto 50
 77        continue
           close(14)
 !          close(15)
 
           Ndatawk = n
-          if (Ndatawk*2>Ndataini) then
+          if (Ndatawk>Ndataini) then
             print*,"ERROR: max wake file line number should be less &
                     than", Ndataini,", program stopped."
             stop
