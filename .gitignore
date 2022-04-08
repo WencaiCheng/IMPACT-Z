@@ -19,3 +19,6 @@ utilities/**/*.pyc
 utilities/MatlabTools/**/*.asv
 ._*
 *.100?
+
+csns_linac.impz 
+rcs.impz

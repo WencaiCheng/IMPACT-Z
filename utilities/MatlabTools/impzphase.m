@@ -32,6 +32,10 @@ classdef impzphase < handle
         xlim
         ylim
         
+        %for data save
+        %-------------
+        filename
+        
     end
     methods
         function obj=impzphase(filenum,path)
@@ -48,6 +52,8 @@ classdef impzphase < handle
             phasefile = [path '/fort.' num2str(filenum)];   %fort.1000 
             slicefile = [path '/fort.1' num2str(filenum)];  %fort.11000
                             
+            obj.filename=num2str(filenum);
+            
             tmp1 = importdata(phasefile,' ',1);
             obj.headstr = tmp1.textdata;
             obj.data    = tmp1.data;
@@ -197,26 +203,27 @@ classdef impzphase < handle
             %--------------------
             h =binscatter(x,y,100);
             colormap(gca,'turbo') %jet
-            colorbar()
-         
+            colorbar('off')
+            
+            %----------------------            
+            % add the hist for two directions  
             % change the axis range here
             %----------------------
-            if isempty(obj.xlim)    
-            else
-              h.XLimits=obj.xlim;
-            end     
-            if isempty(obj.ylim)
-            else
-                h.YLimits=obj.ylim;
-            end
-            %----------------------            
-            % add the hist for two directions   
-            tmp = obj.gethist_norm(h,x,y);
-            hold on
-            h2=plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m');
+%             if isempty(obj.xlim)    
+%             else
+%               h.XLimits=obj.xlim;
+%             end     
+%             if isempty(obj.ylim)
+%             else
+%                 h.YLimits=obj.ylim;
+%             end
+%  
+%             tmp = obj.gethist_norm(h,x,y);
+%             hold on
+%             h2=plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m');
+%             axis([h.XLimits h.YLimits])                         
             xlabel(label1);
             ylabel(label2);
-            axis([h.XLimits h.YLimits])                         
         end
         %for slice enformation
         %---------------------
@@ -240,7 +247,7 @@ classdef impzphase < handle
                 x=obj.sliz*1e3;
                 y=obj.slidelta;
                 label1='z (mm)';
-                label2='slice \DeltaE/E';
+                label2='slice \DeltaE/E_0';
             elseif strcmp(option,'dE')
                 x=obj.sliz*1e3;
                 y=obj.slidE/1e6;
@@ -297,7 +304,7 @@ classdef impzphase < handle
         end
         
         function out=gethist(obj,z)
-            [cnt, x] = histcounts(z,64);
+            [cnt, x] = histcounts(z,100);
             x = x(1,1:end-1,1);
             dx = x(2)-x(1);
             y = cnt; 

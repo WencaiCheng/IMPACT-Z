@@ -102,14 +102,18 @@ classdef impzevo < handle
         % ========================
         function evogroup(obj)
             subplot(2,3,1)
-            plot(obj.s,obj.betax,obj.s,obj.betay)
-            legend('\beta_x','\beta_y')
+            plot(obj.s,obj.betax)
+            hold on 
+            plot(obj.s,obj.betay)
+            plot(obj.s,obj.etax*1e3,'--g')
             xlabel('s (m)')
             ylabel('twiss para. (m)')
             xlim([-5 max(obj.s)])
+            legend('\beta_x','\beta_y','1000\eta_x')
             
             subplot(2,3,2)
-            plot(obj.s,obj.sigx*1e3,obj.s,obj.sigy*1e3)
+            %plot(obj.s,obj.sigx*1e3,obj.s,obj.sigy*1e3)
+            semilogy(obj.s,obj.sigx*1e3,obj.s,obj.sigy*1e3)
             legend('\sigma_x','\sigma_y')
             xlabel('s (m)')
             ylabel('rms size (mm)')
@@ -126,7 +130,7 @@ classdef impzevo < handle
             xlim([-5 max(obj.s)])
             
             subplot(2,3,4)
-            plot(obj.s,obj.enx*1e6,obj.s,obj.eny*1e6)
+            semilogy(obj.s,obj.enx*1e6,obj.s,obj.eny*1e6)
             legend('enx','eny')
             xlabel('s (m)')
             ylabel('norm. emit. (mm mrad)')
@@ -149,8 +153,8 @@ classdef impzevo < handle
         function evogrouplog(obj)
             
             subplot(2,3,1)
-            semilogy(obj.s,obj.betax,obj.s,obj.betay)
-            legend('\beta_x','\beta_y')
+            semilogy(obj.s,obj.betax,obj.s,obj.betay,obj.s,obj.etax*1e3)
+            legend('\beta_x','\beta_y','1000\eta_x')
             xlabel('s (m)')
             ylabel('twiss para. (m)')   
             xlim([-5 max(obj.s)])
