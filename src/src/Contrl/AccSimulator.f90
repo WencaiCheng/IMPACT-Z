@@ -570,7 +570,7 @@
                                                          recvdensz
         double precision :: xx,yy,t3dstart,rr,tmger,tmpwk
         double precision  :: aawk,ggwk,lengwk,hzwake,ab
-        integer :: flagwake,flagwakeread,flagbtw,iizz,iizz1,kz,kadd,ipt,flagcsr
+        integer :: flagwake,flagwakeread,flagwaketype,flagbtw,iizz,iizz1,kz,kadd,ipt,flagcsr
         !for bending magnet Transport transfer matrix implementation
         double precision :: hd0,hd1,dstr1,dstr2,angF,tanphiF,tanphiFb,&
             angB,tanphiB,tanphiBb,hF,hB,qm0,qmi,psi1,psi2,r0,gamn,gambet,&
@@ -674,6 +674,7 @@
         ezwake = 0.0
         flagwake = 0
         flagwakeread = 0
+        flagwaketype=-1
         flagcsr = 0
         aawk = 0.05
         ggwk = 0.05
@@ -709,7 +710,8 @@
           tau1 = 0.0d0
           if(bitype.ge.0) tau1 = 0.5d0*blength/bnseg
           tau2 = 2.0d0*tau1
-          !print*,"flagwakeread, flagwake=",flagwakeread,flagwake
+          !print*,"flagwakeread, flagwake, flagwaketype=", &
+          !        flagwakeread,flagwake, flagwaketype
           !print*,"tau, ",i,tau1,blength,bnseg,bitype,z
 
           if(bitype.eq.0) then
@@ -973,8 +975,22 @@
               call getparam_BeamLineElem(Blnelem(i),5,aawk)
               call getparam_BeamLineElem(Blnelem(i),6,ggwk)
               call getparam_BeamLineElem(Blnelem(i),7,lengwk)
+              !rfile=-1, SLAC32PI
+              !rfile=-2, TESLA13G
+              !rfile=-3, TESLA39G
+              if(nint(rfile).eq.-1) then
+                flagwaketype=-1
+              elseif(nint(rfile).eq.-2) then
+                flagwaketype=-2
+              elseif(nint(rfile).eq.-3) then
+                flagwaketype=-3
+              else
+                print*,"ERROR: not available RFwake type is given:", &
+                       nint(rfile)
+                stop
+              endif
             else 
-              print*,"rfile should be lt or gt 0: rfile=",rfile
+              print*,"ERROR: rfile should be lt or gt 0: rfile=",rfile
               stop
             endif
             call getparam_BeamLineElem(Blnelem(i),4,tmp1)
@@ -1390,7 +1406,7 @@
                 else
                   !biaobin,2022-03-07, analytical model instead
                   call wakefield_FieldQuant(Nz,xwakez,ywakez,recvdensz,exwake,eywake,ezwake,&
-                     hzwake,aawk,ggwk,lengwk,flagbtw)
+                     hzwake,aawk,ggwk,lengwk,flagbtw,flagwaketype)
                 endif
                 !print*,"exwake0,eywake0,ezwake0:",sum(exwake),sum(eywake),sum(ezwake)
                 exwake = scwk*exwake

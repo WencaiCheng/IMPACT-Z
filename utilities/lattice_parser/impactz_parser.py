@@ -339,6 +339,7 @@ class impactz_parser(lattice_parser):
         self.lattice['RFCW']['AC_MODE'] = 0
         self.lattice['RFCW']['WAKEOUT'] = 0
         self.lattice['RFCW']['WAKEFILE'] = 0
+        self.lattice['RFCW']['WAKETYPE'] = 'SLAC32PI'
 
         # WAKEON
         # -----------
@@ -350,17 +351,11 @@ class impactz_parser(lattice_parser):
         self.lattice['WAKEON']['CELL_LEN'] = 17.495e-3
         self.lattice['WAKEON']['WAKEOUT'] = 0
         self.lattice['WAKEON']['WAKEFILE'] = 0
+        self.lattice['WAKEON']['WAKETYPE'] = 'SLAC32PI'
 
         # WAKEOFF
         # -----------
-        self.lattice['WAKEOFF']['WAKEFILE_ID'] = None
-        self.lattice['WAKEOFF']['ZWAKE'] = 0
-        self.lattice['WAKEOFF']['TRWAKE'] = 0
-        self.lattice['WAKEOFF']['A'] = 6.6e-3
-        self.lattice['WAKEOFF']['G'] = 14.995e-3
-        self.lattice['WAKEOFF']['CELL_LEN'] = 17.495e-3
-        self.lattice['WAKEON']['WAKEOUT'] = 0
-        self.lattice['WAKEON']['WAKEFILE'] = 0
+        self.lattice['WAKEOFF']
 
         # EMATRIX
         #-------------
@@ -475,8 +470,6 @@ class impactz_parser(lattice_parser):
         
         # shift the centroid of beam to the axis origin point
         #----------------------------------------------------
-        # shift to center, add L for nothing but for regular expression
-        # match
         self.lattice['SHIFTCENTER']['OPTION'] = "ZDE"
 
         # space charge output
@@ -518,9 +511,8 @@ class impactz_parser(lattice_parser):
                 table.append('TYPE')
                 for elem_para in elem.keys():
                     if elem_para not in table:
-                        print("ERROR: unknown element parameter ",elem_para," for ",elem['TYPE'])
-                        print("PROGRAM STOP!")
-                        sys.exit()
+                        print("PAY ATTENTION: unknown element parameter ",elem_para," for ",elem['TYPE'])
+                        print("PROGRAM CONTINUE!")
 
                     tmp[elem_para] = elem[elem_para] 
                 # replace trackline
@@ -885,7 +877,16 @@ class impactz_parser(lattice_parser):
                     pass
                 else:
                     if elem['WAKEFILE_ID']=='None':
-                        lte_lines.append('0 0 1 -41 1.0 -1')
+                        if elem['WAKETYPE']=='SLAC32PI':
+                            lte_lines.append('0 0 1 -41 1.0 -1')
+                        elif elem['WAKETYPE']=='TESLA13G':
+                            lte_lines.append('0 0 1 -41 1.0 -2')
+                        elif elem['WAKETYPE']=='TESLA39G':
+                            lte_lines.append('0 0 1 -41 1.0 -3')
+                        else:
+                            print("ERROR: wrong waketype is given:",elem['WAKETYPE'])
+                            sys.exit()
+
                         lte_lines.append(wake_flag)
                         lte_lines.append(elem['A'])
                         lte_lines.append(elem['G'])
@@ -933,7 +934,16 @@ class impactz_parser(lattice_parser):
                 else:
                     if elem['WAKEFILE_ID']=='None':
                         # analytical wake model
-                        lte_lines.append('0 0 1 -41 1.0 -1')
+                        if elem['WAKETYPE']=='SLAC32PI':
+                            lte_lines.append('0 0 1 -41 1.0 -1')
+                        elif elem['WAKETYPE']=='TESLA13G':
+                            lte_lines.append('0 0 1 -41 1.0 -2')
+                        elif elem['WAKETYPE']=='TESLA39G':
+                            lte_lines.append('0 0 1 -41 1.0 -3')
+                        else:
+                            print("ERROR: wrong waketype is given:",elem['WAKETYPE'])
+                            sys.exit()
+
                         lte_lines.append(wake_flag)
                         lte_lines.append(elem['A'])
                         lte_lines.append(elem['G'])
@@ -1424,7 +1434,7 @@ class impactz_parser(lattice_parser):
         j=0  
         for elem in trackline:
             # map sbend to bend
-            if elem['TYPE'] in ['SBEND']:
+            if elem['TYPE'] in ['CSRCSBEN', 'CSRCSBEND','SBEN']:
                 elem['TYPE'] = 'BEND'
 
             # map quadrupole to quad 
@@ -1437,7 +1447,8 @@ class impactz_parser(lattice_parser):
                                 'MONITOR','MONI','MARK', \
                                 'KICK','HKICKER','VKICKER', \
                                 'SEXTUPOLE', \
-                                'RCOL']:
+                                'RCOL', \
+                                'CHARGE']:
                 elem['TYPE'] = 'DRIFT'
             
             trackline[j]['TYPE']=elem['TYPE']

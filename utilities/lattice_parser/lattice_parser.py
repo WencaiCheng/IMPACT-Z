@@ -258,7 +258,7 @@ class lattice_parser:
                                    
                     # back to str type
                     # for no-math expression, such as: option="zdE", back to upper
-                    elem[para_name] = str(para_value).upper()
+                    elem[para_name] = str(para_value).upper().replace(' ','')
                     
                 lattice[elem_name] = elem   
                 

@@ -646,10 +646,10 @@
        !Biaobin,2022-03,Analytical wakefunction
        !longitudinal and transverse wakefield
        subroutine wakefield_FieldQuant(Nz,xwakez,ywakez,recvdensz,exwake,eywake,ezwake,&
-                                       hz,aa,gg,leng,flagbtw)
+                                       hz,aa,gg,leng,flagbtw,flagwaketype)
        implicit none
        include 'mpif.h'
-       integer, intent(in) :: Nz,flagbtw
+       integer, intent(in) :: Nz,flagbtw,flagwaketype
        double precision, intent(in) :: hz, aa, gg, leng
        double precision, dimension(Nz,2), intent(in) :: recvdensz
        double precision, dimension(Nz), intent(in) :: xwakez,ywakez
@@ -662,6 +662,7 @@
        real*8 :: tmptmp
 
        pilc = 2*asin(1.0)
+       Z0 = 120*pilc
        
        if(flagbtw.eq.4) then !skip longi-wake
          ezwake = 0.0d0
@@ -682,26 +683,55 @@
        call fftrclocal2_FFT(ksign,scale,densz2n,twonz,one,densz2nout)
 
        !longitudinal wakefield function
-       !the following longitudinal wakefield function is from
-       !"Short-range dipole wakefields in accelerating structures for the NLC",
-       !K. L. F. Bane, SLAC-PUB-9663, 2003.
-       pilc = 2*asin(1.0d0)
-       alpha1 = 0.4648
-       alpha = 1.-alpha1*sqrt(gg/leng)-(1.-2*alpha1)*(gg/leng)
-       !slac wake
-       zz00 = gg*(aa/(alpha*leng))**2/8 
-       !fermi wake
-       !zz00 = 0.41*(aa/leng)**0.8*(gg/leng)**1.6*aa
-       Z0 = 120*pilc
-       !greenwake(1,1) = 0.0
-       zz = 0.0d0
-       !The 0.5 is from S+
-       greenwake(1,1) = 0.5d0*Z0*Clight*exp(-sqrt(zz/zz00))/(pilc*aa*aa)
-       !do kz = 1, Nz+1
-       do kz = 2, Nz+1
-         zz = (kz-1)*hz
-         greenwake(kz,1) = Z0*Clight*exp(-sqrt(zz/zz00))/(pilc*aa*aa)
-       enddo
+       !-------------------------------
+       !case 1: normal cavity and TESLA 1.3GHz share the same form wake
+       if(flagwaketype.eq.-1 .or. flagwaketype.eq.-2) then
+         if(flagwaketype.eq.-1) then
+           !the following longitudinal wakefield function is from
+           !"Short-range dipole wakefields in accelerating structures for the NLC",
+           !K. L. F. Bane, SLAC-PUB-9663, 2003.
+           alpha1 = 0.4648
+           alpha = 1.-alpha1*sqrt(gg/leng)-(1.-2*alpha1)*(gg/leng)
+           !slac wake
+           zz00 = gg*(aa/(alpha*leng))**2/8 
+           !fermi wake
+           !zz00 = 0.41*(aa/leng)**0.8*(gg/leng)**1.6*aa
+           coef1 = Z0*Clight/(pilc*aa*aa)
+         
+         elseif(flagwaketype.eq.-2) then
+           !TESLA 1.3GHZ superconducting cavity wake
+           zz00=1.74d-3
+           coef1=344.0/(8.0*1.036)*1.0d12
+         endif  
+
+         zz = 0.0d0
+         !The 0.5 is from S+
+         greenwake(1,1) = 0.5d0*coef1*exp(-sqrt(zz/zz00))
+         do kz = 2, Nz+1
+           zz = (kz-1)*hz
+           greenwake(kz,1) = coef1*exp(-sqrt(zz/zz00))
+         enddo
+
+       !case 2: TESLA 3.9GHz wake is a little different
+       !I. Zagorodnov, TESLA-Report 2004-01, Eq.19,25
+       elseif(flagwaketype.eq.-3) then
+         zz00=8.4d-4
+         coef1=1.0d0/(4.0*0.345914)*1.0d12
+
+         zz = 0.0d0
+         !The 0.5 is from S+
+         greenwake(1,1) = 0.5d0*(318*exp(-sqrt(zz/zz00))+0.036)*coef1
+         do kz = 2, Nz+1
+           zz = (kz-1)*hz
+           greenwake(kz,1)=(318*exp(-sqrt(zz/zz00)) &
+             +0.9*cos(5830*zz**0.83)/(sqrt(zz)+195*zz))*coef1
+         enddo
+       else
+         print*,"ERROR, not available flagwaketype is given:",flagwaketype
+         stop
+       endif
+
+       !------------------
        do kz = Nz+2, twonz
          greenwake(kz,1) = greenwake(twonz-kz+2,1)
        enddo
@@ -758,24 +788,49 @@
        call fftrclocal2_FFT(ksign,scale,densz2n,twonz,one,densz2nout)
  
        !tranverse wakefield
-       !the following transverse wakefield function is from
-       !"Short-range dipole wakefields in accelerating structures for the NLC",
-       !K. L. F. Bane, SLAC-PUB-9663, 2003. here, 1.1 is an average as suggested       !on page 11 for cell 45.
-       !for LCLS slac
-       zz00 = 1.1*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
-       !for Fermi Elettra
-       !zz00 = 1.0*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
-       coef1 = 4*Z0*Clight*zz00/(pilc*aa*aa*aa*aa)
-       !densconst = 0.5e-6
-       !offset = 0.001
-       !zzmax = 0.002
-       !coef2 = coef1/zz00*densconst*offset
-       !print*,"aa wake: ",aa,leng,gg,zz00,Z0,coef1,coef2,offset,densconst
-       greenwake(1,1) = 0.0
-       do kz = 1, Nz+1
-         zz = (kz-1)*hz
-         greenwake(kz,1) = coef1*(1.0-(1.+sqrt(zz/zz00))*exp(-sqrt(zz/zz00)))
-       enddo
+       !-------------------
+       ! case 1: normal cavity and TESLA 1.3GHz superconducting wake
+       if(flagwaketype.eq.-1 .or. flagwaketype.eq.-2) then
+         if(flagwaketype.eq.-1) then
+           !the following transverse wakefield function is from
+           !"Short-range dipole wakefields in accelerating structures for the NLC",
+           !K. L. F. Bane, SLAC-PUB-9663, 2003. here, 1.1 is an average as suggested       !on page 11 for cell 45.
+           !for LCLS slac
+           zz00 = 1.1*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
+           !for Fermi Elettra
+           !zz00 = 1.0*0.169*aa*(aa/leng)**1.17*(gg/aa)**0.38
+           coef2 = 4*Z0*Clight*zz00/(pilc*aa*aa*aa*aa)
+
+         elseif(flagwaketype.eq.-2) then
+           !TESLA 1.3GHz superconducting cavity wake
+           zz00 = 0.92d-3
+           coef2 = 1.0d3/(8.0d0*1.036)*1.0d12
+         endif
+
+         greenwake(1,1) = 0.0
+         do kz = 1, Nz+1
+           zz = (kz-1)*hz
+           greenwake(kz,1) = coef2*(1.0-(1.+sqrt(zz/zz00))*exp(-sqrt(zz/zz00)))
+         enddo
+        
+       !case 2: TESLA 3.9GHz superconducting cavity wake
+       elseif(flagwaketype.eq.-3) then
+         zz00 = 0.56d-3
+         coef2 = 1.0d0/(4.0*0.345914)*1.0d12
+
+         greenwake(1,1) = 0.0
+         do kz = 1, Nz+1
+           zz = (kz-1)*hz
+           greenwake(kz,1) = &
+             (2232*(1.0-(1.+sqrt(zz/zz00))*exp(-sqrt(zz/zz00))) &
+             +5441*sqrt(zz)+88.5)*coef2
+         enddo
+
+       else
+         print*,"ERROR: Not available flagwaketype is given:",flagwaketype
+         stop
+       endif   
+       !----------------- 
 
        do kz = Nz+2, 2*Nz
          greenwake(kz,1) = greenwake(twonz-kz+2,1)

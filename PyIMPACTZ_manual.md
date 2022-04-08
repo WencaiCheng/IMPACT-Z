@@ -731,7 +731,7 @@ RF cavity with exact phase dependence. Model is drift + acceleration momentum ki
 | zwake          |        | int    | 0       | 0/1, if zero, longitudinal wake is turned off                |
 | trwake         |        | int    | 0       | 0/1, if zero, transverse wakes are turned off                |
 | wakefile_ID    |        | int    | None      | If None, Analytical wake model will be used. If WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
-|                |        |        |           |                                                              |
+| waketype |        | string | “SLAC32PI” | (1). waketype=“SLAC32PI”, i.e. normal $2\pi/3$ mode SLAC type cavity<br />(2).  waketype=“TESLA13G”, i.e. TESLA 1.3GHz superconducting cavity wake<br />(3). waketype=“TESLA39G”, i.e. TESLA 3.9GHz superconducting cavity wake.<br />Analytical wake function in the code is applied. When `wakefile_ID` is used, user given wakefile is appllied. |
 | a | m | double | 6.6e-3 | aperture for wakefield, default is C-BAND parameter |
 | g | m | double | 14.995e-3 | cell gap length, default is C-BAND parmater |
 | cell_len | m | double | 17.495e-3 | cell length, default is C-BAND parameter |
@@ -800,30 +800,27 @@ For analytical C-band RF structure wake：
 ````
 !usage:
 wake1: wakeon,  a=6.6e-3
-wake2: wakeoff, a=6.6e-3
+wake2: wakeoff
 d1: drfit, L=100
 
 line: line=(wake1,d1,wake2)
 ````
 
-代码中，`a=6.6e-3`必须添加，因为目前的 impactz_parser.py 无法处理如下的语句：
-
-```bash
-wake1: wakeon;
-```
 
 
 参数表：
-| Parameter Name | Units | Type   | Default   | Description                                                  |
-| -------------- | ----- | ------ | --------- | ------------------------------------------------------------ |
-| zwake          |       | int    | 0         | 0/1, if zero, longitudinal wake is turned off                |
-| trwake         |       | int    | 0         | 0/1, if zero, transverse wakes are turned off                |
-| wakefile_ID    |       | int    | None      | If None, analytical wake model is used. If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
-| a              | m     | double | 6.6e-3    | aperture for wakefield, default is C-BAND parameter          |
-| g              | m     | double | 14.995e-3 | cell gap length, default is C-BAND parmater                  |
-| cell_len       | m     | double | 17.495e-3 | cell length, default is C-BAND parameter                     |
-| wakeout        |       | int    | 0         | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
-| wakefile       |       | int    | 0         | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
+
+| Parameter Name | Units | Type   | Default    | Description                                                  |
+| -------------- | ----- | ------ | ---------- | ------------------------------------------------------------ |
+| zwake          |       | int    | 0          | 0/1, if zero, longitudinal wake is turned off                |
+| trwake         |       | int    | 0          | 0/1, if zero, transverse wakes are turned off                |
+| wakefile_ID    |       | int    | None       | If None, analytical wake model is used. If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
+| a              | m     | double | 6.6e-3     | aperture for wakefield, default is C-BAND parameter          |
+| g              | m     | double | 14.995e-3  | cell gap length, default is C-BAND parmater                  |
+| cell_len       | m     | double | 17.495e-3  | cell length, default is C-BAND parameter                     |
+| wakeout        |       | int    | 0          | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
+| wakefile       |       | int    | 0          | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
+| waketype       |       | string | “SLAC32PI” | (1). waketype=“SLAC32PI”, i.e. normal $2\pi/3$ mode SLAC type cavity<br />(2).  waketype=“TESLA13G”, i.e. TESLA 1.3GHz superconducting cavity wake<br />(3). waketype=“TESLA39G”, i.e. TESLA 3.9GHz superconducting cavity wake.<br />When `wakefile_ID=none` , analytical wake function in the code is applied. When `wakefile_ID` is used, user given wakefile is appllied. |
 
 Fortran level:
 
@@ -946,7 +943,7 @@ If filename_ID = 1001, then the output file would be fort.1001 and fort.11001. f
 
 | Parameter Name | Units | Type   | Default | Description                                                  |
 | -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
-| phase          |       | string | “zdE”   | (1). option=”zdE”, then shift the beam longitudinally to the bunch centroid so that $<z>=<\Delta E>=0$.<br /><br />(2). option=“xy”, then shift the beam so that $<x>=<y>=0$.<br /><br /> |
+| option         |       | string | “zdE”   | (1). option=”zdE”, then shift the beam longitudinally to the bunch centroid so that $<z>=<\Delta E>=0$.<br /><br />(2). option=“xy”, then shift the beam so that $<x>=<y>=0$.<br /><br /> |
 
 usage:
 
