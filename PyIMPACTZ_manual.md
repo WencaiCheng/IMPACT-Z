@@ -781,7 +781,7 @@ acceleration gradient=5.97474936319844610989e+06 V/m, frequency=1.3e9 Hz, phase=
 
 
 
-### WAKEON and WAKEOFF
+### WAKE
 
 This is for test the wakefield, where we put the drift between the wake ON and OFF elements.
 
