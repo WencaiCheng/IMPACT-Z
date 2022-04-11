@@ -6179,7 +6179,8 @@
           !evolution freq at entrance 
           w0 = 2*Pi*bet0*Clight/Lc
         else 
-          print*,"Unknown simutype=",simutype,". should be Linac or Ring."
+          print*,"Unknown simutype=",simutype, &
+                 ". should be Linac or Ring."
           stop
         end if
         do i = 1, this%Nptlocal
@@ -6193,7 +6194,11 @@
           gami_2 = gami_1+dgami
           gambeti_2 = sqrt(gami_2**2-1.0d0)
 
-          fact = gambeti_1/dgami*dlog(gambeti_2/gambeti_1)*tau/Scxl
+          if(abs(vtmp).lt.1.0d-6) then
+            fact = tau/Scxl
+          else
+            fact = gambeti_1/dgami*dlog(gambeti_2/gambeti_1)*tau/Scxl
+          endif
 
           this%Pts1(1,i) = this%Pts1(1,i) + fact*&
                            this%Pts1(2,i)/gambetzi_1
