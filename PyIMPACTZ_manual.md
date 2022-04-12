@@ -874,7 +874,7 @@ Output particle distribution and beam slice information into fort.N and fort.(N+
 
 | Parameter Name | Units | Type   | Default | Description                                                  |
 | -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
-| filename_ID    |       | int    | 1000    | number larger than 1000 is recommended                       |
+| filename_ID    |       | int    | 9999    | number larger than 1000 is recommended                       |
 | sample_freq    |       | int    | 0       | If sample_freq=10, every 10 particles output 1 particle. If not set (`sample_freq=0`), `sample_out` in control section will set the `sample_freq` based on the `Np` particle number. |
 | coord_conv     |       | string | normal  | `IMPACT-Z/IMPACT-T/NORMAL/ASTRA`                             |
 | slice_info     |       | int    | 1       | whether output slice information, i.e. whether add -8 element simultaneously |

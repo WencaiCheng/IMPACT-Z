@@ -375,7 +375,7 @@ class impactz_parser(lattice_parser):
 
         # watch
         #-------------
-        self.lattice['WATCH']['FILENAME_ID'] = 1000
+        self.lattice['WATCH']['FILENAME_ID'] = 9999
         self.lattice['WATCH']['SAMPLE_FREQ'] = 0
         self.lattice['WATCH']['COORD_CONV'] = 'NORMAL' 
         self.lattice['WATCH']['SLICE_INFO'] = 1  # by default add -8 element simultaneously
@@ -518,7 +518,7 @@ class impactz_parser(lattice_parser):
                 table.append('TYPE')
                 for elem_para in elem.keys():
                     if elem_para not in table:
-                        print("PAY ATTENTION: unknown element parameter ",elem_para," for ",elem['TYPE'])
+                        print("PAY ATTENTION: unknown element parameter",elem_para,"for",elem['NAME'],":",elem['TYPE'])
                         print("PROGRAM CONTINUE!")
 
                     tmp[elem_para] = elem[elem_para] 
