@@ -711,11 +711,12 @@
         real*8 :: R11,R12,R16,R21,R22,R26,R51,R52,R56
         real*8 :: T111,T112,T116,T122,T126,T166,T144
         real*8 :: T216,T222,T266,T244,T314,T324,T346
+        real*8 :: T516,T526,T522,T544
         real*8 :: theta, rho
         real*8 :: x0,xp0,y0,yp0,z0,eta
         !print*,"non-linear map for Dipole."
         !right now, sector dipole only has dipole filed, no quad filed
-        !K1=0, for K1.ne.0, map too complicated, added in future
+        !K1=0, for K1.ne.0, map too complicated, add in future
         rho = 1.0d0/h0;
         theta = len*h0
 
@@ -734,7 +735,7 @@
         T122 = rho*cos(theta)*sin(theta/2.0d0)**2
         T126 = -rho*sin(theta)*(-1.0d0+cos(theta))
         T166 = -rho*sin(theta)**2/2.0d0
-                T144 = rho*(-1.0d0+cos(theta))/2.0d0
+        T144 = rho*(-1.0d0+cos(theta))/2.0d0
         T216 = sin(theta)/rho
         T222 = -sin(theta)/2.0d0
         T266 = -sin(theta)
@@ -742,6 +743,12 @@
         T314 = sin(theta)
         T324 = 2.0d0*rho*sin(theta/2.0d0)**2
         T346 = rho*(theta-sin(theta))
+
+        T522 = -0.5d0*rho*sin(theta)
+        T544 = T522
+        T516 = -sin(theta)
+        T526 = rho*sin(theta)
+
         !reference particle information
         gambet = beta0/sqrt(1.0d0-beta0**2)
         gam2 = 1.0d0/(1.0d0-beta0**2)
@@ -764,9 +771,9 @@
               +T216*x0*eta +T222*xp0**2 +T266*eta**2 +T244*yp0**2
           ptarry2(3) = y0 +len*yp0 +T314*x0*yp0 +T324*xp0*yp0 +T346*yp0*eta
           ptarry2(4) = yp0
-          !longitudinal use linear map
-          qmrel = (ptarry1(7,i)-qm0)/qm0
-          ptarry2(5) = R51*x0+R52*xp0+z0+R56*(eta+qmrel)
+          ptarry2(5) = R51*x0+R52*xp0+z0+R56*eta+ &
+                       T522*xp0**2+T544*yp0**2+T526*xp0*eta+ &
+                       T516*x0*eta
           ptarry2(6) = eta
 
           ptarry1(3,i) = ptarry2(1)/Scxl
