@@ -1,30 +1,179 @@
 
 
-# chap1 功能需求
+# Chap1 Quick Start
 
-- [x] 赋值功能
+## Installation
 
-- [x]  default order in control section should control all settings in lattice, lower priority than ORDER in each element.
+### Environment settings
 
-- [x]  total_charge=0, turn off space charge.
+On my desktop the `PATH` environment variable is set as following:
 
-- [x]  add a charge=1.0/-1.0 parameter. 
+```bash
+export PATH=/mnt/d/githubProj/IMPACT-T/src:$PATH
+export PATH=/mnt/d/githubProj/IMPACT-T/utilities/bashTools:$PATH
+export PATH=/mnt/d/githubProj/IMPACT-Z/utilities/lattice_parser:$PATH
+```
 
-- [x] how to keep charge and current when space charge is off.
-
-- [x]  rpn expression in lattice section is not supported yet.
-
-- [ ] elegant2impactz.py
-
-   read in elegant .lte type lattice, convert it to ImpactZ.in.
-
-- [ ] 2022-03-02, manual 中的 Fortran level 可能有误，是以前很久的版本，规整到了当前版本的manual中。未查验。
-
-- [ ] muzpz 不能用作二次弯曲项，代码中删除该部分代码。该功能可用 EMATRIX 替代。
+The user need to replace it with your own path.
 
 
 
-# Chap2 代码框架及习惯
+### Parallel version
+
+If you want to get the parallel version of ImpactZ.exe, go to `IMPACT-Z/utilities` , then type:
+
+```bash
+./sing2paracore
+```
+
+which will automatically comment the `use mpistub` in the source code. Then go to `IMPACT-Z/src` and type `make`.
+
+
+
+If you want to change back to single process version, go to `IMPACT-Z/utilities`, type:
+
+```bash
+./para2singcore
+```
+
+which will automatically uncomment the `use mpistub` line in the source code. Go to `IMPACT-Z/src` and type `make clean` and then `make`.
+
+
+
+### Single process version
+
+The github version is single process version by default, which is for debug convenience. So just make it.
+
+
+
+### Lattice parser for ELEGANT style
+
+A python module is provided for parsing the elegant style input file. a short example is as following, which tracks a compressor.
+
+Input file `lte.impz`:
+
+```bash
+!control section
+!===============
+&control
+default_order = 2;
+steps=0;
+
+lsc=0;
+zwake=0;
+csr=0;
+tsc=0;
+trwake=0;
+
+core_num_T = 2;
+core_num_L = 2;
+meshx = 32;
+meshy = 32;
+meshz = 64;
+kinetic_energy = 300e6;
+freq_rf_scale = 1.3e9;
+
+slice_bin=100;
+sample_out=1e5;
+
+pipe_radius = 1.0
+
+&end
+
+!beam section
+!==============
+&beam
+mass = 0.511001e6;
+charge = -1.0;
+
+distribution_type = 2;
+Np = 1000;
+total_charge = 100e-12;
+
+emit_nx=0.176e-6, beta_x=12.73, alpha_x=-0.85;
+emit_ny=0.176e-6, beta_y=12.73, alpha_y=-0.85;
+
+!sigz=1e-3, sigE=5e3;
+sigz=1e-3, sigE=5e-3;
+
+&end
+
+!lattice section
+!=====================
+&lattice
+
+! rpn expression is supported
+! ---------------------------
+% 0.2 sto LB1
+% -4.410 pi * 180 / sto AB1  ! Bend angle
+
+BCX11: BEND,L= LB1,ANGLE=AB1,       E2=AB1,       steps=1, pipe_radius=2.1640E-02, fint=0.3893
+BCX12: BEND,L= LB1,ANGLE= "0 AB1 -",E1= "0 AB1 -",steps=1, pipe_radius=2.1640E-02, fint=0.3893
+BCX13: BEND,L= LB1,ANGLE= "0 AB1 -",E2= "0 AB1 -",steps=1, pipe_radius=2.1640E-02, fint=0.3893
+BCX14: BEND,L= LB1,ANGLE=AB1,       E1=AB1,       steps=1, pipe_radius=2.1640E-02, fint=0.3893
+
+D1  : DRIF, L=5.0
+Dm  : DRIF, L=0.5
+
+BC1 : LINE=(BCX11,D1,BCX12,Dm,BCX13,D1,BCX14)
+
+W0:   watch, filename_ID=1002
+W1:   watch, filename_ID=1003
+
+chirp: ematrix, R65=-14.73
+
+Line : LINE=(chirp,W0,BC1,W1)
+
+&end
+```
+
+
+
+There are three sections in the input file, the meaning of each parameter is quite directly and could be found more details in the next chap. 
+
+The collective effects for `CSR, LSC, TSC, zwake, trwake` could be controlled separately. 
+
+In the lattice section, both the `rpn` expression which is used in ELEGANT, and also the direct mathematical calculation is supported. For the `LB1` and `AB1`, the following two cases will give the same results:
+
+```bash
+! case1: rpn expression
+! ---------------------
+% 0.2 sto LB1
+% -4.410 pi * 180 / sto AB1  ! Bend angle
+
+! case2: direct math. expression
+! ------------------------------
+LB1=0.2
+AB1=-4.410*pi/180
+```
+
+
+
+Given the `lte.impz` input file, then type:
+
+```bash
+genimpactzin lte.impz line
+```
+
+which will generate the `ImpactZ.in` file. Now you can run the `ImpactZ.exe` in parallel version as:
+
+```
+mpirun -np 4 ImpactZ.exe
+```
+
+4 processes are used as `core_num_T*core_num_L=4`.
+
+For single process version:
+
+```
+ImpactZ.exe
+```
+
+`ImpactZ.in` is automatically read.
+
+
+
+# Chap2 Code structure and convention
 
 ## Code Structure
 
@@ -212,7 +361,7 @@ $\gamma_0$ 需由统计平均值给出。
 
 
 
-# Chap3 输入文件
+# Chap3 Input file
 
 先介绍 lte.impz 输入文件中的三部分。
 
@@ -240,7 +389,7 @@ The values following are all default values.
   
   freq_rf_scale= 2.856e9;
 
-  steps=1;    ! 1kicks/m
+  steps=1;    ! 1 kicks/m
   maps=1      ! 1 map/half_step
   
 	tsc=0;      !transverse space charge off
@@ -267,11 +416,11 @@ The values following are all default values.
 
 - core_num_T, core_num_L, processor layout, the product of these numbers must equal the number of processors that you run on. 
 
-- gridx, gridy, gridz, grid setting for PIC space charge simulation.
+- meshx, meshy, meshz, grid setting for PIC space charge simulation.
 
-- default_order, 1 refers to linear map, 2 refers to nonlinear map for all elements. It has ==lower priority to the ORDER setted in each individual element==. 
+- default_order, 1 refers to linear map, 2 refers to nonlinear map for all elements. It has ==lower priority to the ORDER set in each individual element==. 
 
-- W [eV], kinetic_energy，即动能。注意与 ELEGANT 的 p_central_mev 区别开来：
+- kinetic_energy [eV], kinetic_energy，即动能。注意与 ELEGANT 的 p_central_mev 区别开来：
 
   p_central_mev, 数值上即等于 $\gamma_0\beta_0$ [MeV/c], 即 $pc=\sqrt{\epsilon^2-\epsilon_0^2}=\gamma\beta m_0c^2=\sqrt{W^2+2W\epsilon_0}$
 
@@ -291,8 +440,6 @@ The values following are all default values.
 ImpactZ.in 中新增加了一行：
 
 `Flagsc turn_number output_frequency SimuType`
-
-
 
 space charge control:
 
@@ -1175,10 +1322,10 @@ Actually it is a very short drift, two additional paras. are added for `scout, s
 
 ### SCATTER
 
-| Parameter Name | Units | Type   | Default | Description                                 |
-| -------------- | ----- | ------ | ------- | ------------------------------------------- |
-| dE             | eV    | double | 0       | dE=1000, then increase energy spread 1e3eV. |
-|                |       |        |         |                                             |
+| Parameter Name | Units | Type   | Default | Description                                                  |
+| -------------- | ----- | ------ | ------- | ------------------------------------------------------------ |
+| dE             | eV    | double | 0       | rms scattering for $\Delta E$ [eV]. dE=1000, then increase energy spread 1keV. |
+
 
 
 
