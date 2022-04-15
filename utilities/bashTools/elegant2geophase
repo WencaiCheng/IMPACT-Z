@@ -1,0 +1,72 @@
+#!/bin/bash
+# author: Biaobin Li
+# email:  biaobin@mail.ustc.edu.cn
+# time:   2018-10-17
+# usage:
+# converts elegant phase-space output file to (x,xp,y,yp,z,delta) format
+# biaobin, 2018-10-17, mean value is Reference Value
+
+if (( $# !=2 )); then
+	echo "usage: elegant2geophase <input> <output>"
+	exit 1
+fi
+
+input=$1
+output=$2
+
+# check whether file exists
+if [[ ! -e $input ]]; then
+	echo "Not found: $input"
+	exit 1
+fi
+
+if [[ -e $output ]]; then
+	echo "$output will be replaced."
+fi
+
+tmpRoot=tmp-`date +%s%N`
+
+#echo $tmpRoot
+
+## get beta and betaz for each particle
+#sddsprocess $input $tmpRoot.1 \
+#	-process=p,average,aveP \
+#    -define=column,pz,"p xp sqr yp sqr + 1 + sqrt /" \
+#    -define=column,px,"pz xp *" \
+#    -define=column,py,"pz yp *" \
+#    -define=column,beta,"p p sqr 1 + sqrt /"  \
+#    -define=column,betaz,"pz p / beta *" \
+#    -define=column,z,"t c_mks * betaz *" \
+#    -process=z,ave,z0 \
+#    -define=column,dz,"z0 z -",units=m \
+#    -define=column,delta,"p aveP - aveP /" \
+#    -redefine=column,x,"x dz xp * +",units=m \
+#    -redefine=column,y,"y dz yp * +",units=m \
+#    -process=x,ave,x0 \
+#    -process=y,ave,y0 \
+#    -redefine=column,x,"x x0 -" \
+#    -redefine=column,y,"y y0 -" 
+
+# change to definition following Wolski
+# X=(x, gambetx/gambet0, z=s-bet0ct, delta=dgam/gam0/bet0^2)
+sddsprocess $input $tmpRoot.1 \
+	-process=p,average,aveP \
+    -process=t,ave,t0 \
+    -define=column,bet0,"aveP aveP sqr 1 + sqrt /"  \
+	-define=column,gam0,"aveP sqr 1 + sqrt"  \
+    -define=column,pz,"p xp sqr yp sqr + 1 + sqrt /" \
+    -define=column,px,"pz xp * aveP /" \
+    -define=column,py,"pz yp * aveP /" \
+    -define=column,z,"t t0 - c_mks * bet0 * -1 *",units=m \
+	-define=column,gam,"p sqr 1 + sqrt" \
+    -define=column,delta,"gam gam0 - gam0 / bet0 sqr /" 
+
+# write into $output
+sddsconvert $tmpRoot.1 -pipe=out -retain=column,x,px,y,py,z,delta \
+ 	| sddsprocess -pipe=in $output 
+
+# txt file format, for gnuplot plotting
+sdds2stream $output -column=x,px,y,py,z,delta > $output.2
+
+rm -rf $tmpRoot.1
+   

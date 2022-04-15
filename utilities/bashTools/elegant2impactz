@@ -1,0 +1,81 @@
+#!/bin/bash
+# author: Biaobin Li
+# email:  biaobin@mail.ustc.edu.cn
+# time:   2018-10-17
+# usage: elegant2impactz input.sdds Q[C] freqRF[Hz]
+#       charge in [C], should be positive for electrons.
+
+if (( $# !=3 )); then
+	echo "Example usage: elegant2impactz input.sdds total_charge freqRF"
+	exit 1
+fi
+
+input=$1
+Q=$2
+freqRF=$3
+output="particle.in"
+
+if [[ ! -e $input ]]; then
+	echo "Not found: $input"
+	exit 1
+fi 
+
+if [[ -e $output ]]; then
+	echo "Warning: $output will be replaced."
+fi
+
+tmpRoot=tmp-`date +%s%N`
+
+#------------------
+#get px py pz
+sddsprocess $input $tmpRoot.1 \
+    -define=parameter,w,"2 pi * $freqRF *" \
+	-define=column,pz,"p xp sqr yp sqr + 1 + sqrt /" \
+	-define=column,px,"pz xp *" \
+    -define=column,py,"pz yp *" \
+    -process=p,ave,p_ave \
+    -define=parameter,beta0,"p_ave p_ave sqr 1 + sqrt /" \
+    -define=column,beta,"p p sqr 1 + sqrt /" \
+    -define=column,gamma,"p beta /" \
+    -process=gamma,ave,gamma_ave \
+    -define=column,dgamma,"gamma_ave gamma -" \
+    -redefine=column,x,"x w * c_mks /" \
+    -redefine=column,y,"y w * c_mks /" \
+    -process=t,ave,t0 \
+    -define=column,phase,"t t0 - w *" \
+    -define=column,q/m,"-1 0.511001E6 /",type=double \
+    -define=column,Index,"i_row 1 +",type=long \
+    -process=Index,last,Np \
+    -define=column,q_macro,"-$Q Np /",type=double
+    #-define=column,z,"t0 t - beta0 * 2.998E8 *" \
+
+
+# get partcl.data
+#this gives sdds format
+#sddsconvert $tmpRoot.1 -pipe=out -retain=column,x,px,y,py,phase,dgamma,q/m,Index \
+#	| sddsprocess -pipe=in $output
+
+sddsconvert $tmpRoot.1 -pipe=out -retain=column,x,px,y,py,phase,dgamma,q/m,q_macro,Index \
+	| sdds2plaindata -pipe=in $output \
+	-outputMode=ascii -noRowCount  -separator="\t" \
+	-column=x,format=%14.7e \
+    -column=px,format=%14.7e \
+    -column=y,format=%14.7e \
+    -column=py,format=%14.7e \
+    -column=phase,format=%14.7e \
+    -column=dgamma,format=%14.7e \
+    -column=q/m,format=%14.7e \
+    -column=q_macro,format=%14.7e \
+    -column=Index,format=%4ld  
+    
+# get particle number
+Np=`cat $output | wc -l`
+# write into the first line
+sed -i "1i\\$Np 0 0" $output
+
+rm -f $tmpRoot.1
+
+
+
+
+

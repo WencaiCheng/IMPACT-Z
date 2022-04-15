@@ -209,19 +209,19 @@ classdef impzphase < handle
             % add the hist for two directions  
             % change the axis range here
             %----------------------
-%             if isempty(obj.xlim)    
-%             else
-%               h.XLimits=obj.xlim;
-%             end     
-%             if isempty(obj.ylim)
-%             else
-%                 h.YLimits=obj.ylim;
-%             end
-%  
-%             tmp = obj.gethist_norm(h,x,y);
-%             hold on
-%             h2=plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m');
-%             axis([h.XLimits h.YLimits])                         
+            if isempty(obj.xlim)    
+            else
+              h.XLimits=obj.xlim;
+            end     
+            if isempty(obj.ylim)
+            else
+                h.YLimits=obj.ylim;
+            end
+ 
+            tmp = obj.gethist_norm(h,x,y);
+            hold on
+            h2=plot(tmp.x1,tmp.y1,'-m',tmp.x2,tmp.y2,'-m');
+            axis([h.XLimits h.YLimits])                         
             xlabel(label1);
             ylabel(label2);
         end
