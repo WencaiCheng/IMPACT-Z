@@ -29,6 +29,14 @@ class impactz_parser(lattice_parser):
         self.control = self.update_control()
         self.beam    = self.update_beam()
         self.lattice = self.update_trackline()
+
+        # some parameters of the beam
+        self.Scxl = None
+        self.gam0 = None
+        self.gambet0 = None
+        self.bet0 = None
+        self.mass = None
+        self.update_paras()
         
     def write_impactzin(self):
         '''
@@ -548,13 +556,26 @@ class impactz_parser(lattice_parser):
             else:
                 print('Unknown control item:',key,'=',control_sec[key])    
                 sys.exit()
-               
+
         ## turn all values to string data type
         #for key in control.keys():
         #    control[key] = str(control[key])
 
         return control
+          
+    def update_paras(self):  
+        Scxl = const.c_light/(2*math.pi*float(self.control['FREQ_RF_SCALE'])) 
+        gam0 = (float(self.control['KINETIC_ENERGY'])+float(self.beam['MASS']))/float(self.beam['MASS'])
+        gambet0 = sqrt(gam0**2-1.0)
+        bet0 = gambet0/gam0
 
+        #update self
+        self.Scxl = Scxl
+        self.gam0 = gam0
+        self.gambet0 = gambet0
+        self.bet0 = bet0
+        self.mass = float(self.beam['MASS'])
+               
     def update_beam(self):
         '''
         update beam:dict with read in para values.
@@ -632,10 +653,10 @@ class impactz_parser(lattice_parser):
         # ==================
         # beam distribution  
         # ==================
-        Scxl = const.c_light/(2*math.pi*float(self.control['FREQ_RF_SCALE'])) 
-        gam0 = (float(self.control['KINETIC_ENERGY'])+float(self.beam['MASS']))/float(self.beam['MASS'])
-        gambet0 = sqrt(gam0**2-1.0)
-        bet0 = gambet0/gam0
+        Scxl    = self.Scxl
+        gam0    = self.gam0
+        gambet0 = self.gambet0
+        bet0    = self.bet0
         
         # set sigxxp, sigyyp, sigzdE by default 0
         sigxxp=0.0
@@ -1494,9 +1515,7 @@ if __name__=='__main__':
     # lattice_sec = lte.get_lattice_section()
     # control_sec   = lte.get_control_section()
     # beam_sec      = lte.get_beam_section()
-    
         
-    
     
 
 
