@@ -475,7 +475,8 @@
         double precision, dimension(6) :: ptarry2, tmp
         double precision :: tanphi2,secphi2,secphi,secphi3,secphib2
         integer :: i
-        real*8 :: gamn,gambetz,gambet,beta0
+        real*8 :: gamn,gambet,beta0
+        real*8 :: gambeti,gami,gambetx,gambety,gambetz,xp,yp
 
         tanphi2 = tanphi**2
         secphi2 = 1.0 + tanphi2
@@ -488,14 +489,19 @@
         ptarry2 = 0.0d0
 
         do i = 1, Nplocal
+          gami = -ptarry1(6,i)+gam0
+          gambeti = sqrt(gami**2-1.0d0)
+          gambetx = ptarry1(2,i)
+          gambety = ptarry1(4,i)
+          gambetz = sqrt(gambeti**2-gambetx**2-gambety**2) 
+         
           tmp(1) = ptarry1(1,i)*Scxl
-          tmp(2) = ptarry1(2,i)/gambet
+          tmp(2) = ptarry1(2,i)/gambetz
           tmp(3) = ptarry1(3,i)*Scxl
-          tmp(4) = ptarry1(4,i)/gambet
+          tmp(4) = ptarry1(4,i)/gambetz
           tmp(5) = -ptarry1(5,i)*beta0*Scxl
           tmp(6) = -ptarry1(6,i)/beta0/gambet - &
                      (ptarry1(7,i)-qm0)/qm0
-
 
           ptarry1(1,i) = tmp(3)
           ptarry1(2,i) = tmp(4)
@@ -504,7 +510,6 @@
           ptarry1(5,i) = tmp(5)
           ptarry1(6,i) = tmp(6)
           
-
           ptarry2(1) = ptarry1(1,i) - 0.5d0*h0*tanphi2*ptarry1(1,i)**2 + &
                      0.5d0*h0*secphi2*ptarry1(3,i)**2
           ptarry2(2) = h0*tanphi*ptarry1(1,i)+ptarry1(2,i)+h0*tanphi2* &
@@ -522,10 +527,14 @@
           ptarry2(5) = ptarry1(5,i)
           ptarry2(6) = ptarry1(6,i)
 
+          xp=ptarry2(2)
+          yp=ptarry2(4)
+          gambetz = gambeti/sqrt(xp**2+yp**2+1.0d0) 
+
           ptarry1(3,i) = ptarry2(1)/Scxl
-          ptarry1(4,i) = ptarry2(2)*gambet
+          ptarry1(4,i) = ptarry2(2)*gambetz
           ptarry1(1,i) = ptarry2(3)/Scxl
-          ptarry1(2,i) = ptarry2(4)*gambet
+          ptarry1(2,i) = ptarry2(4)*gambetz
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
@@ -542,7 +551,8 @@
         double precision, dimension(6) :: ptarry2, tmp
         double precision :: tanphi2,secphi2,secphi,secphi3,secphib2
         integer :: i
-        real*8 :: gamn,gambetz,gambet,beta0
+        real*8 :: gamn,gambet,beta0
+        real*8 :: gami,gambeti,gambetx,gambety,gambetz,xp,yp
 
         tanphi2 = tanphi**2
         secphi2 = 1.0d0 + tanphi2
@@ -556,10 +566,16 @@
         gambet =  beta0*gam0
 
         do i = 1, Nplocal
+          gami = -ptarry1(6,i)+gam0
+          gambeti = sqrt(gami**2-1.0d0)
+          gambetx = ptarry1(2,i)
+          gambety = ptarry1(4,i)
+          gambetz = sqrt(gambeti**2-gambetx**2-gambety**2) 
+
           tmp(1) = ptarry1(1,i)*Scxl
-          tmp(2) = ptarry1(2,i)/gambet
+          tmp(2) = ptarry1(2,i)/gambetz
           tmp(3) = ptarry1(3,i)*Scxl
-          tmp(4) = ptarry1(4,i)/gambet
+          tmp(4) = ptarry1(4,i)/gambetz
           tmp(5) = -ptarry1(5,i)*beta0*Scxl
           tmp(6) = -ptarry1(6,i)/beta0/gambet - &
                        (ptarry1(7,i)-qm0)/qm0
@@ -588,114 +604,19 @@
           ptarry2(5) = ptarry1(5,i)
           ptarry2(6) = ptarry1(6,i)
 
-!          gambetz = sqrt(gamn**2-1.0d0)/sqrt(ptarry2(2)**2+ptarry2(4)**2+1)
+          xp=ptarry2(2)
+          yp=ptarry2(4)
+          gambetz = gambeti/sqrt(xp**2+yp**2+1.0d0) 
+
           ptarry1(1,i) = ptarry2(3)/Scxl
-          ptarry1(2,i) = ptarry2(4)*gambet
+          ptarry1(2,i) = ptarry2(4)*gambetz
           ptarry1(3,i) = ptarry2(1)/Scxl
-          ptarry1(4,i) = ptarry2(2)*gambet
+          ptarry1(4,i) = ptarry2(2)*gambetz
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
 
         end subroutine Bpol_Dipole_nonlinearmap
-
-        subroutine Sectorlinear_Dipole(len,beta,h0,k1,ptarry1,Nplocal,qm0)
-        implicit none
-        include 'mpif.h'
-        integer, intent(in) :: Nplocal
-        double precision, pointer, dimension(:,:) :: ptarry1
-        double precision :: h0,len,beta,k1,qm0
-        double precision, dimension(6) :: ptarry2
-        double precision :: kx2,kx,cx,sx,dx,j1,ky2,ky,cy,sy,dy,&
-                      gambet,gam2,qmrel,gam0,beta0,gamn,gambetz
-        integer :: i
-
-        gambet = beta/sqrt(1.0d0-beta**2)
-        gam2 = 1.0d0/(1.0d0-beta**2)
-        gam0 = sqrt(gam2)
-        beta0 = beta
-
-        kx2 = h0**2 + k1
-        if(kx2.gt.0.0d0) then
-          kx = sqrt(kx2)
-          cx = cos(kx*len)
-          dx = (1.0d0-cx)/kx2
-          sx = sin(kx*len)/kx
-        else if(kx2.eq.0.0d0) then
-          kx = sqrt(kx2)
-          cx = cos(kx*len)
-          dx = len**2/2
-          sx = len
-        else
-          kx = sqrt(-kx2)
-          cx = cosh(kx*len)
-          dx = (1.0-cx)/kx2
-          sx = sinh(kx)/kx
-        endif
-        j1 = (len-sx)/kx2
-        ky2 = -k1
-        if(ky2.gt.0.0) then
-          ky = sqrt(ky2)
-          cy = cos(ky*len)
-          dy = (1.0-cy)/ky2
-          sy = sin(ky*len)/ky
-        else if(ky2.eq.0.0d0) then
-          ky = sqrt(ky2)
-          cy = cos(ky*len)
-          dy = len**2/2
-          sy = len
-        else
-          ky = sqrt(-ky2)
-          cy = cosh(ky*len)
-          dy = (1.0-cy)/ky2
-          sy = sinh(ky)/ky
-        endif
-!        print*,"h0,k1: ",h0,k1,beta,len,kx,cx,dx,sx,ky,cy,dy,sy
-
-        ptarry2 = 0.0d0
-        do i = 1, Nplocal
-          ptarry1(1,i) = ptarry1(1,i)*Scxl
-!          gamn = gam0 - ptarry1(6,i)
-!          gambetz = sqrt(gamn**2-1.0d0-ptarry1(2,i)**2-&
-!                         ptarry1(4,i)**2)
-!          ptarry1(2,i) = ptarry1(2,i)/gambetz
-          ptarry1(2,i) = ptarry1(2,i)/gambet
-          ptarry1(3,i) = ptarry1(3,i)*Scxl
-!          ptarry1(4,i) = ptarry1(4,i)/gambetz
-          ptarry1(4,i) = ptarry1(4,i)/gambet
-          ptarry1(5,i) = -ptarry1(5,i)*beta0*Scxl
-          ptarry1(6,i) = -ptarry1(6,i)/beta0/gambet - &
-                         (ptarry1(7,i)-qm0)/qm0
-
-          ptarry2(1) = cx*ptarry1(1,i)+sx*ptarry1(2,i)+&
-                     h0*dx*ptarry1(6,i) 
-          ptarry2(2) = -kx2*sx*ptarry1(1,i)+cx*ptarry1(2,i)+&
-                     h0*sx*ptarry1(6,i) 
-          ptarry2(3) = cy*ptarry1(3,i)+sy*ptarry1(4,i)
-          ptarry2(4) = -ky2*sy*ptarry1(3,i)+cy*ptarry1(4,i)
-! (5) is defined as -v dt = -c beta dt
-! see p.147 of F. Iselin paper
-          qmrel = (ptarry1(7,i)-qm0)/qm0
-          ptarry2(5) = -h0*sx*ptarry1(1,i)-h0*dx*ptarry1(2,i)+&
-                     ptarry1(5,i) - h0**2*j1*ptarry1(6,i) + &
-                     len/gam2*(ptarry1(6,i)+qmrel)
-! Transport defines (5) as path differnce which is v dt
-!          ptarry2(5) = h0*sx*ptarry1(1,i)+h0*dx*ptarry1(2,i)+&
-!                     ptarry1(5,i) + h0**2*j1*ptarry1(6,i)
-          ptarry2(6) = ptarry1(6,i)
-
-!          gambetz = sqrt(gamn**2-1.0d0)/sqrt(ptarry2(2)**2+ptarry2(4)**2+1)
-          ptarry1(1,i) = ptarry2(1)/Scxl
-!          ptarry1(2,i) = ptarry2(2)*gambetz
-          ptarry1(2,i) = ptarry2(2)*gambet
-          ptarry1(3,i) = ptarry2(3)/Scxl
-!          ptarry1(4,i) = ptarry2(4)*gambetz
-          ptarry1(4,i) = ptarry2(4)*gambet
-          ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
-          ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
-        enddo
-
-        end subroutine Sectorlinear_Dipole
 
         !B. Li added the 2nd order map
         !ref: Brown_1982_SlacPub
@@ -707,13 +628,15 @@
         double precision :: h0,len,beta0,k1,qm0,qmrel
         double precision, dimension(6) :: ptarry2
         integer :: i
-        real*8 :: gami,gam0,gam2,gambet
+        real*8 :: gam0,gam2,gambet
         real*8 :: R11,R12,R16,R21,R22,R26,R51,R52,R56
         real*8 :: T111,T112,T116,T122,T126,T166,T144
         real*8 :: T216,T222,T266,T244,T314,T324,T346
-        real*8 :: T516,T526,T522,T544
+        real*8 :: T526,T522,T544
         real*8 :: theta, rho
         real*8 :: x0,xp0,y0,yp0,z0,eta
+        real*8 :: gambeti,gami,gambetx,gambety,gambetz,xp,yp        
+
         !print*,"non-linear map for Dipole."
         !right now, sector dipole only has dipole filed, no quad filed
         !K1=0, for K1.ne.0, map too complicated, add in future
@@ -744,10 +667,10 @@
         T324 = 2.0d0*rho*sin(theta/2.0d0)**2
         T346 = rho*(theta-sin(theta))
 
-        T522 = -0.5d0*rho*sin(theta)
-        T544 = T522
-        T516 = -sin(theta)
-        T526 = rho*sin(theta)
+        T522= -0.5d0*rho*sin(theta)
+        T544= T522   !bbl, I think T544 should be 0, but ELEGANT map 
+                     !gives T522 value
+        T526=rho*(cos(theta)-1.0d0)
 
         !reference particle information
         gambet = beta0/sqrt(1.0d0-beta0**2)
@@ -755,12 +678,17 @@
         gam0 = sqrt(gam2)
         ptarry2 = 0.0d0
         do i = 1, Nplocal
-          gami = gam0 - ptarry1(6,i)
+          gami = -ptarry1(6,i)+gam0
+          gambeti = sqrt(gami**2-1.0d0)
+          gambetx = ptarry1(2,i)
+          gambety = ptarry1(4,i)
+          gambetz = sqrt(gambeti**2-gambetx**2-gambety**2) 
+
           !transform to geometry phase space (x,xp,y,yp,z,eta)
           y0     =  ptarry1(1,i)*Scxl
-          yp0    =  ptarry1(2,i)/gambet
+          yp0    =  ptarry1(2,i)/gambetz
           x0     =  ptarry1(3,i)*Scxl
-          xp0    =  ptarry1(4,i)/gambet
+          xp0    =  ptarry1(4,i)/gambetz
           z0     = -ptarry1(5,i)*beta0*Scxl
           eta    = -ptarry1(6,i)/beta0/gambet-(ptarry1(7,i)-qm0)/qm0
           !applying transfer map up to 2nd order
@@ -771,15 +699,18 @@
               +T216*x0*eta +T222*xp0**2 +T266*eta**2 +T244*yp0**2
           ptarry2(3) = y0 +len*yp0 +T314*x0*yp0 +T324*xp0*yp0 +T346*yp0*eta
           ptarry2(4) = yp0
-          ptarry2(5) = R51*x0+R52*xp0+z0+R56*eta+ &
-                       T522*xp0**2+T544*yp0**2+T526*xp0*eta+ &
-                       T516*x0*eta
+          ptarry2(5) = R51*x0+R52*xp0+z0+R56*eta &
+                       +T522*xp0**2+T544*yp0**2+T526*xp0*eta
           ptarry2(6) = eta
 
+          xp=ptarry2(2)
+          yp=ptarry2(4)
+          gambetz = gambeti/sqrt(xp**2+yp**2+1.0d0)           
+
           ptarry1(3,i) = ptarry2(1)/Scxl
-          ptarry1(4,i) = ptarry2(2)*gambet
+          ptarry1(4,i) = ptarry2(2)*gambetz
           ptarry1(1,i) = ptarry2(3)/Scxl
-          ptarry1(2,i) = ptarry2(4)*gambet
+          ptarry1(2,i) = ptarry2(4)*gambetz
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
@@ -947,5 +878,105 @@
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
         end subroutine Sector_Dipole_linearmap   
+
+        subroutine Sectorlinear_Dipole(len,beta,h0,k1,ptarry1,Nplocal,qm0)
+        implicit none
+        include 'mpif.h'
+        integer, intent(in) :: Nplocal
+        double precision, pointer, dimension(:,:) :: ptarry1
+        double precision :: h0,len,beta,k1,qm0
+        double precision, dimension(6) :: ptarry2
+        double precision :: kx2,kx,cx,sx,dx,j1,ky2,ky,cy,sy,dy,&
+                      gambet,gam2,qmrel,gam0,beta0,gamn,gambetz
+        integer :: i
+
+        gambet = beta/sqrt(1.0d0-beta**2)
+        gam2 = 1.0d0/(1.0d0-beta**2)
+        gam0 = sqrt(gam2)
+        beta0 = beta
+
+        kx2 = h0**2 + k1
+        if(kx2.gt.0.0d0) then
+          kx = sqrt(kx2)
+          cx = cos(kx*len)
+          dx = (1.0d0-cx)/kx2
+          sx = sin(kx*len)/kx
+        else if(kx2.eq.0.0d0) then
+          kx = sqrt(kx2)
+          cx = cos(kx*len)
+          dx = len**2/2
+          sx = len
+        else
+          kx = sqrt(-kx2)
+          cx = cosh(kx*len)
+          dx = (1.0-cx)/kx2
+          sx = sinh(kx)/kx
+        endif
+        j1 = (len-sx)/kx2
+        ky2 = -k1
+        if(ky2.gt.0.0) then
+          ky = sqrt(ky2)
+          cy = cos(ky*len)
+          dy = (1.0-cy)/ky2
+          sy = sin(ky*len)/ky
+        else if(ky2.eq.0.0d0) then
+          ky = sqrt(ky2)
+          cy = cos(ky*len)
+          dy = len**2/2
+          sy = len
+        else
+          ky = sqrt(-ky2)
+          cy = cosh(ky*len)
+          dy = (1.0-cy)/ky2
+          sy = sinh(ky)/ky
+        endif
+!        print*,"h0,k1: ",h0,k1,beta,len,kx,cx,dx,sx,ky,cy,dy,sy
+
+        ptarry2 = 0.0d0
+        do i = 1, Nplocal
+          ptarry1(1,i) = ptarry1(1,i)*Scxl
+!          gamn = gam0 - ptarry1(6,i)
+!          gambetz = sqrt(gamn**2-1.0d0-ptarry1(2,i)**2-&
+!                         ptarry1(4,i)**2)
+!          ptarry1(2,i) = ptarry1(2,i)/gambetz
+          ptarry1(2,i) = ptarry1(2,i)/gambet
+          ptarry1(3,i) = ptarry1(3,i)*Scxl
+!          ptarry1(4,i) = ptarry1(4,i)/gambetz
+          ptarry1(4,i) = ptarry1(4,i)/gambet
+          ptarry1(5,i) = -ptarry1(5,i)*beta0*Scxl
+          ptarry1(6,i) = -ptarry1(6,i)/beta0/gambet - &
+                         (ptarry1(7,i)-qm0)/qm0
+
+          ptarry2(1) = cx*ptarry1(1,i)+sx*ptarry1(2,i)+&
+                     h0*dx*ptarry1(6,i) 
+          ptarry2(2) = -kx2*sx*ptarry1(1,i)+cx*ptarry1(2,i)+&
+                     h0*sx*ptarry1(6,i) 
+          ptarry2(3) = cy*ptarry1(3,i)+sy*ptarry1(4,i)
+          ptarry2(4) = -ky2*sy*ptarry1(3,i)+cy*ptarry1(4,i)
+! (5) is defined as -v dt = -c beta dt
+! see p.147 of F. Iselin paper
+          qmrel = (ptarry1(7,i)-qm0)/qm0
+          ptarry2(5) = -h0*sx*ptarry1(1,i)-h0*dx*ptarry1(2,i)+&
+                     ptarry1(5,i) - h0**2*j1*ptarry1(6,i) + &
+                     len/gam2*(ptarry1(6,i)+qmrel)
+! Transport defines (5) as path differnce which is v dt
+!          ptarry2(5) = h0*sx*ptarry1(1,i)+h0*dx*ptarry1(2,i)+&
+!                     ptarry1(5,i) + h0**2*j1*ptarry1(6,i)
+          ptarry2(6) = ptarry1(6,i)
+
+!          gambetz = sqrt(gamn**2-1.0d0)/sqrt(ptarry2(2)**2+ptarry2(4)**2+1)
+          ptarry1(1,i) = ptarry2(1)/Scxl
+!          ptarry1(2,i) = ptarry2(2)*gambetz
+          ptarry1(2,i) = ptarry2(2)*gambet
+          ptarry1(3,i) = ptarry2(3)/Scxl
+!          ptarry1(4,i) = ptarry2(4)*gambetz
+          ptarry1(4,i) = ptarry2(4)*gambet
+          ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
+          ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
+        enddo
+
+        end subroutine Sectorlinear_Dipole
+
+
 
       end module Dipoleclass

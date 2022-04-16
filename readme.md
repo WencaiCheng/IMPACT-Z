@@ -1,6 +1,4 @@
-
-
-# Chap1 Quick Start
+#  Quick Start
 
 ## Installation
 
@@ -173,7 +171,7 @@ ImpactZ.exe
 
 
 
-# Chap2 Code structure and convention
+# Code structure and convention
 
 ## Code Structure
 
@@ -312,7 +310,6 @@ SHINE: line = (Q01COL0, Q01COL0, &
 
 
 
-
 ## 坐标定义
 
 ### IMPACT-Z 坐标
@@ -361,7 +358,7 @@ $\gamma_0$ 需由统计平均值给出。
 
 
 
-# Chap3 Input file
+# Input file
 
 先介绍 lte.impz 输入文件中的三部分。
 
@@ -1183,8 +1180,6 @@ notes:
 
  <img src="pics/image-20211123100427234.png" alt="image-20211123100427234" style="zoom:67%;" />
 
-
-
 ### SC
 
 即`104`超导元件。
@@ -1410,9 +1405,7 @@ usage:
 
 gives the following plots:
 
-![image-20211223020905891](file:///Users/biaobin/gitlab_subj/IMPACT-Z/pics/image-20211223020905891.png?lastModify=1646226104)
-
-
+![image-20211223020905891](pics/image-20211223020905891.png)
 
 ## debug时输出分布
 
@@ -1464,7 +1457,7 @@ wakefield file 不能过长，5000行数据为最大(Data.f90)。kband-file 有3
 bug: value requires 3018290224 bytes, which is more than max-value-size.
 ```
 
-![image-20210227033247406](pics/image-20210227033247406.png)
+
 
 如 rfdata41.in 行数超过 5000 行，如为 3e4 行，将超行读取。（这里很是奇怪，照理应该仍然只能读 5000 行的数据，但是实际上却读取了 3e4 行），最后在 deallocate 时出错。
 
@@ -1713,6 +1706,5 @@ $$
 2192         end subroutine scatter1_BeamBunch
 
 ```
-
 
 
