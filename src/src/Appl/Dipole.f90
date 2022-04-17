@@ -503,10 +503,10 @@
           tmp(6) = -ptarry1(6,i)/beta0/gambet - &
                      (ptarry1(7,i)-qm0)/qm0
 
-          ptarry1(1,i) = tmp(3)
-          ptarry1(2,i) = tmp(4)
-          ptarry1(3,i) = tmp(1)
-          ptarry1(4,i) = tmp(2)
+          ptarry1(1,i) = tmp(1)
+          ptarry1(2,i) = tmp(2)
+          ptarry1(3,i) = tmp(3)
+          ptarry1(4,i) = tmp(4)
           ptarry1(5,i) = tmp(5)
           ptarry1(6,i) = tmp(6)
           
@@ -531,10 +531,10 @@
           yp=ptarry2(4)
           gambetz = gambeti/sqrt(xp**2+yp**2+1.0d0) 
 
-          ptarry1(3,i) = ptarry2(1)/Scxl
-          ptarry1(4,i) = ptarry2(2)*gambetz
-          ptarry1(1,i) = ptarry2(3)/Scxl
-          ptarry1(2,i) = ptarry2(4)*gambetz
+          ptarry1(1,i) = ptarry2(1)/Scxl
+          ptarry1(2,i) = ptarry2(2)*gambetz
+          ptarry1(3,i) = ptarry2(3)/Scxl
+          ptarry1(4,i) = ptarry2(4)*gambetz
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
@@ -580,10 +580,10 @@
           tmp(6) = -ptarry1(6,i)/beta0/gambet - &
                        (ptarry1(7,i)-qm0)/qm0
 
-          ptarry1(1,i) = tmp(3)
-          ptarry1(2,i) = tmp(4)
-          ptarry1(3,i) = tmp(1)
-          ptarry1(4,i) = tmp(2)
+          ptarry1(1,i) = tmp(1)
+          ptarry1(2,i) = tmp(2)
+          ptarry1(3,i) = tmp(3)
+          ptarry1(4,i) = tmp(4)
           ptarry1(5,i) = tmp(5)
           ptarry1(6,i) = tmp(6)
 
@@ -608,10 +608,10 @@
           yp=ptarry2(4)
           gambetz = gambeti/sqrt(xp**2+yp**2+1.0d0) 
 
-          ptarry1(1,i) = ptarry2(3)/Scxl
-          ptarry1(2,i) = ptarry2(4)*gambetz
-          ptarry1(3,i) = ptarry2(1)/Scxl
-          ptarry1(4,i) = ptarry2(2)*gambetz
+          ptarry1(1,i) = ptarry2(1)/Scxl
+          ptarry1(2,i) = ptarry2(2)*gambetz
+          ptarry1(3,i) = ptarry2(3)/Scxl
+          ptarry1(4,i) = ptarry2(4)*gambetz
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
@@ -685,10 +685,10 @@
           gambetz = sqrt(gambeti**2-gambetx**2-gambety**2) 
 
           !transform to geometry phase space (x,xp,y,yp,z,eta)
-          y0     =  ptarry1(1,i)*Scxl
-          yp0    =  ptarry1(2,i)/gambetz
-          x0     =  ptarry1(3,i)*Scxl
-          xp0    =  ptarry1(4,i)/gambetz
+          x0     =  ptarry1(1,i)*Scxl
+          xp0    =  ptarry1(2,i)/gambetz
+          y0     =  ptarry1(3,i)*Scxl
+          yp0    =  ptarry1(4,i)/gambetz
           z0     = -ptarry1(5,i)*beta0*Scxl
           eta    = -ptarry1(6,i)/beta0/gambet-(ptarry1(7,i)-qm0)/qm0
           !applying transfer map up to 2nd order
@@ -707,10 +707,10 @@
           yp=ptarry2(4)
           gambetz = gambeti/sqrt(xp**2+yp**2+1.0d0)           
 
-          ptarry1(3,i) = ptarry2(1)/Scxl
-          ptarry1(4,i) = ptarry2(2)*gambetz
-          ptarry1(1,i) = ptarry2(3)/Scxl
-          ptarry1(2,i) = ptarry2(4)*gambetz
+          ptarry1(1,i) = ptarry2(1)/Scxl
+          ptarry1(2,i) = ptarry2(2)*gambetz
+          ptarry1(3,i) = ptarry2(3)/Scxl
+          ptarry1(4,i) = ptarry2(4)*gambetz
           ptarry1(5,i) = -ptarry2(5)/Scxl/beta0
           ptarry1(6,i) = -beta0*gambet*(ptarry2(6)+(ptarry1(7,i)-qm0)/qm0)
         enddo
