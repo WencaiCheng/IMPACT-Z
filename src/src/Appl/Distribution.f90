@@ -2057,9 +2057,7 @@
             call random_number(xx)
             this%pts1(6,i) = sig6*sqrt(-2.0*log(xtmp(6)))* &
                              cos(twopi*xx) 
-            !then add energy chirp, muzpz is energy chirp h here
-            this%pts1(6,i) = this%pts1(6,i) + xmu6 &
-                             +muzpz*xz*Scxl*gam0*bet0**3
+            this%pts1(6,i) = this%pts1(6,i) + xmu6 
         enddo
         
         this%Nptlocal = avgpts
