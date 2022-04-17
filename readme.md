@@ -836,7 +836,7 @@ usage: ID=25
 | R11            |                  | double | 1.0     | for x direction shrink                                       |
 | R33            |                  | double | 1.0     | for y direction shrink.                                      |
 | R55            |                  | double | 1.0     | for z direction shrink                                       |
-| R56            |                  | double | 0.0     | momentum compaction factor, because we used z>0 for beam head, so positive m56 results bunch length compression in four dipole chicane. |
+| R56            |                  | double | 0.0     | momentum compaction factor, because we used z>0 for beam head, so positive m56 results bunch length compression in four dipole chicane.<br />PAY ATTENTION, this is different from the convention used in ELEGANT, as we define $z>0$ for head. So all the terms related to subscript 5 may be minus of the term in ELEGANT. |
 | R65            |                  | double | 0.0     | for energy chirp, R65<0 for chicane compression, R65>0 for de-chirp. |
 | R66            |                  | double | 1.0     |                                                              |
 | T566           |                  | double | 0.0     |                                                              |
@@ -1706,5 +1706,4 @@ $$
 2192         end subroutine scatter1_BeamBunch
 
 ```
-
 
