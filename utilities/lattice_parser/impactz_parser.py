@@ -220,6 +220,7 @@ class impactz_parser(lattice_parser):
         self.control['RINGSIMU']  = 0 
         self.control['SAMPLE_OUT'] = 1e5   #WATCH element, output how many particles
         self.control['SLICE_BIN'] = 128    #WATCH element, output how many particles
+        self.control['ERROR'] = 0
 
         # turn all para values to str data type
         for key in self.control:
@@ -616,6 +617,8 @@ class impactz_parser(lattice_parser):
         Np = int(float(self.beam['NP']))
         control_lines.append( str(Np) )
         control_lines.append( self.control['INTEGRATOR'] )
+        control_lines.append( self.control['ERROR'] )
+
         control_lines.append( '0 1 \n' )
         
         # line-3
