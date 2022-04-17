@@ -376,6 +376,7 @@ The values following are all default values.
   core_num_L=1;
   
   integrator= 1;  
+  error= 0;
   
   meshx= 64;
   meshy= 64;
@@ -429,6 +430,7 @@ The values following are all default values.
 | -------------- | ----- | ---- | ------- | ------------------------------------------------------------ |
 | integrator     |       | int  | 1       | 1 for linear map, i.e. transfer matrix; 2 for nonlinear Lorentz integrator. |
 | steps          |       | int  | 1       | 1 kicks/m. If set to 0, no matter how long is the element, the nseg=1. |
+| error          |       | int  | 0       | ==For element TILT and ERROR study, this parameter should be set to 1.== |
 
 
 
@@ -800,7 +802,7 @@ A magnetic dipole implemented as a matrix, up to 2nd order. See K. Brown paper f
 | Dy             | m            | double | 0.0     | y misalignment error                                         |
 | rotate_x       | rad          | double | 0.0     | rotation error in x direction                                |
 | rotate_y       | rad          | double | 0.0     | rotation error in y direction                                |
-| ratate_z       | rad          | double | 0.0     | rotation error in y direction                                |
+| ratate_z       | rad          | double | 0.0     | rotation error in y direction. This parameter could be used as TILT from ELEGANT. BUT REMEMBER TO SET ERROR=1 IN CONTROL SECTION. |
 | CSR            |              | int    | 0       | 0/1, whether to include 1D-CSR effects or not.   |
 | csrout | | int | 0 | `0/1`, OFF or ON the csr wake at each step. |
 | csrfile | | int | 1 | output file will be `1_1.csr, 1_2.csr, ...`. The first colum is particle coordinate (m), 2nd col. is density profile, 3rd. colum is csrwake. The size depends on Nz, i.e. longi. grid points. |

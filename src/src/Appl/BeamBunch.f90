@@ -80,7 +80,10 @@
         anglex = anglerrx
         angley = anglerry
         anglez = anglerrz
-
+        
+        !To avoid every elem. go into the loop which is not tilted
+        if(abs(dx)+abs(dy)+abs(anglex)+abs(angley)+abs(anglez) &
+           .gt.1.0d-12) then
         !print*,"errorL: ",xerr,yerr,anglerrx,anglerry,anglerrz
         gam0 = -this%refptcl(6)
         gambetz0 = sqrt(gam0**2-1.0d0)
@@ -124,6 +127,7 @@
           this%Pts1(5,i) = -tmp(5)/betz 
           this%Pts1(6,i) = gam0-gam 
         enddo
+        endif
         !print*,"after1: ",this%Pts1(1:6,1)
 
         end subroutine geomerrL_BeamBunch
@@ -150,7 +154,10 @@
         angley = -anglerry
         anglez = -anglerrz
 
-!        print*,"errorT: ",xerr,yerr,anglerrx
+        !To avoid every elem. go into the loop which is not tilted
+        if(abs(dx)+abs(dy)+abs(anglex)+abs(angley)+abs(anglez) &
+           .gt.1.0d-12) then
+        !print*,"errorT: ",xerr,yerr,anglerrx
         !print*,"before2: ",this%Pts1(1:6,1)
         gam0 = -this%refptcl(6)
         gambetz0 = sqrt(gam0**2-1.0d0)
@@ -195,6 +202,7 @@
           this%Pts1(5,i) = -temp(5)/betz
           this%Pts1(6,i) = gam0-gam 
         enddo
+        endif
         !print*,"after2: ",this%Pts1(1:6,1)
 
         end subroutine geomerrT_BeamBunch

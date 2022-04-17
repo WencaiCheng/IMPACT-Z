@@ -1626,10 +1626,12 @@
             endif
             !print*,"pass sec2: ",z
             
-            !for one turn tracking, calculation beam information after
+            !1. for one turn tracking, calculation beam information after
             !every element; for multi-turn tracking, only at the end of
             !one turn
-            if(turn.eq.1) then
+            !2. for error and elem. rotation case, no output inside the
+            !element, since we rotated the beam
+            if(turn.eq.1 .and. Flagerr.eq.0) then
               if(Flagdiag.eq.1) then
                   call diagnostic1_Output(z,Bpts,nchrg,nptlist0, &
                                           turn,ith_turn)
@@ -1658,9 +1660,19 @@
                 stop        
               endif
           endif
+
+          !for error and rotate case, only output beam info 
+          !at the exit of the elem.
           if(Flagerr.eq.1) then
-                call geomerrT_BeamBunch(Bpts,Blnelem(i)) 
+            call geomerrT_BeamBunch(Bpts,Blnelem(i)) 
+            if(Flagdiag.eq.1) then
+                call diagnostic1_Output(z,Bpts,nchrg,nptlist0, &
+                                       turn,ith_turn )
+            else
+                call diagnostic2_Output(Bpts,z,nchrg,nptlist0)
+            endif
           end if
+
           zbleng = zbleng + blength
         enddo  !end loop through nbeam line element
 
