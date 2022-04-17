@@ -147,27 +147,35 @@ AB1=-4.410*pi/180
 
 
 
-Given the `lte.impz` input file, then type:
+### How to run it
 
-```bash
-genimpactzin lte.impz line
-```
+1. Add `ImpactZ.exe,` `genimpactzin` into your `PATH` environment:
 
-which will generate the `ImpactZ.in` file. Now you can run the `ImpactZ.exe` in parallel version as:
+	```bash
+	export PATH=/mnt/d/githubProj/IMPACT-T/src:$PATH
+	export PATH=/mnt/d/githubProj/IMPACT-Z/utilities/lattice_parser:$PATH
+	```
 
-```
-mpirun -np 4 ImpactZ.exe
-```
+2. Given the `lte.impz` input file:
 
-4 processes are used as `core_num_T*core_num_L=4`.
+	```bash
+	genimpactzin lte.impz line
+	```
+	which will generate the `ImpactZ.in` file. Now you can run the `ImpactZ.exe` in parallel version as:
 
-For single process version:
+	```
+	mpirun -np 4 ImpactZ.exe
+	```
 
-```
-ImpactZ.exe
-```
+	4 processes are used as `core_num_T*core_num_L=4`.
 
-`ImpactZ.in` is automatically read.
+	If you are using the single process version, `core_num_T=1,core_num_L=1` should be given. Then just type:
+
+	```
+	ImpactZ.exe
+	```
+
+	`ImpactZ.in` is automatically read.
 
 
 
