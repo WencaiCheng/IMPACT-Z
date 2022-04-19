@@ -937,6 +937,21 @@ acceleration gradient=5.97474936319844610989e+06 V/m, frequency=1.3e9 Hz, phase=
 
 ### WAKE
 
+
+
+| Parameter Name | Units | Type   | Default    | Description                                                  |
+| -------------- | ----- | ------ | ---------- | ------------------------------------------------------------ |
+| zwake          |       | int    | 0          | 0/1, if zero, longitudinal wake is turned off                |
+| trwake         |       | int    | 0          | 0/1, if zero, transverse wakes are turned off                |
+| wakefile_ID    |       | int    | None       | If None, analytical wake model is used. If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
+| a              | m     | double | 6.6e-3     | aperture for wakefield, default is C-BAND parameter          |
+| g              | m     | double | 14.995e-3  | cell gap length, default is C-BAND parmater                  |
+| cell_len       | m     | double | 17.495e-3  | cell length, default is C-BAND parameter                     |
+| wakeout        |       | int    | 0          | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
+| wakefile       |       | int    | 0          | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) [V/m] along the longi. position. The size depends on Nz, i.e. longi. grid points. |
+| waketype       |       | string | “SLAC32PI” | (1). waketype=“SLAC32PI”, i.e. normal $2\pi/3$ mode SLAC type cavity<br />(2).  waketype=“TESLA13G”, i.e. TESLA 1.3GHz superconducting cavity wake<br />(3). waketype=“TESLA39G”, i.e. TESLA 3.9GHz superconducting cavity wake.<br />When `wakefile_ID=none` , analytical wake function in the code is applied. When `wakefile_ID` is used, user given wakefile is appllied. |
+| factor         |       | double | 1.0        | Factor to multiply the wakefield in rfdata41.in. ONLY for user given wakefile, NOT for analytical model. |
+
 This is for test the wakefield, where we put the drift between the wake ON and OFF elements.
 
 For `rfdata41.in` read-in file:
@@ -949,6 +964,8 @@ d1: drfit, L=100
 
 line: line=(wake1,d1,wake2)
 ```
+
+
 
 For analytical C-band RF structure wake：
 
@@ -963,20 +980,19 @@ line: line=(wake1,d1,wake2)
 
 
 
-参数表：
+If one wants to know the convolved RF wake field, one could use the following lines to output the wakefile:
 
-| Parameter Name | Units | Type   | Default    | Description                                                  |
-| -------------- | ----- | ------ | ---------- | ------------------------------------------------------------ |
-| zwake          |       | int    | 0          | 0/1, if zero, longitudinal wake is turned off                |
-| trwake         |       | int    | 0          | 0/1, if zero, transverse wakes are turned off                |
-| wakefile_ID    |       | int    | None       | If None, analytical wake model is used. If  WAKEFIEL_ID=41, it refers to `rfdata41.in` , which contains RF structure wakefield, 1st column is s [m],  2nd column is longitudinal wakefield $w_L$ [V/C/m], 3rd column is transverse wakefield $w_T$ [$\rm{V/C/m^2}$]. |
-| a              | m     | double | 6.6e-3     | aperture for wakefield, default is C-BAND parameter          |
-| g              | m     | double | 14.995e-3  | cell gap length, default is C-BAND parmater                  |
-| cell_len       | m     | double | 17.495e-3  | cell length, default is C-BAND parameter                     |
-| wakeout        |       | int    | 0          | 0/1, OFF or ON the RF wake output. Only  output the wake in the first step. |
-| wakefile       |       | int    | 0          | output the wake, which has been convolved with the current profile, the output file will be `0.rfwake`. The first colum is particle coordinate [m], 2nd. col. is current profile, 3-5 col. are (exwake,eywake,ezwake) along the longi. position. The size depends on Nz, i.e. longi. grid points. |
-| waketype       |       | string | “SLAC32PI” | (1). waketype=“SLAC32PI”, i.e. normal $2\pi/3$ mode SLAC type cavity<br />(2).  waketype=“TESLA13G”, i.e. TESLA 1.3GHz superconducting cavity wake<br />(3). waketype=“TESLA39G”, i.e. TESLA 3.9GHz superconducting cavity wake.<br />When `wakefile_ID=none` , analytical wake function in the code is applied. When `wakefile_ID` is used, user given wakefile is appllied. |
-| factor         |       | double | 1.0        | Factor to multiply the wakefield in rfdata41.in. ONLY for user given wakefile, NOT for analytical model. |
+```
+! wake out
+!---------
+wake1: wakeon,a=6.6e-3, wakeout=1, wakefile=1
+wakeoff: wakeoff
+d1: drift, L=1e-3
+
+wakefile1: line=(wake1,d1,wakeoff)
+```
+
+ 
 
 Fortran level:
 
