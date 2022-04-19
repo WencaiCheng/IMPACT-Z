@@ -618,8 +618,7 @@ class impactz_parser(lattice_parser):
         control_lines.append( str(Np) )
         control_lines.append( self.control['INTEGRATOR'] )
         control_lines.append( self.control['ERROR'] )
-
-        control_lines.append( '0 1 \n' )
+        control_lines.append( '1 \n' )
         
         # line-3
         control_lines.append( self.control['MESHX'] )
