@@ -1,3 +1,7 @@
+The main differences between this branch with the official one is a python module was developed to parse the ELEGANT style input file into `ImpactZ.in`. For the beginners to IMPACT-Z, the most unfriendly problem maybe is the all number input file `ImpactZ.in`. Right now, with the help of `genimpactzin` python scripts, one could take a little modifications to run ELEGANT lattice with IMPACT-Z. 
+
+
+
 #  Quick Start
 
 ## Installation
