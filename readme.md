@@ -22,7 +22,14 @@ The user need to replace it with your own path.
 
 ### Parallel version
 
-If you want to get the parallel version of ImpactZ.exe, go to `IMPACT-Z/utilities` , then type:
+Before compiling the parallel version, one should install `mpich` and `gfortran` in your computer. In linux system:
+
+```bash
+sudo apt install gfortran
+sudo apt install mpich
+```
+
+Then go to `IMPACT-Z/utilities` ,  type:
 
 ```bash
 ./sing2paracore
