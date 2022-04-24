@@ -1,5 +1,62 @@
 The main differences between this branch with the official one is a python module was developed to parse the ELEGANT style input file into `ImpactZ.in`. For the beginners to IMPACT-Z, the most unfriendly problem maybe is the all number input file `ImpactZ.in`. Right now, with the help of `genimpactzin` python scripts, one could take a little modifications to run ELEGANT lattice with IMPACT-Z. 
 
+The useful features are listed as following:
+
+- In the `control` section, using the following lines to separately control the collective effects:
+
+	```bash
+	&control
+	
+	lsc=0;
+	zwake=0;
+	csr=0;
+	tsc=0;
+	trwake=0;
+	
+	&end
+	```
+
+- use `default_order` in control section to choose linear map or nonlinear map.
+
+- output the wakefield in `lattice` section:
+
+	```bash
+	! wake out
+	!---------
+	wake1: wakeon,a=6.6e-3, wakeout=1, wakefile=1
+	wakeoff: wakeoff
+	d1: drift, L=1e-3
+	
+	wakefile: line=(wake1,d1,wakeoff)
+	```
+
+	insert the `wakefile` element in the position you want to check the convolved wake. 
+
+- output csr wakefield every step in the dipole:
+
+	```
+	csr1: csrkick, L=Lb2, angle=theta2, steps=5, csrout=1, csrfile=1
+	```
+
+	The `csrkick` element will only give the csr kick but no optics transfer map is applied.
+
+- mathematical or `rpn` expressions are supported in the lattice section:
+
+	```bash
+	! case1: rpn expression
+	! ---------------------
+	% 0.2 sto LB1
+	% -4 pi * 180 / sto theta  ! Bend angle
+	
+	! case2: direct math. expression
+	! ------------------------------
+	LB1=0.2
+	theta=-4*pi/180
+	```
+
+- `ematrix` element, which is useful for Linac-1D for FEL design, with turning off the `end_focus` in `RFCW`, and setting `sigxp=0,sigyp=0` , one could apply the 1D tracking.
+- beta and dispersion function of the tracking beam is added in additional columns in `fort.24` and `fort.25` output files.
+
 
 
 #  Quick Start
