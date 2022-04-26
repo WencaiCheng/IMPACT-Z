@@ -1115,7 +1115,8 @@ Output particle distribution and beam slice information into fort.N and fort.(N+
 | filename_ID    |       | int    | 9999    | number larger than 1000 is recommended                       |
 | sample_freq    |       | int    | 0       | If sample_freq=10, every 10 particles output 1 particle. If not set (`sample_freq=0`), `sample_out` in control section will set the `sample_freq` based on the `Np` particle number. |
 | coord_conv     |       | string | normal  | `IMPACT-Z/IMPACT-T/NORMAL/ASTRA`                             |
-| slice_info     |       | int    | 1       | whether output slice information, i.e. whether add -8 element simultaneously |
+| slice_info     |       | int    | 1       | `0/1`, whether output slice information, i.e. whether add -8 element simultaneously |
+| coord_info     |       | int    | 1       | `0/1`, whether output particles phase space, i.e. whether add -2 element. |
 | slice_bin      |       | int    | 0       | bins number for getting histogram slice information. If not set (`slice_bin=0`), `slice_bin` in control section will set the value. |
 
 For coordinate_convention='IMPACT-Z', output phase space is $(xw/c,\gamma\beta_x,yw/c,\gamma\beta_y,wt,-(\gamma-\gamma_0))$,  where $w$ is $w=2\pi f$, $f$ is the scaling frequency.
