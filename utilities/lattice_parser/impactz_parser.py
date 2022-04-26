@@ -388,6 +388,7 @@ class impactz_parser(lattice_parser):
         self.lattice['WATCH']['SAMPLE_FREQ'] = 0
         self.lattice['WATCH']['COORD_CONV'] = 'NORMAL' 
         self.lattice['WATCH']['SLICE_INFO'] = 1  # by default add -8 element simultaneously
+        self.lattice['WATCH']['COORD_INFO'] = 1  # by default add -8 element simultaneously
         self.lattice['WATCH']['SLICE_BIN'] = 0
 
         # RingRF BPM element
@@ -1047,13 +1048,14 @@ class impactz_parser(lattice_parser):
                     elif Np > sample_out:
                         freq = math.ceil(Np/sample_out)
                         elem['SAMPLE_FREQ'] = str(freq)
-                    
-                lte_lines.append('0 0')
-                lte_lines.append(elem['FILENAME_ID'])
-                lte_lines.append('-2')
-                lte_lines.append(str(phaseopt))
-                lte_lines.append(elem['SAMPLE_FREQ'])
-                lte_lines.append('/ \n')
+                
+                if elem['COORD_INFO']=='1':
+                    lte_lines.append('0 0')
+                    lte_lines.append(elem['FILENAME_ID'])
+                    lte_lines.append('-2')
+                    lte_lines.append(str(phaseopt))
+                    lte_lines.append(elem['SAMPLE_FREQ'])
+                    lte_lines.append('/ \n')
                 
                 # whether add -8 element
                 if elem['SLICE_BIN']=='0':
