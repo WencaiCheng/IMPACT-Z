@@ -27,10 +27,10 @@ class lattice_parser:
 
         j = 0
         for line in lines:
-            if re.match(r'.*&+ *\n$',line):
-                
+            #be careful of "\t": ..., & \t \n
+            if re.match(r'.*&+ *\t* *\n$',line):
                 # delete '& \n'
-                lines[j] = re.sub(r'&+ *\n',' ',lines[j])
+                lines[j] = re.sub(r'&+.*\n','',lines[j])
     
                 # combine these two line
                 lines[j+1] = lines[j]+lines[j+1]
@@ -113,6 +113,10 @@ class lattice_parser:
             # only \n at the end
             line = lines[j]
             lines[j] = line.replace('\n','')
+            
+            # \t at the end of line
+            line = lines[j]
+            lines[j] = line.replace('\t','')
             
             j += 1
         
